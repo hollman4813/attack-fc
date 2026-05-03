@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATTACK F.C.</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1829;
+    --bg2: #132040;
+    --bg3: #1a2d55;
+    --card: #132040;
+    --border: #1e3060;
+    --navy: #1a3a6b;
+    --skyblue: #4aa8d8;
+    --gold: #c9a84c;
+    --gold2: #e8c96a;
+    --white: #ffffff;
+    --text: #d8e4f0;
+    --muted: #6a85a8;
+    --red: #e05555;
+    --green: #4caf80;
+    --win: #4caf80;
+    --lose: #e05555;
+    --draw: #c9a84c;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; min-height:100vh; font-size:14px; }
+
+  header {
+    background:var(--bg2);
+    border-bottom:2px solid var(--gold);
+    padding:0 16px;
+    position:sticky; top:0; z-index:100;
+    height:60px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .logo-wrap { display:flex; align-items:center; gap:10px; }
+  .logo-img { width:40px; height:40px; border-radius:50%; object-fit:cover; }
+  .logo-text { font-weight:700; font-size:16px; color:var(--white); letter-spacing:0.5px; }
+  .logo-sub { font-size:11px; color:var(--gold); font-weight:500; }
+
+  .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:var(--bg2); border-top:2px solid var(--gold); display:flex; z-index:100; height:58px; }
+  .bottom-nav button { flex:1; background:none; border:none; color:var(--muted); font-family:inherit; font-size:10px; font-weight:600; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; transition:color 0.2s; }
+  .bottom-nav button .nav-icon { font-size:18px; }
+  .bottom-nav button.active { color:var(--gold); }
+
+  main { max-width:480px; margin:0 auto; padding:16px 12px 74px; }
+  .section { display:none; }
+  .section.active { display:block; }
+  .page-title { font-size:18px; font-weight:700; color:var(--white); margin-bottom:16px; }
+
+  /* HERO */
+  .season-hero {
+    background: linear-gradient(160deg, #1a3a6b 0%, #0d1829 100%);
+    border-radius:14px; padding:20px; margin-bottom:14px;
+    border:1px solid var(--border);
+    position:relative; overflow:hidden;
+  }
+  .season-hero::after {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background: linear-gradient(90deg, var(--gold), var(--skyblue), var(--gold));
+  }
+  .hero-top { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .hero-emblem { width:56px; height:56px; border-radius:50%; object-fit:cover; border:2px solid var(--gold); }
+  .hero-info .league-name { font-size:11px; color:var(--gold); font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+  .hero-info .team-name { font-size:20px; font-weight:700; color:var(--white); }
+
+  .wdl-strip { display:flex; align-items:center; gap:6px; margin-bottom:14px; }
+  .wdl-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+  .wdl-dot.w { background:var(--win); color:#fff; }
+  .wdl-dot.d { background:var(--draw); color:#000; }
+  .wdl-dot.l { background:var(--lose); color:#fff; }
+
+  .season-stats-row { display:flex; gap:0; }
+  .season-stat { flex:1; text-align:center; padding:0 4px; border-right:1px solid var(--border); }
+  .season-stat:last-child { border-right:none; }
+  .season-stat .val { font-size:22px; font-weight:700; color:var(--white); line-height:1; }
+  .season-stat .lbl { font-size:10px; color:var(--muted); margin-top:4px; }
+
+  /* SECTION HEADER */
+  .sec-header { display:flex; align-items:center; justify-content:space-between; margin:18px 0 10px; }
+  .sec-title { font-size:12px; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:1px; }
+  .sec-more { font-size:12px; color:var(--skyblue); cursor:pointer; background:none; border:none; font-family:inherit; }
+
+  /* RANK LIST */
+  .rank-list { background:var(--card); border-radius:12px; overflow:hidden; border:1px solid var(--border); margin-bottom:12px; }
+  .rank-item { display:flex; align-items:center; padding:12px 14px; border-bottom:1px solid var(--border); gap:12px; }
+  .rank-item:last-child { border-bottom:none; }
+  .rank-pos { font-size:13px; font-weight:700; color:var(--muted); width:20px; text-align:center; flex-shrink:0; }
+  .rank-pos.p1 { color:var(--gold); }
+  .rank-pos.p2 { color:#b0bec5; }
+  .rank-pos.p3 { color:#a0785a; }
+  .rank-avatar { width:36px; height:36px; border-radius:50%; background:var(--bg3); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:var(--skyblue); flex-shrink:0; border:1px solid var(--border); }
+  .rank-info { flex:1; }
+  .rank-name { font-size:14px; font-weight:600; color:var(--white); }
+  .rank-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+  .rank-val { font-size:24px; font-weight:700; color:var(--gold); text-align:right; line-height:1; }
+  .rank-val-label { font-size:10px; color:var(--muted); text-align:right; }
+
+  /* MATCH CARD */
+  .match-card { background:var(--card); border-radius:12px; margin-bottom:8px; overflow:hidden; border:1px solid var(--border); }
+  .match-card-header { padding:8px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--bg3); }
+  .match-date-text { font-size:11px; color:var(--muted); }
+  .match-result-pill { font-size:10px; font-weight:700; padding:2px 10px; border-radius:10px; }
+  .match-result-pill.win { background:rgba(76,175,128,0.2); color:var(--win); border:1px solid rgba(76,175,128,0.3); }
+  .match-result-pill.lose { background:rgba(224,85,85,0.2); color:var(--lose); border:1px solid rgba(224,85,85,0.3); }
+  .match-result-pill.draw { background:rgba(201,168,76,0.2); color:var(--draw); border:1px solid rgba(201,168,76,0.3); }
+  .match-card-body { padding:14px; display:flex; align-items:center; justify-content:space-between; }
+  .match-team { font-size:13px; font-weight:600; flex:1; color:var(--white); }
+  .match-team.right { text-align:right; }
+  .match-team.ours { color:var(--skyblue); }
+  .match-score { font-size:24px; font-weight:700; color:var(--white); text-align:center; min-width:72px; letter-spacing:3px; }
+  .match-ground { padding:7px 14px; font-size:11px; color:var(--muted); border-top:1px solid var(--border); }
+
+  /* TABS */
+  .tab-row { display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px; }
+  .tab-btn { background:var(--bg3); border:1px solid var(--border); border-radius:20px; color:var(--muted); font-family:inherit; font-size:12px; font-weight:600; padding:6px 14px; cursor:pointer; white-space:nowrap; transition:all 0.15s; }
+  .tab-btn.active { background:var(--gold); color:#0d1829; border-color:var(--gold); }
+
+  /* FULL TABLE */
+  .full-table { background:var(--card); border-radius:12px; overflow:hidden; border:1px solid var(--border); }
+  .full-table-header { display:grid; padding:10px 14px; background:var(--bg3); font-size:10px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; grid-template-columns:24px 1fr 36px 36px 42px 42px; gap:6px; border-bottom:1px solid var(--border); }
+  .full-table-row { display:grid; padding:11px 14px; border-top:1px solid var(--border); grid-template-columns:24px 1fr 36px 36px 42px 42px; gap:6px; align-items:center; transition:background 0.15s; }
+  .full-table-row:hover { background:var(--bg3); }
+  .col-name { font-weight:600; font-size:13px; color:var(--white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .col-num { font-size:14px; font-weight:600; text-align:center; color:var(--text); }
+  .col-num.highlight { color:var(--gold); font-size:18px; font-weight:700; }
+
+  /* PLAYER CARD */
+  .player-card { background:var(--card); border-radius:12px; border:1px solid var(--border); margin-bottom:8px; display:flex; align-items:center; padding:12px 14px; gap:12px; transition:background 0.15s; }
+  .player-card:hover { background:var(--bg3); }
+  .player-num-badge { width:38px; height:38px; background:var(--navy); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:var(--gold); flex-shrink:0; border:1px solid var(--border); }
+  .player-info { flex:1; }
+  .player-name { font-size:14px; font-weight:600; color:var(--white); }
+  .player-meta { font-size:11px; color:var(--muted); margin-top:3px; display:flex; align-items:center; gap:4px; }
+  .player-stats-mini { display:flex; gap:14px; text-align:center; }
+  .mini-stat .v { font-size:16px; font-weight:700; color:var(--white); }
+  .mini-stat .l { font-size:10px; color:var(--muted); }
+  .status-dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
+  .status-dot.active { background:var(--win); }
+  .status-dot.injured { background:var(--lose); }
+  .status-dot.resting { background:var(--draw); }
+
+  .loading { display:flex; flex-direction:column; align-items:center; padding:60px 0; color:var(--muted); font-size:13px; gap:12px; }
+  .spinner { width:28px; height:28px; border:2px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .mom-tag { background:rgba(201,168,76,0.2); color:var(--gold); font-size:10px; font-weight:700; padding:2px 7px; border-radius:8px; border:1px solid rgba(201,168,76,0.3); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <img class="logo-img" src="emblem_v4.png" alt="ATTACK FC">
+    <div>
+      <div class="logo-text">ATTACK F.C.</div>
+      <div class="logo-sub">2026 SEASON</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- 홈 -->
+  <div class="section active" id="home">
+    <div class="loading" id="home-loading"><div class="spinner"></div>불러오는 중...</div>
+    <div id="home-content" style="display:none">
+      <div class="season-hero">
+        <div class="hero-top">
+          <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC">
+          <div class="hero-info">
+            <div class="league-name">2026 시즌</div>
+            <div class="team-name">ATTACK F.C.</div>
+          </div>
+        </div>
+        <div class="wdl-strip" id="recent-form"></div>
+        <div class="season-stats-row">
+          <div class="season-stat"><div class="val" id="h-games">-</div><div class="lbl">경기</div></div>
+          <div class="season-stat"><div class="val" id="h-wins">-</div><div class="lbl">승</div></div>
+          <div class="season-stat"><div class="val" id="h-draws">-</div><div class="lbl">무</div></div>
+          <div class="season-stat"><div class="val" id="h-loses">-</div><div class="lbl">패</div></div>
+          <div class="season-stat"><div class="val" id="h-gd">-</div><div class="lbl">득실차</div></div>
+        </div>
+      </div>
+
+      <div class="sec-header"><div class="sec-title">⚡ 득점 순위</div><button class="sec-more" onclick="showSection('stats',event)">전체보기</button></div>
+      <div class="rank-list" id="home-goals"></div>
+      <div class="sec-header"><div class="sec-title">🎯 어시스트 순위</div><button class="sec-more" onclick="showSection('stats',event)">전체보기</button></div>
+      <div class="rank-list" id="home-assists"></div>
+      <div class="sec-header"><div class="sec-title">🏆 MOM 순위</div><button class="sec-more" onclick="showSection('stats',event)">전체보기</button></div>
+      <div class="rank-list" id="home-mom"></div>
+    </div>
+  </div>
+
+  <!-- 경기 -->
+  <div class="section" id="matches">
+    <div class="loading" id="matches-loading"><div class="spinner"></div>불러오는 중...</div>
+    <div id="matches-content" style="display:none">
+      <div class="page-title">경기 결과</div>
+      <div id="matches-list"></div>
+    </div>
+  </div>
+
+  <!-- 스탯 -->
+  <div class="section" id="stats">
+    <div class="loading" id="stats-loading"><div class="spinner"></div>불러오는 중...</div>
+    <div id="stats-content" style="display:none">
+      <div class="page-title">시즌 스탯</div>
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="switchTab('goals',this)">골</button>
+        <button class="tab-btn" onclick="switchTab('assists',this)">어시스트</button>
+        <button class="tab-btn" onclick="switchTab('points',this)">공격포인트</button>
+        <button class="tab-btn" onclick="switchTab('mom',this)">MOM</button>
+      </div>
+      <div class="full-table">
+        <div class="full-table-header">
+          <div>#</div><div>선수</div>
+          <div style="text-align:center">G</div>
+          <div style="text-align:center">A</div>
+          <div style="text-align:center">포인트</div>
+          <div style="text-align:center">MOM</div>
+        </div>
+        <div id="stats-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 선수 -->
+  <div class="section" id="players">
+    <div class="loading" id="players-loading"><div class="spinner"></div>불러오는 중...</div>
+    <div id="players-content" style="display:none">
+      <div class="page-title">선수단</div>
+      <div id="players-list"></div>
+    </div>
+  </div>
+</main>
+
+<div class="bottom-nav">
+  <button class="active" onclick="showSection('home',event)"><span class="nav-icon">🏠</span>홈</button>
+  <button onclick="showSection('matches',event)"><span class="nav-icon">⚽</span>경기</button>
+  <button onclick="showSection('stats',event)"><span class="nav-icon">📊</span>스탯</button>
+  <button onclick="showSection('players',event)"><span class="nav-icon">👥</span>선수</button>
+</div>
+
+<script>
+const URL = 'https://fboqjlzgyfewgsoxclxy.supabase.co';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZib3FqbHpneWZld2dzb3hjbHh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3ODQ4MzIsImV4cCI6MjA5MzM2MDgzMn0.x4ima7dIQRP6q9nmCyWi0DIOOA3ZmSorjX-gE3lthiU';
+
+async function api(path) {
+  const r = await fetch(`${URL}/rest/v1/${path}`, { headers:{ 'apikey':KEY, 'Authorization':`Bearer ${KEY}` } });
+  return r.json();
+}
+
+let allStats = [];
+
+function rankItem(p, i, key, label) {
+  const cls = ['p1','p2','p3'][i]||'';
+  return `<div class="rank-item">
+    <div class="rank-pos ${cls}">${i+1}</div>
+    <div class="rank-avatar">${p.name.slice(0,1)}</div>
+    <div class="rank-info">
+      <div class="rank-name">${p.name}</div>
+      <div class="rank-sub">#${p.number||'-'}</div>
+    </div>
+    <div>
+      <div class="rank-val">${p[key]}</div>
+      <div class="rank-val-label">${label}</div>
+    </div>
+  </div>`;
+}
+
+async function loadHome() {
+  const [summary, stats, matches] = await Promise.all([
+    api('view_season_summary?select=*'),
+    api('view_season_stats?select=*'),
+    api('view_match_results?select=*&order=match_date.desc&limit=5')
+  ]);
+  allStats = stats;
+  const s = summary[0];
+  document.getElementById('h-games').textContent = s.총경기수;
+  document.getElementById('h-wins').textContent = s.승;
+  document.getElementById('h-draws').textContent = s.무;
+  document.getElementById('h-loses').textContent = s.패;
+  const gd = s.득실차;
+  document.getElementById('h-gd').textContent = gd > 0 ? `+${gd}` : gd;
+
+  const formDots = matches.slice(0,5).reverse().map(m => {
+    const c = m.result==='Win'?'w':m.result==='Lose'?'l':'d';
+    const l = m.result==='Win'?'W':m.result==='Lose'?'L':'D';
+    return `<div class="wdl-dot ${c}">${l}</div>`;
+  }).join('');
+  document.getElementById('recent-form').innerHTML = `<span style="font-size:11px;color:var(--muted);margin-right:6px">최근 폼</span>${formDots}`;
+
+  const topG = [...stats].sort((a,b)=>b.총골-a.총골).slice(0,5);
+  document.getElementById('home-goals').innerHTML = topG.map((p,i)=>rankItem(p,i,'총골','골')).join('');
+  const topA = [...stats].sort((a,b)=>b.총어시스트-a.총어시스트).slice(0,5);
+  document.getElementById('home-assists').innerHTML = topA.map((p,i)=>rankItem(p,i,'총어시스트','어시스트')).join('');
+  const topM = [...stats].sort((a,b)=>b.mom횟수-a.mom횟수).filter(p=>p.mom횟수>0).slice(0,5);
+  document.getElementById('home-mom').innerHTML = topM.map((p,i)=>rankItem(p,i,'mom횟수','MOM')).join('');
+
+  document.getElementById('home-loading').style.display='none';
+  document.getElementById('home-content').style.display='block';
+}
+
+async function loadMatches() {
+  const matches = await api('view_match_results?select=*&order=match_date.desc');
+  document.getElementById('matches-list').innerHTML = matches.map(m => {
+    const rc = m.result==='Win'?'win':m.result==='Lose'?'lose':'draw';
+    const rl = m.result==='Win'?'승':m.result==='Lose'?'패':'무';
+    const d = new Date(m.match_date);
+    return `<div class="match-card">
+      <div class="match-card-header">
+        <span class="match-date-text">${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}</span>
+        <span class="match-result-pill ${rc}">${rl}</span>
+      </div>
+      <div class="match-card-body">
+        <div class="match-team ours">ATTACK F.C.</div>
+        <div class="match-score">${m.our_score} : ${m.opponent_score}</div>
+        <div class="match-team right">${m.opponent}</div>
+      </div>
+      <div class="match-ground">📍 ${m.ground||'미정'}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('matches-loading').style.display='none';
+  document.getElementById('matches-content').style.display='block';
+}
+
+async function loadStats() {
+  if (!allStats.length) allStats = await api('view_season_stats?select=*');
+  renderStatsTable('goals');
+  document.getElementById('stats-loading').style.display='none';
+  document.getElementById('stats-content').style.display='block';
+}
+
+function renderStatsTable(tab) {
+  const sorted = [...allStats].sort((a,b) =>
+    tab==='goals' ? b.총골-a.총골 :
+    tab==='assists' ? b.총어시스트-a.총어시스트 :
+    tab==='points' ? b.공격포인트-a.공격포인트 :
+    b.mom횟수-a.mom횟수
+  );
+  document.getElementById('stats-list').innerHTML = sorted.map((p,i) => {
+    const cls = ['p1','p2','p3'][i]||'';
+    return `<div class="full-table-row">
+      <div class="rank-pos ${cls}" style="font-size:12px">${i+1}</div>
+      <div class="col-name">${p.name}</div>
+      <div class="col-num ${tab==='goals'?'highlight':''}">${p.총골}</div>
+      <div class="col-num ${tab==='assists'?'highlight':''}">${p.총어시스트}</div>
+      <div class="col-num ${tab==='points'?'highlight':''}">${p.공격포인트}</div>
+      <div class="col-num ${tab==='mom'?'highlight':''}">${p.mom횟수>0?`<span class="mom-tag">${p.mom횟수}</span>`:'-'}</div>
+    </div>`;
+  }).join('');
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStatsTable(tab);
+}
+
+async function loadPlayers() {
+  const players = await api('players?select=*&order=number.asc');
+  if (!allStats.length) allStats = await api('view_season_stats?select=*');
+  const sm = {};
+  allStats.forEach(s => sm[s.name]=s);
+  const stMap = { active:'정상', injured:'부상', resting:'휴식' };
+  document.getElementById('players-list').innerHTML = players.map(p => {
+    const s = sm[p.name]||{총골:0,총어시스트:0,mom횟수:0};
+    const st = p.status||'active';
+    return `<div class="player-card">
+      <div class="player-num-badge">${p.number}</div>
+      <div class="player-info">
+        <div class="player-name">${p.name}</div>
+        <div class="player-meta">
+          ${p.position?`<span>${p.position}</span><span>·</span>`:''}
+          <span class="status-dot ${st}"></span>
+          <span>${stMap[st]}</span>
+        </div>
+      </div>
+      <div class="player-stats-mini">
+        <div class="mini-stat"><div class="v">${s.총골||0}</div><div class="l">골</div></div>
+        <div class="mini-stat"><div class="v">${s.총어시스트||0}</div><div class="l">어시</div></div>
+        <div class="mini-stat"><div class="v">${s.mom횟수||0}</div><div class="l">MOM</div></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('players-loading').style.display='none';
+  document.getElementById('players-content').style.display='block';
+}
+
+const loaded = {};
+function showSection(id, e) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx = {home:0,matches:1,stats:2,players:3}[id];
+  document.querySelectorAll('.bottom-nav button')[idx].classList.add('active');
+  if (!loaded[id]) {
+    loaded[id]=true;
+    if(id==='home') loadHome();
+    if(id==='matches') loadMatches();
+    if(id==='stats') loadStats();
+    if(id==='players') loadPlayers();
+  }
+}
+
+loadHome(); loaded['home']=true;
+</script>
+</body>
+</html>
