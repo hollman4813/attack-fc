@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="emblem_v4.png">
+<link rel="apple-touch-icon" href="emblem_v4.png">
 <title>ATTACK F.C.</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -896,10 +898,14 @@ function switchTab(tab, btn) {
 
 /* ── 유튜브 앱 열기 ── */
 function openYoutube() {
-  const appUrl = 'youtube://www.youtube.com/@ch.attack4905';
   const webUrl = 'https://www.youtube.com/@ch.attack4905';
-  window.location = appUrl;
-  setTimeout(() => { window.open(webUrl, '_blank'); }, 1500);
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (isMobile) {
+    window.location = 'youtube://www.youtube.com/@ch.attack4905';
+    setTimeout(() => { window.open(webUrl, '_blank'); }, 1500);
+  } else {
+    window.open(webUrl, '_blank');
+  }
 }
 
 /* ── 브라우저 뒤로가기 처리 ── */
