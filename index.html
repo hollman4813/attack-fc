@@ -86,14 +86,14 @@
   .s-val { font-size:22px; font-weight:700; color:var(--text); line-height:1; }
   .s-lbl { font-size:10px; color:var(--muted); margin-top:4px; }
   .stats-summary-item.hl .s-val { color:var(--skyblue); }
-  .wdl-bar-wrap { padding:14px; border-top:1px solid var(--border); }
-  .wdl-bar-labels { display:flex; justify-content:space-between; margin-bottom:6px; }
-  .wdl-bar-label { font-size:11px; color:var(--muted); }
-  .wdl-bar { display:flex; border-radius:4px; overflow:hidden; height:6px; }
-  .w-bar { background:var(--win); } .d-bar { background:var(--draw); } .l-bar { background:var(--lose); }
-  .wdl-bar-nums { display:flex; justify-content:space-between; margin-top:6px; }
-  .wdl-num { font-size:13px; font-weight:700; }
-  .wdl-num.w { color:var(--win); } .wdl-num.d { color:var(--draw); } .wdl-num.l { color:var(--lose); }
+  .wdl-bar-wrap { padding:14px; border-top:1px solid var(--border); display:flex; justify-content:space-around; align-items:center; }
+  .wdl-item { text-align:center; flex:1; }
+  .wdl-item-val { font-size:32px; font-weight:800; line-height:1; }
+  .wdl-item-val.w { color:#2e7d32; }
+  .wdl-item-val.d { color:#616161; }
+  .wdl-item-val.l { color:#c62828; }
+  .wdl-item-lbl { font-size:11px; color:var(--muted); margin-top:5px; font-weight:500; }
+  .wdl-divider { width:1px; height:36px; background:var(--border); }
 
   /* TOP3 RANK (홈) */
   .rank-list { background:#fff; border-radius:10px; overflow:hidden; border:1px solid var(--border); margin-bottom:4px; }
@@ -244,12 +244,19 @@
               <div class="stats-summary-item"><div class="s-val" id="s-gd">-</div><div class="s-lbl">득실차</div></div>
             </div>
             <div class="wdl-bar-wrap">
-              <div class="wdl-bar-labels"><span class="wdl-bar-label">승</span><span class="wdl-bar-label">무</span><span class="wdl-bar-label">패</span></div>
-              <div class="wdl-bar" id="wdl-bar"></div>
-              <div class="wdl-bar-nums">
-                <span class="wdl-num w" id="s-w">-</span>
-                <span class="wdl-num d" id="s-d">-</span>
-                <span class="wdl-num l" id="s-l">-</span>
+              <div class="wdl-item">
+                <div class="wdl-item-val w" id="s-w">-</div>
+                <div class="wdl-item-lbl">승</div>
+              </div>
+              <div class="wdl-divider"></div>
+              <div class="wdl-item">
+                <div class="wdl-item-val d" id="s-d">-</div>
+                <div class="wdl-item-lbl">무</div>
+              </div>
+              <div class="wdl-divider"></div>
+              <div class="wdl-item">
+                <div class="wdl-item-val l" id="s-l">-</div>
+                <div class="wdl-item-lbl">패</div>
               </div>
             </div>
           </div>
@@ -531,7 +538,7 @@ async function loadOverview() {
   const [summary, stats, matches, upcoming] = await Promise.all([
     api('view_season_summary?select=*'),
     api('view_season_stats?select=*'),
-    api('view_match_results?select=*&order=match_date.desc&limit=8'),
+    api('matches?select=*&status=eq.finished&order=match_date.desc&limit=7'),
     api('matches?select=*&status=eq.upcoming&order=match_date.asc&limit=1')
   ]);
   allStats = stats;
@@ -571,12 +578,10 @@ async function loadOverview() {
   document.getElementById('s-w').textContent = s.승||0;
   document.getElementById('s-d').textContent = s.무||0;
   document.getElementById('s-l').textContent = s.패||0;
-  const tot = s.총경기수||1;
-  const wp = (s.승||0)/tot*100, dp = (s.무||0)/tot*100, lp = 100-wp-dp;
-  document.getElementById('wdl-bar').innerHTML = `<div class="w-bar" style="width:${wp}%"></div><div class="d-bar" style="width:${dp}%"></div><div class="l-bar" style="width:${lp}%"></div>`;
+
 
   // 폼 카드
-  const fin = matches.filter(m=>m.result);
+  const fin = matches.filter(m=>m.result !== null);
   document.getElementById('form-strip').innerHTML = fin.map(m=>{
     const rc=m.result==='Win'?'win':m.result==='Lose'?'lose':'draw';
     const lbl=m.result==='Win'?'승':m.result==='Lose'?'패':'무';
