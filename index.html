@@ -903,9 +903,9 @@ function openYoutube() {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if (isMobile) {
     window.location = 'youtube://www.youtube.com/@ch.attack4905';
-    setTimeout(() => { window.open(webUrl, '_blank'); }, 1500);
+    setTimeout(() => { window.location.href = webUrl; }, 1500);
   } else {
-    window.open(webUrl, '_blank');
+    window.location.href = webUrl;
   }
 }
 
