@@ -1436,15 +1436,12 @@ async function showPlayer(playerId) {
           <div style="font-size:10px;color:var(--muted);margin-top:3px">주발</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr)">
-        <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr">
+        <div style="padding:14px;text-align:center">
           <div style="font-size:13px;font-weight:600;color:var(--text)">${p.birth_date?new Date(p.birth_date).toLocaleDateString('ko-KR'):'-'}</div>
           <div style="font-size:10px;color:var(--muted);margin-top:3px">생년월일</div>
         </div>
-        <div style="padding:14px;text-align:center">
-          <div style="font-size:13px;font-weight:600;color:var(--text)">${p.phone||'-'}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">전화번호</div>
-        </div>
+
       </div>
     </div>
 
