@@ -630,11 +630,12 @@ async function loadOverview() {
   // 도넛 차트
   const circ = 238.8;
   const wp = wins/total*circ, dp = draws/total*circ, lp = losses/total*circ;
-  document.getElementById('wdl-arc-w').setAttribute('stroke-dasharray', `${wp} ${circ}`);
+  const gap = 2;
+  document.getElementById('wdl-arc-w').setAttribute('stroke-dasharray', `${wp-gap} ${circ}`);
   document.getElementById('wdl-arc-w').setAttribute('stroke-dashoffset', '0');
-  document.getElementById('wdl-arc-d').setAttribute('stroke-dasharray', `${dp} ${circ}`);
+  document.getElementById('wdl-arc-d').setAttribute('stroke-dasharray', `${dp-gap} ${circ}`);
   document.getElementById('wdl-arc-d').setAttribute('stroke-dashoffset', `-${wp}`);
-  document.getElementById('wdl-arc-l').setAttribute('stroke-dasharray', `${lp} ${circ}`);
+  document.getElementById('wdl-arc-l').setAttribute('stroke-dasharray', `${lp-gap} ${circ}`);
   document.getElementById('wdl-arc-l').setAttribute('stroke-dashoffset', `-${wp+dp}`);
   document.getElementById('wdl-pct').textContent = Math.round(wins/total*100) + '%';
 
