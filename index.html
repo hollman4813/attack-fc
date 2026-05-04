@@ -625,7 +625,6 @@ async function loadOverview() {
   document.getElementById('s-goals').textContent = s.총득점||0;
   document.getElementById('s-concede').textContent = s.총실점||0;
   const gd = s.득실차||0;
-  document.getElementById('s-gd').textContent = gd>0?`+${gd}`:gd;
   const wins = s.승||0, draws = s.무||0, losses = s.패||0;
   const total = s.총경기수||1;
   document.getElementById('s-w').textContent = wins;
