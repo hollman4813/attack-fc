@@ -520,12 +520,28 @@
         <button onclick="updatePlayer()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">정보 저장</button>
       </div>
 
+      <!-- 참석 관리 -->
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">참석 관리</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
+          <select id="a-attend-match" onchange="loadAttendance()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">경기를 선택하세요</option>
+          </select>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">참석 선수 선택 <span id="a-attend-count" style="color:var(--skyblue);font-weight:700"></span></div>
+        <div id="a-attendance-list" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+          <div style="color:var(--muted);font-size:12px;grid-column:span 2;padding:8px 0">경기를 먼저 선택해주세요</div>
+        </div>
+        <button onclick="saveAttendance()" style="width:100%;padding:10px;background:var(--win);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 참석 저장</button>
+      </div>
+
       <!-- 경기 기록 입력 -->
       <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 기록 입력</div>
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
         <div style="margin-bottom:10px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
-          <select id="a-stat-match" onchange="loadStatPlayers()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+          <select id="a-stat-match" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
             <option value="">경기를 선택하세요</option>
           </select>
         </div>
@@ -978,15 +994,20 @@ async function loadAdminData() {
   ]);
   allPlayers = players;
 
-  // 결과 입력용 경기 목록 (upcoming만)
   const upcoming = matches.filter(m=>m.status==='upcoming');
   const finished = matches.filter(m=>m.status==='finished');
 
+  // 결과 입력용 (upcoming)
   const matchSel = document.getElementById('a-match-select');
   matchSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
     upcoming.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponent}</option>`).join('');
 
-  // 기록 입력용 경기 목록 (finished)
+  // 참석 관리용 (전체)
+  const attendSel = document.getElementById('a-attend-match');
+  attendSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
+    matches.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponent} ${m.status==='upcoming'?'(예정)':''}</option>`).join('');
+
+  // 기록 입력용 (finished)
   const statSel = document.getElementById('a-stat-match');
   statSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
     finished.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponent}</option>`).join('');
@@ -1134,6 +1155,74 @@ async function saveStat() {
   } else {
     const err = await res.text();
     alert('오류: ' + err);
+  }
+}
+
+async function loadAttendance() {
+  const matchId = document.getElementById('a-attend-match').value;
+  if (!matchId) return;
+
+  // 해당 경기 기존 참석 데이터
+  const existing = await api(`match_stats?select=player_id,attended&match_id=eq.${matchId}`);
+  const attendedSet = new Set(existing.filter(s=>s.attended).map(s=>s.player_id));
+
+  const list = document.getElementById('a-attendance-list');
+  list.innerHTML = allPlayers.map(p => `
+    <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${attendedSet.has(p.id)?'#e8f5fb':'#f8f9fb'};border:1px solid ${attendedSet.has(p.id)?'var(--skyblue)':'var(--border)'};border-radius:8px;cursor:pointer;font-size:13px;font-weight:${attendedSet.has(p.id)?'600':'400'}" onclick="updateAttendCount()">
+      <input type="checkbox" value="${p.id}" ${attendedSet.has(p.id)?'checked':''} style="width:16px;height:16px;accent-color:var(--skyblue);flex-shrink:0">
+      <span style="color:var(--muted);font-size:11px;min-width:20px">#${p.number}</span>
+      <span>${p.name}</span>
+    </label>
+  `).join('');
+  updateAttendCount();
+}
+
+function updateAttendCount() {
+  const checked = document.querySelectorAll('#a-attendance-list input[type=checkbox]:checked').length;
+  const countEl = document.getElementById('a-attend-count');
+  if (countEl) countEl.textContent = checked > 0 ? `(${checked}명 선택)` : '';
+}
+
+async function saveAttendance() {
+  const matchId = document.getElementById('a-attend-match').value;
+  if (!matchId) { alert('경기를 선택해주세요!'); return; }
+
+  const checked = [...document.querySelectorAll('#a-attendance-list input[type=checkbox]')];
+  const attendedIds = checked.filter(c=>c.checked).map(c=>parseInt(c.value));
+  const allIds = checked.map(c=>parseInt(c.value));
+
+  // 기존 match_stats 확인
+  const existing = await api(`match_stats?select=id,player_id&match_id=eq.${matchId}`);
+  const existMap = {};
+  existing.forEach(s => existMap[s.player_id] = s.id);
+
+  let success = true;
+  for (const playerId of allIds) {
+    const attended = attendedIds.includes(playerId);
+    if (existMap[playerId]) {
+      // 업데이트
+      const res = await fetch(`${SUPA_URL}/rest/v1/match_stats?id=eq.${existMap[playerId]}`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ attended })
+      });
+      if (!res.ok) success = false;
+    } else if (attended) {
+      // 새로 추가
+      const res = await fetch(`${SUPA_URL}/rest/v1/match_stats`, {
+        method: 'POST',
+        headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ match_id: parseInt(matchId), player_id: playerId, goals: 0, assists: 0, is_mom: false, attended: true })
+      });
+      if (!res.ok) success = false;
+    }
+  }
+
+  if (success) {
+    alert(`참석 저장 완료! ✅ ${attendedIds.length}명`);
+    await loadAttendance();
+  } else {
+    alert('일부 저장에 실패했어요.');
   }
 }
 
@@ -1291,6 +1380,32 @@ async function showPlayer(playerId) {
     </div>`;
   }).join('');
 
+  // 참석 통계 로드 (비동기)
+  api(`view_player_attendance?select=*&id=eq.${playerId}`).then(attend => {
+    const el = document.getElementById(`player-attend-stats-${playerId}`);
+    if (!el) return;
+    const a = attend[0];
+    if (a) {
+      el.innerHTML = `
+        <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
+          <div style="font-size:18px;font-weight:700;color:var(--text)">${a.참석경기}/${a.총경기}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">참석</div>
+        </div>
+        <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
+          <div style="font-size:18px;font-weight:700;color:${a.참석률>=70?'var(--win)':a.참석률>=50?'var(--draw)':'var(--lose)'}">${a.참석률}%</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">참석률</div>
+        </div>
+        <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
+          <div style="font-size:18px;font-weight:700;color:var(--skyblue)">${a.경기당골}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당골</div>
+        </div>
+        <div style="padding:12px 8px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:var(--skyblue)">${a.경기당어시스트}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당어시</div>
+        </div>`;
+    }
+  });
+
   document.getElementById('player-detail-content').innerHTML = `
     <!-- 헤더 -->
     <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:20px 16px 24px;position:relative">
@@ -1337,18 +1452,36 @@ async function showPlayer(playerId) {
     <div style="padding:0 12px;margin-top:20px">
       <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">2026 시즌 통계</div>
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr)">
-          <div style="padding:16px;text-align:center;border-right:1px solid var(--border)">
-            <div style="font-size:26px;font-weight:800;color:var(--skyblue)">${s['총골']||0}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)">
+          <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
+            <div style="font-size:24px;font-weight:800;color:var(--skyblue)">${s['총골']||0}</div>
             <div style="font-size:11px;color:var(--muted);margin-top:4px">골</div>
           </div>
-          <div style="padding:16px;text-align:center;border-right:1px solid var(--border)">
-            <div style="font-size:26px;font-weight:800;color:var(--skyblue)">${s['총어시스트']||0}</div>
+          <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
+            <div style="font-size:24px;font-weight:800;color:var(--skyblue)">${s['총어시스트']||0}</div>
             <div style="font-size:11px;color:var(--muted);margin-top:4px">어시스트</div>
           </div>
-          <div style="padding:16px;text-align:center">
-            <div style="font-size:26px;font-weight:800;color:#f5a623">${s['mom횟수']||0}</div>
+          <div style="padding:14px;text-align:center">
+            <div style="font-size:24px;font-weight:800;color:#f5a623">${s['mom횟수']||0}</div>
             <div style="font-size:11px;color:var(--muted);margin-top:4px">MOM</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr)" id="player-attend-stats-${p.id}">
+          <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
+            <div style="font-size:18px;font-weight:700;color:var(--text)">-</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">참석</div>
+          </div>
+          <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
+            <div style="font-size:18px;font-weight:700;color:var(--text)">-</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">참석률</div>
+          </div>
+          <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
+            <div style="font-size:18px;font-weight:700;color:var(--skyblue)">-</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당골</div>
+          </div>
+          <div style="padding:12px 8px;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:var(--skyblue)">-</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당어시</div>
           </div>
         </div>
       </div>
