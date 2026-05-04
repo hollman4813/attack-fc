@@ -186,9 +186,9 @@
 
   /* 스쿼드 */
   .squad-wrap { background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-  .squad-table-header { display:grid; grid-template-columns:40px 1fr 36px 32px 40px 44px; gap:8px; padding:8px 14px; background:var(--bg3); font-size:10px; color:var(--muted); font-weight:700; letter-spacing:0.3px; border-bottom:1px solid var(--border); }
+  .squad-table-header { display:grid; grid-template-columns:40px 1fr 36px 32px 40px 36px 44px; gap:8px; padding:8px 14px; background:var(--bg3); font-size:10px; color:var(--muted); font-weight:700; letter-spacing:0.3px; border-bottom:1px solid var(--border); }
   .squad-group-title { font-size:11px; font-weight:700; color:var(--muted); padding:10px 14px 6px; background:#f8f9fb; border-top:1px solid var(--border); text-transform:uppercase; letter-spacing:0.5px; }
-  .squad-row { display:grid; grid-template-columns:40px 1fr 36px 32px 40px 44px; gap:8px; padding:10px 14px; border-top:1px solid var(--border); align-items:center; background:#fff; }
+  .squad-row { display:grid; grid-template-columns:40px 1fr 36px 32px 40px 36px 44px; gap:8px; padding:10px 14px; border-top:1px solid var(--border); align-items:center; background:#fff; }
   .squad-row:hover { background:#f8f9fb; }
   .squad-num { font-size:13px; font-weight:700; color:var(--muted); text-align:center; }
   .squad-name { font-size:13px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:5px; }
@@ -840,7 +840,7 @@ async function loadSquad() {
   const row = p => {
     const s = sm[p.name]||{};
     const st = p.status||'active';
-    const stMap = {active:'-',injured:'부상',resting:'휴식'};
+    const stMap = {active:'정상',injured:'부상',resting:'휴식'};
     const dot = st!=='active'?`<span class="squad-status-dot ${st}"></span>`:'';
     // 나이 계산
     let age = '-';
@@ -853,11 +853,11 @@ async function loadSquad() {
     const photoEl = p.photo_url
       ? `<img src="${p.photo_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
       : `<div style="width:36px;height:36px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--skyblue)">${p.name.slice(0,1)}</div>`;
-    const stColor = st==='injured'?'var(--lose)':st==='resting'?'var(--draw)':'var(--muted)';
-    const stBg = st==='injured'?'#ffebee':st==='resting'?'#fff8e1':'#f5f5f5';
-    const stPill = st!=='active'
-      ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${stBg};color:${stColor}">${stMap[st]}</span>`
-      : `<span style="font-size:10px;color:var(--muted)">-</span>`;
+    const stColor = st==='injured'?'var(--lose)':st==='resting'?'var(--draw)':'var(--win)';
+    const stBg = st==='injured'?'#ffebee':st==='resting'?'#fff8e1':'#e8f5e9';
+    const stPill = `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${stBg};color:${stColor}">${stMap[st]}</span>`;
+    const footMap = {right:'R', left:'L', both:'B'};
+    const foot = footMap[p.dominant_foot] || '-';
     return `<div class="squad-row" onclick="showPlayer(${p.id})" style="cursor:pointer">
       <div style="display:flex;align-items:center;justify-content:center">${photoEl}</div>
       <div>
@@ -867,11 +867,12 @@ async function loadSquad() {
       <div class="squad-col" style="font-size:13px;font-weight:700;color:var(--muted)">${p.number}</div>
       <div class="squad-col" style="font-size:12px">${age}</div>
       <div class="squad-col" style="font-size:12px">${p.height?p.height+'cm':'-'}</div>
+      <div class="squad-col" style="font-size:12px">${foot}</div>
       <div class="squad-col">${stPill}</div>
     </div>`;
   };
 
-  let html = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:center">#</div><div style="text-align:center">나이</div><div style="text-align:center">키</div><div style="text-align:center">상태</div></div>`;
+  let html = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:center">#</div><div style="text-align:center">나이</div><div style="text-align:center">키</div><div style="text-align:center">주발</div><div style="text-align:center">상태</div></div>`;
   posOrder.forEach(pos=>{
     if(!groups[pos].length) return;
     html += `<div class="squad-group-title">${posLabel[pos]}</div>${groups[pos].map(row).join('')}`;
