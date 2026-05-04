@@ -231,12 +231,12 @@
             <div class="team-sub">창단 2006 · 안산시</div>
           </div>
           <!-- @ch.attack4905 -->
-          <button onclick="openYoutube()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:7px 12px;cursor:pointer;font-family:inherit;flex-shrink:0">
+          <a href="https://www.youtube.com/@ch.attack4905" target="_blank" rel="noopener" onclick="mobileYoutube(event)" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:7px 12px;cursor:pointer;text-decoration:none;flex-shrink:0">
             <span style="width:24px;height:24px;background:#FF0000;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
             </span>
             <span style="color:#fff;font-size:11px;font-weight:600">@ch.attack4905</span>
-          </button>
+          </a>
         </div>
       </div>
       <div class="loading" id="ov-loading"><div class="spinner"></div>불러오는 중...</div>
@@ -898,15 +898,14 @@ function switchTab(tab, btn) {
 }
 
 /* ── 유튜브 앱 열기 ── */
-function openYoutube() {
-  const webUrl = 'https://www.youtube.com/@ch.attack4905';
+function mobileYoutube(e) {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if (isMobile) {
+    e.preventDefault();
     window.location = 'youtube://www.youtube.com/@ch.attack4905';
-    setTimeout(() => { window.location.href = webUrl; }, 1500);
-  } else {
-    window.location.href = webUrl;
+    setTimeout(() => { window.location.href = 'https://www.youtube.com/@ch.attack4905'; }, 1500);
   }
+  // PC는 기본 a 태그 동작 (새 탭으로 열림)
 }
 
 /* ── 브라우저 뒤로가기 처리 ── */
