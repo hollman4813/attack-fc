@@ -945,7 +945,7 @@ async function loadTeamStats() {
   // 경기장별 통계
   const groundMap = {};
   matches.forEach(m => {
-    const g = m.grounds?.name || m.ground || '미정';
+    const g = m.grounds?.name || m.ground || '미정'; // grounds.name 우선
     if (!groundMap[g]) groundMap[g] = {games:0,wins:0,draws:0,losses:0,goals:0,concede:0};
     groundMap[g].games++;
     if (m.result==='Win') groundMap[g].wins++;
@@ -1176,15 +1176,19 @@ document.addEventListener('touchend', e => {
 window.addEventListener('popstate', (e) => {
   const state = e.state;
   if (!state || state.page === 'home') {
-    // 메인 화면
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    ['home','match-detail','player-detail','admin-page'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.classList.remove('active');
+    });
     document.getElementById('home').classList.add('active');
     document.getElementById('team-tab-bar').style.display = 'flex';
     return;
   }
   if (state.page === 'tab') {
-    // 탭 전환 (뒤로가기)
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    ['home','match-detail','player-detail','admin-page'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.classList.remove('active');
+    });
     document.getElementById('home').classList.add('active');
     document.getElementById('team-tab-bar').style.display = 'flex';
     const tabs = document.querySelectorAll('.team-tab');
@@ -1245,7 +1249,10 @@ function toggleAdmin() {
 
 async function showAdminPage() {
   history.pushState({ page: 'admin' }, '');
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  ['home','match-detail','player-detail','admin-page'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
   document.getElementById('admin-page').classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'none';
   await loadAdminData();
@@ -1590,14 +1597,16 @@ async function updatePlayer() {
 
 function exitAdmin() {
   isAdmin = false;
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
+  ['home','match-detail','player-detail','admin-page'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
   document.querySelectorAll('.team-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('home').classList.add('active');
-  document.getElementById('tab-overview').classList.add('active');
   document.querySelectorAll('.team-tab')[0].classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'flex';
-  // 개요 새로고침
+  const slides = document.getElementById('tab-slides');
+  if (slides) slides.style.transform = 'translateX(0)';
   loaded['overview'] = false;
   loadOverview();
 }
@@ -1608,7 +1617,10 @@ async function showPlayer(playerId) {
   window._prevTab = document.querySelector('.tab-section.active')?.id || 'tab-overview';
   window._prevTabBtn = document.querySelector('.team-tab.active');
   history.pushState({ page: 'player', id: playerId }, '');
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  ['home','match-detail','player-detail','admin-page'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
   document.getElementById('player-detail').classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'none';
   document.getElementById('player-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
@@ -1791,7 +1803,10 @@ async function showMatch(matchId) {
   window._prevTab = document.querySelector('.tab-section.active')?.id || 'tab-matches';
   window._prevTabBtn = document.querySelector('.team-tab.active');
   history.pushState({ page: 'match', id: matchId }, '');
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  ['home','match-detail','player-detail','admin-page'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
   document.getElementById('match-detail').classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'none';
   document.getElementById('match-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
@@ -2026,40 +2041,44 @@ async function showMatch(matchId) {
 }
 
 function backToMatches() {
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
+  ['home','match-detail','player-detail','admin-page'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
   document.querySelectorAll('.team-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('home').classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'flex';
-  const prev = window._prevSection || 'home';
   const prevTab = window._prevTab || 'tab-matches';
-  document.getElementById(prev).classList.add('active');
-  const tabEl = document.getElementById(prevTab);
-  if (tabEl) tabEl.classList.add('active');
+  const tabName = prevTab.replace('tab-', '');
+  const idx = TAB_ORDER.indexOf(tabName);
   if (window._prevTabBtn) window._prevTabBtn.classList.add('active');
-  else document.querySelectorAll('.team-tab')[1].classList.add('active');
+  else if (document.querySelectorAll('.team-tab')[idx]) document.querySelectorAll('.team-tab')[idx].classList.add('active');
+  const slides = document.getElementById('tab-slides');
+  if (slides && idx >= 0) slides.style.transform = `translateX(-${idx * 100}%)`;
 }
 
 function backFromPlayer() {
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
+  ['home','match-detail','player-detail','admin-page'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
   document.querySelectorAll('.team-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('home').classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'flex';
-  const prev = window._prevSection || 'home';
   const prevTab = window._prevTab || 'tab-overview';
-  document.getElementById(prev).classList.add('active');
-  const tabEl = document.getElementById(prevTab);
-  if (tabEl) tabEl.classList.add('active');
-  if (window._prevTabBtn) window._prevTabBtn.classList.add('active');
-  else document.querySelectorAll('.team-tab')[0].classList.add('active');
-
-  // 이전 탭 캐시 초기화 → 다시 로드
   const tabName = prevTab.replace('tab-', '');
-  loaded[tabName] = false;
+  const idx = TAB_ORDER.indexOf(tabName);
+  if (window._prevTabBtn) window._prevTabBtn.classList.add('active');
+  else if (document.querySelectorAll('.team-tab')[idx]) document.querySelectorAll('.team-tab')[idx].classList.add('active');
+  const slides = document.getElementById('tab-slides');
+  if (slides && idx >= 0) slides.style.transform = `translateX(-${idx * 100}%)`;
+  // 캐시 초기화
   allStats = [];
-  if (tabName === 'overview') { loaded['overview'] = false; loadOverview(); }
-  else if (tabName === 'matches') loadMatches();
-  else if (tabName === 'scorers') loadScorers();
-  else if (tabName === 'squad') loadSquad();
+  loaded[tabName] = false;
+  if (tabName==='overview') loadOverview();
+  else if (tabName==='matches') loadMatches();
+  else if (tabName==='scorers') loadScorers();
+  else if (tabName==='squad') loadSquad();
 }
 
 function backToSquad() {
