@@ -1725,11 +1725,12 @@ async function showMatch(matchId) {
   document.getElementById('team-tab-bar').style.display = 'none';
   document.getElementById('match-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
 
-  let matches = [], stats = [];
+  let matches = [], stats = [], allMatches = [];
   try {
-    [matches, stats] = await Promise.all([
-      api(`matches?select=*&id=eq.${matchId}`),
-      api(`match_stats?select=*,players(name,number,photo_url,position)&match_id=eq.${matchId}&order=players(name).asc`)
+    [matches, stats, allMatches] = await Promise.all([
+      api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&id=eq.${matchId}`),
+      api(`match_stats?select=*,players(name,number,photo_url,position)&match_id=eq.${matchId}&order=players(name).asc`),
+      api(`matches?select=*,opponents(name)&status=eq.finished&order=match_date.desc`)
     ]);
   } catch(e) {
     console.error('경기 상세 로드 실패:', e);
@@ -1738,12 +1739,22 @@ async function showMatch(matchId) {
   const m = matches[0];
   if (!m) return;
 
+  const isUpcoming = m.status === 'upcoming';
+  const oppName = m.opponents?.name || m.opponent || '';
   const d = new Date(m.match_date);
   const dateStr = `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}`;
   const rc = m.result==='Win'?'win':m.result==='Lose'?'lose':'draw';
   const rlKo = m.result==='Win'?'승':m.result==='Lose'?'패':'무';
   const rcColor = rc==='win'?'#2e7d32':rc==='lose'?'#c62828':'#616161';
   const rcBg = rc==='win'?'#e8f5e9':rc==='lose'?'#ffebee':'#f5f5f5';
+
+  // 역대 전적 계산
+  const h2h = allMatches.filter(x=>(x.opponents?.name||x.opponent)===oppName && x.id!==parseInt(matchId));
+  const h2hWins = h2h.filter(x=>x.result==='Win').length;
+  const h2hDraws = h2h.filter(x=>x.result==='Draw').length;
+  const h2hLoses = h2h.filter(x=>x.result==='Lose').length;
+  const h2hGoals = h2h.reduce((s,x)=>s+(x.our_score||0),0);
+  const h2hConcede = h2h.reduce((s,x)=>s+(x.opponent_score||0),0);
 
   // 득점자
   const scorers = stats.filter(s=>s.goals>0).sort((a,b)=>b.goals-a.goals);
