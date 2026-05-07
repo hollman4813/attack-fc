@@ -240,11 +240,8 @@
 <main>
   <div class="section active" id="home">
 
-    <div class="tab-container">
-    <div class="tab-slides" id="tab-slides">
-
     <!-- 팀 개요 -->
-    <div class="tab-slide tab-section active" id="tab-overview">
+    <div class="tab-section active" id="tab-overview">
       <div class="team-hero">
         <div class="hero-main">
           <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC">
@@ -341,7 +338,7 @@
     </div>
 
     <!-- 경기 -->
-    <div class="tab-slide tab-section" id="tab-matches">
+    <div class="tab-section" id="tab-matches">
       <div class="loading" id="matches-loading"><div class="spinner"></div>불러오는 중...</div>
       <div id="matches-content" style="display:none">
         <div id="matches-list"></div>
@@ -349,7 +346,7 @@
     </div>
 
     <!-- 플레이어 통계 - FOTMOB 스타일 -->
-    <div class="tab-slide tab-section" id="tab-scorers">
+    <div class="tab-section" id="tab-scorers">
       <div class="loading" id="scorers-loading"><div class="spinner"></div>불러오는 중...</div>
       <div id="scorers-content" style="display:none">
         <div class="tab-row content-wrap">
@@ -364,7 +361,7 @@
     </div>
 
     <!-- 스쿼드 -->
-    <div class="tab-slide tab-section" id="tab-squad">
+    <div class="tab-section" id="tab-squad">
       <div class="loading" id="squad-loading"><div class="spinner"></div>불러오는 중...</div>
       <div id="squad-content" style="display:none">
         <div class="content-wrap" style="padding-top:12px">
@@ -374,7 +371,7 @@
     </div>
 
     <!-- 팀 통계 -->
-    <div class="tab-slide tab-section" id="tab-teamstats">
+    <div class="tab-section" id="tab-teamstats">
       <div class="loading" id="teamstats-loading"><div class="spinner"></div>불러오는 중...</div>
       <div id="teamstats-content" style="display:none;padding:0 12px 16px"></div>
     </div>
@@ -1116,11 +1113,6 @@ function switchTab(tab, btn) {
   btn.classList.add('active');
   document.getElementById(`tab-${tab}`).classList.add('active');
 
-  // 슬라이드 위치
-  const idx = TAB_ORDER.indexOf(tab);
-  const slides = document.getElementById('tab-slides');
-  if (slides) slides.style.transform = `translateX(-${idx * 100}%)`;
-
   // 탭 전환 history
   history.pushState({ page: 'tab', tab }, '');
 
@@ -1143,34 +1135,6 @@ function mobileYoutube(e) {
   }
   // PC는 기본 a 태그 동작 (새 탭으로 열림)
 }
-
-/* ── 탭 스와이프 제스처 ── */
-let touchStartX = 0, touchStartY = 0;
-
-document.addEventListener('touchstart', e => {
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-}, { passive: true });
-
-document.addEventListener('touchend', e => {
-  // 상세 페이지에서는 스와이프 탭 전환 비활성화
-  const detailActive = document.getElementById('match-detail').classList.contains('active') ||
-                       document.getElementById('player-detail').classList.contains('active') ||
-                       document.getElementById('admin-page').classList.contains('active');
-  if (detailActive) return;
-
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  const dy = e.changedTouches[0].clientY - touchStartY;
-  if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
-
-  const tabs = document.querySelectorAll('.team-tab');
-  const activeIdx = TAB_ORDER.indexOf(
-    document.querySelector('.tab-section.active')?.id.replace('tab-','') || 'overview'
-  );
-  let nextIdx = dx < 0 ? activeIdx + 1 : activeIdx - 1;
-  nextIdx = Math.max(0, Math.min(TAB_ORDER.length - 1, nextIdx));
-  if (nextIdx !== activeIdx && tabs[nextIdx]) switchTab(TAB_ORDER[nextIdx], tabs[nextIdx]);
-}, { passive: true });
 
 /* ── 브라우저 뒤로가기 처리 ── */
 window.addEventListener('popstate', (e) => {
@@ -1198,8 +1162,7 @@ window.addEventListener('popstate', (e) => {
       document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
       tabs[idx].classList.add('active');
       document.getElementById(`tab-${state.tab}`).classList.add('active');
-      const slides = document.getElementById('tab-slides');
-      if (slides) slides.style.transform = `translateX(-${idx * 100}%)`;
+
     }
   } else if (state.page === 'player') {
     backFromPlayer();
@@ -1605,8 +1568,6 @@ function exitAdmin() {
   document.getElementById('home').classList.add('active');
   document.querySelectorAll('.team-tab')[0].classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'flex';
-  const slides = document.getElementById('tab-slides');
-  if (slides) slides.style.transform = 'translateX(0)';
   loaded['overview'] = false;
   loadOverview();
 }
@@ -2053,8 +2014,6 @@ function backToMatches() {
   const idx = TAB_ORDER.indexOf(tabName);
   if (window._prevTabBtn) window._prevTabBtn.classList.add('active');
   else if (document.querySelectorAll('.team-tab')[idx]) document.querySelectorAll('.team-tab')[idx].classList.add('active');
-  const slides = document.getElementById('tab-slides');
-  if (slides && idx >= 0) slides.style.transform = `translateX(-${idx * 100}%)`;
 }
 
 function backFromPlayer() {
@@ -2070,8 +2029,6 @@ function backFromPlayer() {
   const idx = TAB_ORDER.indexOf(tabName);
   if (window._prevTabBtn) window._prevTabBtn.classList.add('active');
   else if (document.querySelectorAll('.team-tab')[idx]) document.querySelectorAll('.team-tab')[idx].classList.add('active');
-  const slides = document.getElementById('tab-slides');
-  if (slides && idx >= 0) slides.style.transform = `translateX(-${idx * 100}%)`;
   // 캐시 초기화
   allStats = [];
   loaded[tabName] = false;
