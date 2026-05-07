@@ -201,6 +201,18 @@
   /* 관리자 모드 활성화 헤더 버튼 */
   #admin-btn.active { background:var(--skyblue); color:#fff; border-color:var(--skyblue); }
 
+  /* 아이폰 사파리 date input 스타일 fix */
+  input[type="date"], input[type="time"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background:#fff;
+    color:#222831;
+    min-height: 38px;
+  }
+  input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+  }
+
   .loading { display:flex; flex-direction:column; align-items:center; padding:60px 0; color:var(--muted); font-size:13px; gap:12px; }
   .spinner { width:26px; height:26px; border:2px solid var(--border); border-top-color:var(--skyblue); border-radius:50%; animation:spin 0.7s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
@@ -215,6 +227,7 @@
   <button class="team-tab" onclick="switchTab('matches',this)">경기</button>
   <button class="team-tab" onclick="switchTab('scorers',this)">플레이어 통계</button>
   <button class="team-tab" onclick="switchTab('squad',this)">스쿼드</button>
+  <button class="team-tab" onclick="switchTab('teamstats',this)">팀 통계</button>
   <button class="team-tab" onclick="openAdminTab(this)">🔒</button>
 </div>
 
@@ -601,8 +614,8 @@ async function loadOverview() {
   const [summary, stats, matches, upcoming] = await Promise.all([
     api('view_season_summary?select=*'),
     api('view_season_stats?select=*'),
-    api('matches?select=*&status=eq.finished&order=match_date.desc&limit=7'),
-    api('matches?select=*&status=eq.upcoming&order=match_date.asc&limit=1')
+    api('matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.finished&order=match_date.desc&limit=7'),
+    api('matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.upcoming&order=match_date.asc&limit=1')
   ]);
   allStats = stats;
   const s = summary[0] || {};
@@ -625,10 +638,18 @@ async function loadOverview() {
         </div>
         <div class="next-team">
           <div class="next-team-emblem">⚽</div>
-          <div class="next-team-name">${u.opponent}</div>
+          <div class="next-team-name">${u.opponents?.name || u.opponent}</div>
         </div>
       </div>
-      <div class="next-match-ground">📍 ${u.ground||'미정'}</div>`;
+      <div class="next-match-ground">📍 ${u.grounds?.name || u.ground||'미정'}</div>
+      ${u.grounds?.lat && u.grounds?.lng ? `
+      <div style="height:160px;overflow:hidden">
+        <iframe
+          src="https://www.google.com/maps?q=${u.grounds.lat},${u.grounds.lng}&z=16&output=embed"
+          width="100%" height="160" style="border:0;display:block" loading="lazy">
+        </iframe>
+      </div>` : ''}
+    `
     document.getElementById('next-match-wrap').style.display = 'block';
   }
 
@@ -728,8 +749,8 @@ async function loadMatches() {
       html += `<div class="fixture-card" onclick="showMatch(${m.id})" style="cursor:pointer">
         <div class="fixture-result-badge ${rc}">${rl}</div>
         <div class="fixture-info">
-          <div class="fixture-teams"><span class="fixture-team-name">ATTACK F.C.</span><span class="fixture-vs">vs</span><span class="fixture-team-name">${m.opponent}</span></div>
-          <div class="fixture-ground">📅 ${d.getMonth()+1}. ${d.getDate()} · 📍 ${m.ground||'미정'}</div>
+          <div class="fixture-teams"><span class="fixture-team-name">ATTACK F.C.</span><span class="fixture-vs">vs</span><span class="fixture-team-name">${m.opponents?.name||m.opponent}</span></div>
+          <div class="fixture-ground">📅 ${d.getMonth()+1}. ${d.getDate()} · 📍 ${m.grounds?.name||m.ground||'미정'}</div>
         </div>
         <div class="fixture-score ${rc}">${m.our_score} : ${m.opponent_score}</div>
       </div>`;
@@ -901,6 +922,184 @@ async function loadSquad() {
 }
 
 /* ── 탭 전환 ── */
+/* ── 팀 통계 ── */
+async function loadTeamStats() {
+  const matches = await api('matches?select=*&status=eq.finished&order=match_date.asc');
+
+  // 기본 계산
+  const total = matches.length;
+  const wins = matches.filter(m=>m.result==='Win');
+  const draws = matches.filter(m=>m.result==='Draw');
+  const losses = matches.filter(m=>m.result==='Lose');
+  const totalGoals = matches.reduce((s,m)=>s+(m.our_score||0),0);
+  const totalConcede = matches.reduce((s,m)=>s+(m.opponent_score||0),0);
+
+  // 경기장별 통계
+  const groundMap = {};
+  matches.forEach(m => {
+    const g = m.grounds?.name || m.ground || '미정';
+    if (!groundMap[g]) groundMap[g] = {games:0,wins:0,draws:0,losses:0,goals:0,concede:0};
+    groundMap[g].games++;
+    if (m.result==='Win') groundMap[g].wins++;
+    else if (m.result==='Draw') groundMap[g].draws++;
+    else groundMap[g].losses++;
+    groundMap[g].goals += m.our_score||0;
+    groundMap[g].concede += m.opponent_score||0;
+  });
+  const grounds = Object.entries(groundMap).sort((a,b)=>b[1].games-a[1].games);
+
+  // 상대팀별 통계
+  const oppMap = {};
+  matches.forEach(m => {
+    const o = m.opponents?.name || m.opponent;
+    if (!oppMap[o]) oppMap[o] = {games:0,wins:0,draws:0,losses:0,goals:0,concede:0};
+    oppMap[o].games++;
+    if (m.result==='Win') oppMap[o].wins++;
+    else if (m.result==='Draw') oppMap[o].draws++;
+    else oppMap[o].losses++;
+    oppMap[o].goals += m.our_score||0;
+    oppMap[o].concede += m.opponent_score||0;
+  });
+  const opps = Object.entries(oppMap).sort((a,b)=>b[1].games-a[1].games);
+
+  // 월별 통계
+  const monthMap = {};
+  matches.forEach(m => {
+    const d = new Date(m.match_date);
+    const key = `${d.getFullYear()}년 ${d.getMonth()+1}월`;
+    if (!monthMap[key]) monthMap[key] = {games:0,wins:0,draws:0,losses:0,goals:0,concede:0};
+    monthMap[key].games++;
+    if (m.result==='Win') monthMap[key].wins++;
+    else if (m.result==='Draw') monthMap[key].draws++;
+    else monthMap[key].losses++;
+    monthMap[key].goals += m.our_score||0;
+    monthMap[key].concede += m.opponent_score||0;
+  });
+
+  // 최다 득점 경기
+  const topScoring = [...matches].sort((a,b)=>(b.our_score||0)-(a.our_score||0)).slice(0,3);
+  // 최다 실점 경기
+  const topConcede = [...matches].sort((a,b)=>(b.opponent_score||0)-(a.opponent_score||0)).slice(0,3);
+  // 최다 득점차 승리
+  const bigWins = wins.sort((a,b)=>((b.our_score-b.opponent_score)|0)-((a.our_score-a.opponent_score)|0)).slice(0,3);
+  // 연속 승리 계산
+  let maxStreak = 0, curStreak = 0, curType = '';
+  let maxWinStreak = 0, curWinStreak = 0;
+  let maxLoseStreak = 0, curLoseStreak = 0;
+  matches.forEach(m => {
+    if (m.result==='Win') { curWinStreak++; curLoseStreak=0; }
+    else { curLoseStreak++; if(m.result==='Lose') curWinStreak=0; }
+    maxWinStreak = Math.max(maxWinStreak, curWinStreak);
+    maxLoseStreak = Math.max(maxLoseStreak, curLoseStreak);
+  });
+
+  const wdlBadge = (w,d,l) => `<span style="color:#2e7d32;font-weight:700">${w}승</span> <span style="color:#757575">${d}무</span> <span style="color:#c62828">${l}패</span>`;
+  const resultDot = r => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${r==='Win'?'#2e7d32':r==='Lose'?'#c62828':'#9e9e9e'};margin-right:2px"></span>`;
+
+  const sectionTitle = (icon, title) => `<div style="font-size:13px;font-weight:700;color:var(--text);margin:20px 0 10px;display:flex;align-items:center;gap:6px">${icon} ${title}</div>`;
+
+  const card = (inner) => `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:4px">${inner}</div>`;
+
+  const statRow = (label, value, sub='', color='var(--text)') => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border)">
+      <div style="font-size:13px;color:var(--text)">${label}</div>
+      <div style="text-align:right">
+        <div style="font-size:15px;font-weight:700;color:${color}">${value}</div>
+        ${sub?`<div style="font-size:11px;color:var(--muted);margin-top:1px">${sub}</div>`:''}
+      </div>
+    </div>`;
+
+  let html = '';
+
+  // 🏆 핵심 기록
+  html += sectionTitle('🏆', '핵심 기록');
+  html += card(`
+    <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)">
+      <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
+        <div style="font-size:28px;font-weight:800;color:#2e7d32">${maxWinStreak}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">최장 연승</div>
+      </div>
+      <div style="padding:14px;text-align:center">
+        <div style="font-size:28px;font-weight:800;color:#c62828">${maxLoseStreak}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">최장 연패</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border)">
+      <div style="padding:12px;text-align:center;border-right:1px solid var(--border)">
+        <div style="font-size:22px;font-weight:700;color:var(--skyblue)">${(totalGoals/total).toFixed(1)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당 득점</div>
+      </div>
+      <div style="padding:12px;text-align:center;border-right:1px solid var(--border)">
+        <div style="font-size:22px;font-weight:700;color:#c62828">${(totalConcede/total).toFixed(1)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당 실점</div>
+      </div>
+      <div style="padding:12px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:${totalGoals-totalConcede>=0?'#2e7d32':'#c62828'}">${totalGoals-totalConcede>=0?'+':''}${totalGoals-totalConcede}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">총 득실차</div>
+      </div>
+    </div>
+    <div style="padding:0">
+      ${statRow('🔥 최다 득점 경기', `${topScoring[0]?.our_score}:${topScoring[0]?.opponent_score}`, `vs ${topScoring[0]?.opponent}`, 'var(--skyblue)')}
+      ${statRow('😰 최다 실점 경기', `${topConcede[0]?.our_score}:${topConcede[0]?.opponent_score}`, `vs ${topConcede[0]?.opponent}`, '#c62828')}
+      ${statRow('💪 최대 점수차 승리', `${bigWins[0]?.our_score}:${bigWins[0]?.opponent_score}`, `vs ${bigWins[0]?.opponent}`, '#2e7d32')}
+      ${statRow('🤝 클린시트', `${matches.filter(m=>m.opponent_score===0).length}경기`, `전체 ${total}경기 중`, 'var(--skyblue)')}
+      ${statRow('🎯 5골 이상 경기', `${matches.filter(m=>(m.our_score||0)>=5).length}경기`, '', 'var(--skyblue)')}
+    </div>
+  `);
+
+  // 📅 월별 통계
+  html += sectionTitle('📅', '월별 통계');
+  html += card(`<div style="padding:0">
+    <div style="display:grid;grid-template-columns:1fr 60px 80px;padding:8px 16px;background:var(--bg3);font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
+      <div>월</div><div style="text-align:center">경기</div><div style="text-align:right">승/무/패</div>
+    </div>
+    ${Object.entries(monthMap).map(([month, s]) => `
+      <div style="display:grid;grid-template-columns:1fr 60px 80px;padding:11px 16px;border-top:1px solid var(--border);align-items:center">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${month}</div>
+        <div style="text-align:center;font-size:13px;color:var(--muted)">${s.games}</div>
+        <div style="text-align:right;font-size:12px">${wdlBadge(s.wins,s.draws,s.losses)}</div>
+      </div>`).join('')}
+  </div>`);
+
+  // 🏟️ 경기장별 통계
+  html += sectionTitle('🏟️', '경기장별 통계');
+  html += card(`<div style="padding:0">
+    <div style="display:grid;grid-template-columns:1fr 50px 80px;padding:8px 16px;background:var(--bg3);font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
+      <div>경기장</div><div style="text-align:center">경기</div><div style="text-align:right">승/무/패</div>
+    </div>
+    ${grounds.map(([g, s]) => `
+      <div style="display:grid;grid-template-columns:1fr 50px 80px;padding:11px 16px;border-top:1px solid var(--border);align-items:center">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${g.length>14?g.slice(0,14)+'…':g}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${s.goals}득 ${s.concede}실</div>
+        </div>
+        <div style="text-align:center;font-size:13px;color:var(--muted)">${s.games}</div>
+        <div style="text-align:right;font-size:12px">${wdlBadge(s.wins,s.draws,s.losses)}</div>
+      </div>`).join('')}
+  </div>`);
+
+  // ⚔️ 상대팀별 통계
+  html += sectionTitle('⚔️', '상대팀별 통계');
+  html += card(`<div style="padding:0">
+    <div style="display:grid;grid-template-columns:1fr 50px 80px;padding:8px 16px;background:var(--bg3);font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
+      <div>상대팀</div><div style="text-align:center">경기</div><div style="text-align:right">승/무/패</div>
+    </div>
+    ${opps.map(([o, s]) => `
+      <div style="display:grid;grid-template-columns:1fr 50px 80px;padding:11px 16px;border-top:1px solid var(--border);align-items:center">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${o}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${s.goals}득 ${s.concede}실</div>
+        </div>
+        <div style="text-align:center;font-size:13px;color:var(--muted)">${s.games}</div>
+        <div style="text-align:right;font-size:12px">${wdlBadge(s.wins,s.draws,s.losses)}</div>
+      </div>`).join('')}
+  </div>`);
+
+  document.getElementById('teamstats-content').innerHTML = html;
+  document.getElementById('teamstats-loading').style.display = 'none';
+  document.getElementById('teamstats-content').style.display = 'block';
+}
+
 function switchTab(tab, btn) {
   document.querySelectorAll('.team-tab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
@@ -911,6 +1110,7 @@ function switchTab(tab, btn) {
     if (tab==='matches') loadMatches();
     if (tab==='scorers') loadScorers();
     if (tab==='squad') loadSquad();
+    if (tab==='teamstats') loadTeamStats();
   }
 }
 
@@ -1000,17 +1200,17 @@ async function loadAdminData() {
   // 결과 입력용 (upcoming)
   const matchSel = document.getElementById('a-match-select');
   matchSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
-    upcoming.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponent}</option>`).join('');
+    upcoming.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponents?.name||m.opponent}</option>`).join('');
 
   // 참석 관리용 (전체)
   const attendSel = document.getElementById('a-attend-match');
   attendSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
-    matches.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponent} ${m.status==='upcoming'?'(예정)':''}</option>`).join('');
+    matches.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponents?.name||m.opponent} ${m.status==='upcoming'?'(예정)':''}</option>`).join('');
 
   // 기록 입력용 (finished)
   const statSel = document.getElementById('a-stat-match');
   statSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
-    finished.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponent}</option>`).join('');
+    finished.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponents?.name||m.opponent}</option>`).join('');
 
   // 선수 목록 (기록용)
   const playerSel = document.getElementById('a-player-select');
@@ -1512,7 +1712,7 @@ async function showMatch(matchId) {
   try {
     [matches, stats] = await Promise.all([
       api(`matches?select=*&id=eq.${matchId}`),
-      api(`match_stats?select=*,players(name,number,photo_url,position)&match_id=eq.${matchId}`)
+      api(`match_stats?select=*,players(name,number,photo_url,position)&match_id=eq.${matchId}&order=players(name).asc`)
     ]);
   } catch(e) {
     console.error('경기 상세 로드 실패:', e);
@@ -1532,8 +1732,8 @@ async function showMatch(matchId) {
   const scorers = stats.filter(s=>s.goals>0).sort((a,b)=>b.goals-a.goals);
   // 어시스트
   const assisters = stats.filter(s=>s.assists>0).sort((a,b)=>b.assists-a.assists);
-  // MOM
-  const mom = stats.find(s=>s.is_mom);
+  // MOM (공동 MOM 지원)
+  const moms = stats.filter(s=>s.is_mom);
 
   const playerRow = (s, statKey, statLabel) => {
     const p = s.players||{};
@@ -1553,12 +1753,12 @@ async function showMatch(matchId) {
     </div>`;
   };
 
-  const momHtml = mom ? (() => {
+  const momHtml = moms.length > 0 ? moms.map(mom => {
     const p = mom.players||{};
     const photo = p.photo_url
       ? `<img src="${p.photo_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
       : `<div style="width:36px;height:36px;border-radius:50%;background:#fff8e1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#f5a623">${(p.name||'?').slice(0,1)}</div>`;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px">
+    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border)">
       ${photo}
       <div style="flex:1">
         <div style="font-size:14px;font-weight:600;color:var(--text)">${p.name||'-'}</div>
@@ -1566,14 +1766,14 @@ async function showMatch(matchId) {
       </div>
       <div style="font-size:20px">⭐</div>
     </div>`;
-  })() : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">없음</div>';
+  }).join('') : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">없음</div>';
 
   document.getElementById('match-detail-content').innerHTML = `
     <!-- 헤더 -->
     <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:20px 16px">
       <button onclick="backToMatches()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>
       <div style="text-align:center">
-        <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:12px">${dateStr} · ${m.ground||'미정'}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:12px">${dateStr} · ${m.grounds?.name||m.ground||'미정'}</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:16px">
           <div style="flex:1;text-align:right">
             <div style="font-size:13px;font-weight:600;color:#fff">ATTACK F.C.</div>
@@ -1584,7 +1784,7 @@ async function showMatch(matchId) {
             <span style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:10px;background:${rcBg};color:${rcColor};margin-top:6px;display:inline-block">${rlKo}</span>
           </div>
           <div style="flex:1;text-align:left">
-            <div style="font-size:13px;font-weight:600;color:#fff">${m.opponent}</div>
+            <div style="font-size:13px;font-weight:600;color:#fff">${m.opponents?.name||m.opponent}</div>
             <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;margin-top:6px">⚽</div>
           </div>
         </div>
@@ -1613,6 +1813,30 @@ async function showMatch(matchId) {
         <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">MOM</div>
         <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
           ${momHtml}
+        </div>
+      </div>
+
+      <!-- 참석 인원 -->
+      <div style="margin-top:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">
+          참석 인원 <span style="color:var(--skyblue);font-weight:700">${stats.filter(s=>s.attended).length}명</span>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          ${stats.filter(s=>s.attended).length > 0
+            ? `<div style="display:flex;flex-wrap:wrap;gap:8px;padding:14px">
+                ${stats.filter(s=>s.attended).map(s=>{
+                  const p = s.players||{};
+                  const photo = p.photo_url
+                    ? `<img src="${p.photo_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
+                    : `<div style="width:36px;height:36px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--skyblue)">${(p.name||'?').slice(0,1)}</div>`;
+                  return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:48px">
+                    ${photo}
+                    <div style="font-size:10px;color:var(--text);text-align:center;font-weight:500;line-height:1.2;word-break:keep-all">${p.name||'-'}</div>
+                  </div>`;
+                }).join('')}
+              </div>`
+            : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">참석 정보 없음</div>'
+          }
         </div>
       </div>
     </div>
