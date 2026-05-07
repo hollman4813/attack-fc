@@ -213,6 +213,11 @@
     text-align: left;
   }
 
+  /* 탭 슬라이드 */
+  .tab-container { overflow:hidden; position:relative; }
+  .tab-slides { display:flex; transition:transform 0.3s ease; will-change:transform; }
+  .tab-slide { flex:0 0 100%; width:100%; min-height:200px; }
+
   .loading { display:flex; flex-direction:column; align-items:center; padding:60px 0; color:var(--muted); font-size:13px; gap:12px; }
   .spinner { width:26px; height:26px; border:2px solid var(--border); border-top-color:var(--skyblue); border-radius:50%; animation:spin 0.7s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
@@ -234,8 +239,11 @@
 <main>
   <div class="section active" id="home">
 
+    <div class="tab-container">
+    <div class="tab-slides" id="tab-slides">
+
     <!-- 팀 개요 -->
-    <div class="tab-section active" id="tab-overview">
+    <div class="tab-slide tab-section active" id="tab-overview">
       <div class="team-hero">
         <div class="hero-main">
           <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC">
@@ -332,7 +340,7 @@
     </div>
 
     <!-- 경기 -->
-    <div class="tab-section" id="tab-matches">
+    <div class="tab-slide tab-section" id="tab-matches">
       <div class="loading" id="matches-loading"><div class="spinner"></div>불러오는 중...</div>
       <div id="matches-content" style="display:none">
         <div id="matches-list"></div>
@@ -340,7 +348,7 @@
     </div>
 
     <!-- 플레이어 통계 - FOTMOB 스타일 -->
-    <div class="tab-section" id="tab-scorers">
+    <div class="tab-slide tab-section" id="tab-scorers">
       <div class="loading" id="scorers-loading"><div class="spinner"></div>불러오는 중...</div>
       <div id="scorers-content" style="display:none">
         <div class="tab-row content-wrap">
@@ -355,7 +363,7 @@
     </div>
 
     <!-- 스쿼드 -->
-    <div class="tab-section" id="tab-squad">
+    <div class="tab-slide tab-section" id="tab-squad">
       <div class="loading" id="squad-loading"><div class="spinner"></div>불러오는 중...</div>
       <div id="squad-content" style="display:none">
         <div class="content-wrap" style="padding-top:12px">
@@ -1093,11 +1101,22 @@ async function loadTeamStats() {
   document.getElementById('teamstats-content').style.display = 'block';
 }
 
+const TAB_ORDER = ['overview','matches','scorers','squad','teamstats'];
+
 function switchTab(tab, btn) {
   document.querySelectorAll('.team-tab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById(`tab-${tab}`).classList.add('active');
+
+  // 슬라이드 위치
+  const idx = TAB_ORDER.indexOf(tab);
+  const slides = document.getElementById('tab-slides');
+  if (slides) slides.style.transform = `translateX(-${idx * 100}%)`;
+
+  // 탭 전환 history
+  history.pushState({ page: 'tab', tab }, '');
+
   if (!loaded[tab]) {
     loaded[tab] = true;
     if (tab==='matches') loadMatches();
@@ -1118,15 +1137,60 @@ function mobileYoutube(e) {
   // PC는 기본 a 태그 동작 (새 탭으로 열림)
 }
 
+/* ── 탭 스와이프 제스처 ── */
+let touchStartX = 0, touchStartY = 0;
+
+document.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+  // 상세 페이지에서는 스와이프 탭 전환 비활성화
+  const detailActive = document.getElementById('match-detail').classList.contains('active') ||
+                       document.getElementById('player-detail').classList.contains('active') ||
+                       document.getElementById('admin-page').classList.contains('active');
+  if (detailActive) return;
+
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
+
+  const tabs = document.querySelectorAll('.team-tab');
+  const activeIdx = TAB_ORDER.indexOf(
+    document.querySelector('.tab-section.active')?.id.replace('tab-','') || 'overview'
+  );
+  let nextIdx = dx < 0 ? activeIdx + 1 : activeIdx - 1;
+  nextIdx = Math.max(0, Math.min(TAB_ORDER.length - 1, nextIdx));
+  if (nextIdx !== activeIdx && tabs[nextIdx]) switchTab(TAB_ORDER[nextIdx], tabs[nextIdx]);
+}, { passive: true });
+
 /* ── 브라우저 뒤로가기 처리 ── */
 window.addEventListener('popstate', (e) => {
   const state = e.state;
-  if (!state) {
-    // 초기 상태로 복귀
-    backFromPlayer();
+  if (!state || state.page === 'home') {
+    // 메인 화면
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('home').classList.add('active');
+    document.getElementById('team-tab-bar').style.display = 'flex';
     return;
   }
-  if (state.page === 'player') {
+  if (state.page === 'tab') {
+    // 탭 전환 (뒤로가기)
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('home').classList.add('active');
+    document.getElementById('team-tab-bar').style.display = 'flex';
+    const tabs = document.querySelectorAll('.team-tab');
+    const idx = TAB_ORDER.indexOf(state.tab);
+    if (idx >= 0 && tabs[idx]) {
+      document.querySelectorAll('.team-tab').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
+      tabs[idx].classList.add('active');
+      document.getElementById(`tab-${state.tab}`).classList.add('active');
+      const slides = document.getElementById('tab-slides');
+      if (slides) slides.style.transform = `translateX(-${idx * 100}%)`;
+    }
+  } else if (state.page === 'player') {
     backFromPlayer();
   } else if (state.page === 'match') {
     backToMatches();
