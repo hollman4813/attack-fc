@@ -1785,8 +1785,28 @@ async function showMatch(matchId) {
     </div>`;
   }).join('') : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">없음</div>';
 
-  document.getElementById('match-detail-content').innerHTML = `
-    <!-- 헤더 -->
+  const heroHtml = isUpcoming ? `
+    <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:20px 16px">
+      <button onclick="backToMatches()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>
+      <div style="text-align:center">
+        <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:4px">예정 경기</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:12px">${dateStr}${m.match_time ? ' · ' + m.match_time : ''}</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+          <div style="flex:1;text-align:right">
+            <div style="font-size:13px;font-weight:600;color:#fff">ATTACK F.C.</div>
+            <img src="emblem_v4.png" style="width:44px;height:44px;border-radius:50%;margin-top:6px">
+          </div>
+          <div style="text-align:center;min-width:80px">
+            <div style="font-size:28px;font-weight:800;color:rgba(255,255,255,0.6)">VS</div>
+          </div>
+          <div style="flex:1;text-align:left">
+            <div style="font-size:13px;font-weight:600;color:#fff">${oppName}</div>
+            <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;margin-top:6px">⚽</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.6)">📍 ${m.grounds?.name||m.ground||'미정'}</div>
+      </div>
+    </div>` : `
     <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:20px 16px">
       <button onclick="backToMatches()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>
       <div style="text-align:center">
@@ -1801,14 +1821,60 @@ async function showMatch(matchId) {
             <span style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:10px;background:${rcBg};color:${rcColor};margin-top:6px;display:inline-block">${rlKo}</span>
           </div>
           <div style="flex:1;text-align:left">
-            <div style="font-size:13px;font-weight:600;color:#fff">${m.opponents?.name||m.opponent}</div>
+            <div style="font-size:13px;font-weight:600;color:#fff">${oppName}</div>
             <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;margin-top:6px">⚽</div>
           </div>
         </div>
       </div>
-    </div>
+    </div>`;
 
+  // 역대 전적 HTML
+  const h2hHtml = h2h.length > 0 ? `
+    <div style="margin-top:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">⚔️ ${oppName} 역대 전적</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)">
+          <div style="padding:12px;text-align:center;border-right:1px solid var(--border)">
+            <div style="font-size:22px;font-weight:800;color:#2e7d32">${h2hWins}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">승</div>
+          </div>
+          <div style="padding:12px;text-align:center;border-right:1px solid var(--border)">
+            <div style="font-size:22px;font-weight:800;color:#757575">${h2hDraws}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">무</div>
+          </div>
+          <div style="padding:12px;text-align:center">
+            <div style="font-size:22px;font-weight:800;color:#c62828">${h2hLoses}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">패</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)">
+          <div style="padding:10px;text-align:center;border-right:1px solid var(--border)">
+            <div style="font-size:16px;font-weight:700;color:var(--skyblue)">${h2hGoals}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">총 득점</div>
+          </div>
+          <div style="padding:10px;text-align:center">
+            <div style="font-size:16px;font-weight:700;color:#c62828">${h2hConcede}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">총 실점</div>
+          </div>
+        </div>
+        ${h2h.slice(0,5).map(x => {
+          const xd = new Date(x.match_date);
+          const xrc = x.result==='Win'?'#2e7d32':x.result==='Lose'?'#c62828':'#757575';
+          const xrl = x.result==='Win'?'W':x.result==='Lose'?'L':'D';
+          const xbg = x.result==='Win'?'#e8f5e9':x.result==='Lose'?'#ffebee':'#f5f5f5';
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border)">
+            <div style="font-size:12px;color:var(--muted)">${xd.getFullYear()}.${xd.getMonth()+1}.${xd.getDate()}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text)">${x.our_score} : ${x.opponent_score}</div>
+            <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${xbg};color:${xrc}">${xrl}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : '';
+
+  document.getElementById('match-detail-content').innerHTML = `
+    ${heroHtml}
     <div style="padding:0 12px 24px">
+      ${isUpcoming ? h2hHtml : ''}
       <!-- 득점 -->
       <div style="margin-top:20px">
         <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">득점</div>
@@ -1856,6 +1922,9 @@ async function showMatch(matchId) {
           }
         </div>
       </div>
+      <!-- 역대 전적 (완료 경기) -->
+      ${!isUpcoming ? h2hHtml : ''}
+
       <!-- 지도 (예정 경기만) -->
       ${m.status === 'upcoming' && m.grounds?.lat && m.grounds?.lng ? `
       <div style="margin-top:16px">
