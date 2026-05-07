@@ -40,6 +40,7 @@
   main { max-width:480px; margin:0 auto; padding:0 0 20px; }
   .section { display:none; } .section.active { display:block; }
   .tab-section { display:none; } .tab-section.active { display:block; }
+  .tab-slide.tab-section { display:block !important; } /* 슬라이드는 항상 보이게 - transform으로 제어 */
 
   /* HERO */
   .team-hero { background:linear-gradient(180deg,#1a3a6b,#1e4d8c); padding:20px 16px 16px; }
@@ -265,7 +266,7 @@
         <div class="content-wrap">
           <div id="next-match-wrap" style="display:none">
             <div class="next-match-label">다음 경기</div>
-            <div class="next-match-card" id="next-match-card"></div>
+            <div class="next-match-card" id="next-match-card" style="cursor:pointer"></div>
             <div class="divider"></div>
           </div>
           <div class="sec-header"><div class="sec-title">팀 기록</div></div>
@@ -370,6 +371,12 @@
           <div class="squad-wrap" id="squad-list"></div>
         </div>
       </div>
+    </div>
+
+    <!-- 팀 통계 -->
+    <div class="tab-slide tab-section" id="tab-teamstats">
+      <div class="loading" id="teamstats-loading"><div class="spinner"></div>불러오는 중...</div>
+      <div id="teamstats-content" style="display:none;padding:0 12px 16px"></div>
     </div>
 
   </div>
@@ -634,8 +641,8 @@ async function loadOverview() {
     const u = upcoming[0];
     const d = new Date(u.match_date);
     document.getElementById('next-match-card').innerHTML = `
-      <div class="next-match-league">📅 예정 경기</div>
-      <div class="next-match-body">
+      <div class="next-match-league" style="cursor:pointer" onclick="showMatch(${u.id})">📅 예정 경기 · 탭하여 상세보기 ›</div>
+      <div class="next-match-body" onclick="showMatch(${u.id})">
         <div class="next-team">
           <div class="next-team-emblem"><img src="emblem_v4.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover"></div>
           <div class="next-team-name">ATTACK F.C.</div>
