@@ -30,7 +30,7 @@
 
 
 
-  .team-tab-bar { background:#fff; border-bottom:1px solid var(--border); display:flex; overflow-x:auto; position:sticky; top:0; z-index:99; }
+  .team-tab-bar { background:#fff; border-bottom:1px solid var(--border); display:flex; overflow-x:auto; position:sticky; top:0; z-index:99; touch-action:pan-x; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
   .team-tab-bar::-webkit-scrollbar { display:none; }
   .team-tab { background:none; border:none; color:var(--muted); font-family:inherit; font-size:13px; font-weight:500; padding:13px 16px; cursor:pointer; white-space:nowrap; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; }
   .team-tab.active { color:var(--skyblue); border-bottom-color:var(--skyblue); font-weight:700; }
