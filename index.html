@@ -2008,7 +2008,7 @@ async function showMatch(matchId) {
             <div style="font-size:10px;color:var(--muted);margin-top:2px">총 실점</div>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 80px 50px;padding:8px 14px;background:#f8f9fb;border-top:1px solid var(--border);font-size:10px;color:var(--muted);font-weight:700">
+        <div style="display:grid;grid-template-columns:120px 1fr 44px;padding:8px 14px;background:#f8f9fb;border-top:1px solid var(--border);font-size:10px;color:var(--muted);font-weight:700">
           <div>날짜 · 장소</div><div style="text-align:center">스코어</div><div style="text-align:center">결과</div>
         </div>
         ${[...h2h].sort((a,b)=>new Date(b.match_date)-new Date(a.match_date)).slice(0,5).map(x => {
@@ -2017,10 +2017,10 @@ async function showMatch(matchId) {
           const xrl = x.result==='Win'?'W':x.result==='Lose'?'L':'D';
           const xbg = x.result==='Win'?'#e8f5e9':x.result==='Lose'?'#ffebee':'#f5f5f5';
           const xGround = x.grounds?.name || x.ground || '';
-          return `<div style="display:grid;grid-template-columns:1fr 80px 50px;align-items:center;padding:11px 14px;border-top:1px solid var(--border)">
+          return `<div style="display:grid;grid-template-columns:120px 1fr 44px;align-items:center;padding:11px 14px;border-top:1px solid var(--border)">
             <div>
-              <div style="font-size:12px;color:var(--text);font-weight:500">${xd.getFullYear()}.${xd.getMonth()+1}.${xd.getDate()}</div>
-              ${xGround ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">${xGround}</div>` : ''}
+              <div style="font-size:12px;color:var(--text);font-weight:500">${xd.getFullYear()}.${String(xd.getMonth()+1).padStart(2,'0')}.${String(xd.getDate()).padStart(2,'0')}</div>
+              ${xGround ? `<div style="font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${xGround.length>10?xGround.slice(0,10)+'…':xGround}</div>` : ''}
             </div>
             <div style="font-size:15px;font-weight:700;color:var(--text);text-align:center">${x.our_score} : ${x.opponent_score}</div>
             <div style="text-align:center"><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${xbg};color:${xrc}">${xrl}</span></div>
