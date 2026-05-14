@@ -187,9 +187,9 @@
 
   /* 스쿼드 */
   .squad-wrap { background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-  .squad-table-header { display:grid; grid-template-columns:40px 1fr 70px 36px 30px 30px 44px; gap:6px; padding:8px 14px; background:var(--bg3); font-size:10px; color:var(--muted); font-weight:700; letter-spacing:0.3px; border-bottom:1px solid var(--border); }
+  .squad-table-header { display:grid; grid-template-columns:40px 1fr 60px 32px 28px 28px 40px; gap:4px; padding:8px 14px; background:var(--bg3); font-size:10px; color:var(--muted); font-weight:700; letter-spacing:0.3px; border-bottom:1px solid var(--border); }
   .squad-group-title { font-size:11px; font-weight:700; color:var(--muted); padding:10px 14px 6px; background:#f8f9fb; border-top:1px solid var(--border); text-transform:uppercase; letter-spacing:0.5px; }
-  .squad-row { display:grid; grid-template-columns:40px 1fr 70px 36px 30px 30px 44px; gap:6px; padding:10px 14px; border-top:1px solid var(--border); align-items:center; background:#fff; }
+  .squad-row { display:grid; grid-template-columns:40px 1fr 60px 32px 28px 28px 40px; gap:4px; padding:10px 14px; border-top:1px solid var(--border); align-items:center; background:#fff; }
   .squad-row:hover { background:#f8f9fb; }
   .squad-num { font-size:13px; font-weight:700; color:var(--muted); text-align:center; }
   .squad-name { font-size:13px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:5px; }
@@ -554,25 +554,13 @@
             </select>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">생년월일</div>
-            <input id="ep-birth" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">키 (cm)</div>
-            <input id="ep-height" type="number" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
-          </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">생년월일</div>
+          <input id="ep-birth" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">전화번호</div>
-            <input id="ep-phone" type="tel" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">닉네임</div>
-            <input id="ep-nickname" type="text" placeholder="닉네임" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
-          </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">닉네임</div>
+          <input id="ep-nickname" type="text" placeholder="닉네임" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
         </div>
         <div style="margin-bottom:10px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상태</div>
@@ -938,7 +926,7 @@ async function loadSquad() {
       : `<div style="width:36px;height:36px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--skyblue)">${p.name.slice(0,1)}</div>`;
     const stColor = st==='injured'?'var(--lose)':st==='resting'?'var(--draw)':'var(--win)';
     const stBg = st==='injured'?'#ffebee':st==='resting'?'#fff8e1':'#e8f5e9';
-    const stPill = `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${stBg};color:${stColor}">${stMap[st]}</span>`;
+    const stPill = `<span style="font-size:9px;font-weight:700;padding:2px 5px;border-radius:10px;background:${stBg};color:${stColor};white-space:nowrap">${stMap[st]}</span>`;
     const footMap = {right:'R', left:'L', both:'B'};
     const foot = footMap[p.dominant_foot] || '-';
     return `<div class="squad-row" onclick="showPlayer(${p.id})" style="cursor:pointer">
@@ -1631,8 +1619,6 @@ function loadEditPlayer() {
   document.getElementById('ep-position').value = p.position || '';
   document.getElementById('ep-foot').value = p.dominant_foot || '';
   document.getElementById('ep-birth').value = p.birth_date || '';
-  document.getElementById('ep-height').value = p.height || '';
-  document.getElementById('ep-phone').value = p.phone || '';
   document.getElementById('ep-nickname').value = p.nickname || '';
   document.getElementById('ep-status').value = p.status || 'active';
 }
@@ -1645,8 +1631,6 @@ async function updatePlayer() {
     position: document.getElementById('ep-position').value || null,
     dominant_foot: document.getElementById('ep-foot').value || null,
     birth_date: document.getElementById('ep-birth').value || null,
-    height: parseInt(document.getElementById('ep-height').value) || null,
-    phone: document.getElementById('ep-phone').value.trim() || null,
     nickname: document.getElementById('ep-nickname').value.trim() || null,
     status: document.getElementById('ep-status').value
   };
