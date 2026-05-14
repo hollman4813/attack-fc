@@ -437,6 +437,36 @@
         <button onclick="saveResult()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">결과 저장</button>
       </div>
 
+      <!-- 경기 정보 수정 -->
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 정보 수정</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
+          <select id="em-match-select" onchange="loadEditMatch()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">경기를 선택하세요</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">날짜</div>
+            <input id="em-date" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">시간</div>
+            <input id="em-time" type="time" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상대팀</div>
+          <input id="em-opponent" type="text" placeholder="상대팀 이름" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+        </div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기장</div>
+          <input id="em-ground" type="text" placeholder="경기장 이름" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+        </div>
+        <button onclick="updateMatch()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">경기 정보 저장</button>
+      </div>
+
       <!-- 선수 등록 -->
       <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">선수 등록</div>
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
@@ -620,6 +650,7 @@ const api = async path => {
 };
 
 let allStats = [];
+let allAdminMatches = [];
 const loaded = {};
 
 /* ── 팀 개요 ── */
@@ -1227,6 +1258,7 @@ async function loadAdminData() {
     api('players?select=*&order=number.asc')
   ]);
   allPlayers = players;
+  allAdminMatches = matches;
 
   const upcoming = matches.filter(m=>m.status==='upcoming');
   const finished = matches.filter(m=>m.status==='finished');
@@ -1239,6 +1271,11 @@ async function loadAdminData() {
   // 참석 관리용 (전체)
   const attendSel = document.getElementById('a-attend-match');
   attendSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
+    matches.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponents?.name||m.opponent} ${m.status==='upcoming'?'(예정)':''}</option>`).join('');
+
+  // 경기 수정용 (전체)
+  const emSel = document.getElementById('em-match-select');
+  emSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
     matches.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponents?.name||m.opponent} ${m.status==='upcoming'?'(예정)':''}</option>`).join('');
 
   // 기록 입력용 (finished)
@@ -1481,6 +1518,65 @@ async function loadExistingStat() {
     document.getElementById('a-mom').value = 'false';
     document.getElementById('a-stat-hint').textContent = '신규 기록입니다';
     document.getElementById('a-stat-hint').style.color = 'var(--muted)';
+  }
+}
+
+function loadEditMatch() {
+  const id = parseInt(document.getElementById('em-match-select').value);
+  const m = allAdminMatches?.find(x=>x.id===id);
+  if (!m) return;
+  document.getElementById('em-date').value = m.match_date || '';
+  document.getElementById('em-time').value = m.match_time || '';
+  document.getElementById('em-opponent').value = m.opponents?.name || m.opponent || '';
+  document.getElementById('em-ground').value = m.grounds?.name || m.ground || '';
+}
+
+async function updateMatch() {
+  const id = document.getElementById('em-match-select').value;
+  if (!id) { alert('경기를 선택해주세요!'); return; }
+
+  const opponent = document.getElementById('em-opponent').value.trim();
+  const date = document.getElementById('em-date').value;
+  if (!opponent || !date) { alert('날짜와 상대팀은 필수입니다!'); return; }
+
+  // opponents 테이블에 없으면 추가
+  let opponentId = null;
+  const existOpp = await api(`opponents?select=id&name=eq.${encodeURIComponent(opponent)}`);
+  if (existOpp.length > 0) {
+    opponentId = existOpp[0].id;
+  } else {
+    const res = await fetch(`${SUPA_URL}/rest/v1/opponents`, {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ name: opponent })
+    });
+    const data = await res.json();
+    opponentId = data[0]?.id;
+  }
+
+  const body = {
+    match_date: date,
+    match_time: document.getElementById('em-time').value || null,
+    opponent,
+    opponent_id: opponentId,
+    ground: document.getElementById('em-ground').value.trim() || null,
+  };
+
+  const res = await fetch(`${SUPA_URL}/rest/v1/matches?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify(body)
+  });
+
+  if (res.ok) {
+    alert('경기 정보 저장 완료! ✅');
+    document.getElementById('em-match-select').value = '';
+    ['em-date','em-time','em-opponent','em-ground'].forEach(id=>document.getElementById(id).value='');
+    await loadAdminData();
+    loaded['matches'] = false;
+    loaded['overview'] = false;
+  } else {
+    alert('오류가 발생했어요.');
   }
 }
 
