@@ -2020,7 +2020,7 @@ async function showMatch(matchId) {
           return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;padding:11px 14px;border-top:1px solid var(--border)">
             <div>
               <div style="font-size:12px;color:var(--text);font-weight:500">${xd.getFullYear()}.${String(xd.getMonth()+1).padStart(2,'0')}.${String(xd.getDate()).padStart(2,'0')}</div>
-              ${xGround ? `<div style="font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${xGround.length>10?xGround.slice(0,10)+'…':xGround}</div>` : ''}
+              ${xGround ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">${xGround}</div>` : ''}
             </div>
             <div style="font-size:15px;font-weight:700;color:var(--text);text-align:center">${x.our_score} : ${x.opponent_score}</div>
             <div style="text-align:center"><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${xbg};color:${xrc}">${xrl}</span></div>
