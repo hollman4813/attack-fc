@@ -187,9 +187,9 @@
 
   /* 스쿼드 */
   .squad-wrap { background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-  .squad-table-header { display:grid; grid-template-columns:40px 1fr 36px 32px 40px 36px 44px; gap:8px; padding:8px 14px; background:var(--bg3); font-size:10px; color:var(--muted); font-weight:700; letter-spacing:0.3px; border-bottom:1px solid var(--border); }
+  .squad-table-header { display:grid; grid-template-columns:40px 1fr 80px 36px 32px 36px 44px; gap:8px; padding:8px 14px; background:var(--bg3); font-size:10px; color:var(--muted); font-weight:700; letter-spacing:0.3px; border-bottom:1px solid var(--border); }
   .squad-group-title { font-size:11px; font-weight:700; color:var(--muted); padding:10px 14px 6px; background:#f8f9fb; border-top:1px solid var(--border); text-transform:uppercase; letter-spacing:0.5px; }
-  .squad-row { display:grid; grid-template-columns:40px 1fr 36px 32px 40px 36px 44px; gap:8px; padding:10px 14px; border-top:1px solid var(--border); align-items:center; background:#fff; }
+  .squad-row { display:grid; grid-template-columns:40px 1fr 80px 36px 32px 36px 44px; gap:8px; padding:10px 14px; border-top:1px solid var(--border); align-items:center; background:#fff; }
   .squad-row:hover { background:#f8f9fb; }
   .squad-num { font-size:13px; font-weight:700; color:var(--muted); text-align:center; }
   .squad-name { font-size:13px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:5px; }
@@ -511,9 +511,15 @@
             <input id="np-height" type="number" placeholder="175" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
           </div>
         </div>
-        <div style="margin-bottom:14px">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">전화번호</div>
-          <input id="np-phone" type="tel" placeholder="010-0000-0000" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">전화번호</div>
+            <input id="np-phone" type="tel" placeholder="010-0000-0000" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">닉네임</div>
+            <input id="np-nickname" type="text" placeholder="닉네임" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
         </div>
         <button onclick="addPlayer()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">선수 등록</button>
       </div>
@@ -564,13 +570,17 @@
             <input id="ep-phone" type="tel" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
           </div>
           <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상태</div>
-            <select id="ep-status" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
-              <option value="active">정상</option>
-              <option value="injured">부상</option>
-              <option value="resting">휴식</option>
-            </select>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">닉네임</div>
+            <input id="ep-nickname" type="text" placeholder="닉네임" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
           </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상태</div>
+          <select id="ep-status" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="active">정상</option>
+            <option value="injured">부상</option>
+            <option value="resting">휴식</option>
+          </select>
         </div>
         <button onclick="updatePlayer()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">정보 저장</button>
       </div>
@@ -945,7 +955,7 @@ async function loadSquad() {
     </div>`;
   };
 
-  let html = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:center">#</div><div style="text-align:center">나이</div><div style="text-align:center">키</div><div style="text-align:center">주발</div><div style="text-align:center">상태</div></div>`;
+  let html = `<div class="squad-table-header"><div></div><div>이름</div><div>닉네임</div><div style="text-align:center">#</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div><div style="text-align:center">상태</div></div>`;
   posOrder.forEach(pos=>{
     if(!groups[pos].length) return;
     html += `<div class="squad-group-title">${posLabel[pos]}</div>${groups[pos].map(row).join('')}`;
@@ -1593,6 +1603,7 @@ async function addPlayer() {
     birth_date: document.getElementById('np-birth').value || null,
     height: parseInt(document.getElementById('np-height').value) || null,
     phone: document.getElementById('np-phone').value.trim() || null,
+    nickname: document.getElementById('np-nickname').value.trim() || null,
     status: 'active'
   };
 
@@ -1604,7 +1615,7 @@ async function addPlayer() {
 
   if (res.ok) {
     alert(`${name} 선수 등록 완료! ✅`);
-    ['np-name','np-number','np-birth','np-height','np-phone'].forEach(id => document.getElementById(id).value = '');
+    ['np-name','np-number','np-birth','np-height','np-phone','np-nickname'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('np-position').value = '';
     document.getElementById('np-foot').value = '';
     await loadAdminData();
@@ -1623,6 +1634,7 @@ function loadEditPlayer() {
   document.getElementById('ep-birth').value = p.birth_date || '';
   document.getElementById('ep-height').value = p.height || '';
   document.getElementById('ep-phone').value = p.phone || '';
+  document.getElementById('ep-nickname').value = p.nickname || '';
   document.getElementById('ep-status').value = p.status || 'active';
 }
 
@@ -1636,6 +1648,7 @@ async function updatePlayer() {
     birth_date: document.getElementById('ep-birth').value || null,
     height: parseInt(document.getElementById('ep-height').value) || null,
     phone: document.getElementById('ep-phone').value.trim() || null,
+    nickname: document.getElementById('ep-nickname').value.trim() || null,
     status: document.getElementById('ep-status').value
   };
 
@@ -1785,12 +1798,12 @@ async function showPlayer(playerId) {
           <div style="font-size:10px;color:var(--muted);margin-top:3px">나이</div>
         </div>
         <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
-          <div style="font-size:18px;font-weight:700;color:var(--text)">${p.height?p.height+'cm':'-'}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">키</div>
-        </div>
-        <div style="padding:14px;text-align:center">
           <div style="font-size:14px;font-weight:600;color:var(--text)">${footMap[p.dominant_foot]||'-'}</div>
           <div style="font-size:10px;color:var(--muted);margin-top:3px">주발</div>
+        </div>
+        <div style="padding:14px;text-align:center">
+          <div style="font-size:13px;font-weight:600;color:var(--skyblue)">${p.nickname||'-'}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">닉네임</div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr">
