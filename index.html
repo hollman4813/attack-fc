@@ -935,9 +935,10 @@ async function loadSquad() {
         <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:4px">${dot}${p.name}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px">${p.position||'-'}</div>
       </div>
-      <div class="squad-col" style="font-size:13px;font-weight:700;color:var(--muted)">${p.number}</div>
-      <div class="squad-col" style="font-size:12px">${age}</div>
-      <div class="squad-col" style="font-size:12px">${foot}</div>
+      <div class="squad-col" style="font-size:11px;color:var(--skyblue);font-weight:600;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nickname||''}</div>
+      <div class="squad-col" style="font-size:13px;font-weight:700;color:var(--muted);text-align:center">${p.number}</div>
+      <div class="squad-col" style="font-size:12px;text-align:center">${age}</div>
+      <div class="squad-col" style="font-size:12px;text-align:center">${foot}</div>
       <div class="squad-col">${stPill}</div>
     </div>`;
   };
