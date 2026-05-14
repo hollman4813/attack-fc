@@ -187,9 +187,9 @@
 
   /* 스쿼드 */
   .squad-wrap { background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-  .squad-table-header { display:grid; grid-template-columns:40px 1fr 80px 36px 36px 36px 44px; gap:8px; padding:8px 14px; background:var(--bg3); font-size:10px; color:var(--muted); font-weight:700; letter-spacing:0.3px; border-bottom:1px solid var(--border); }
+  .squad-table-header { display:grid; grid-template-columns:40px 1fr 70px 36px 30px 30px 44px; gap:6px; padding:8px 14px; background:var(--bg3); font-size:10px; color:var(--muted); font-weight:700; letter-spacing:0.3px; border-bottom:1px solid var(--border); }
   .squad-group-title { font-size:11px; font-weight:700; color:var(--muted); padding:10px 14px 6px; background:#f8f9fb; border-top:1px solid var(--border); text-transform:uppercase; letter-spacing:0.5px; }
-  .squad-row { display:grid; grid-template-columns:40px 1fr 80px 36px 36px 36px 44px; gap:8px; padding:10px 14px; border-top:1px solid var(--border); align-items:center; background:#fff; }
+  .squad-row { display:grid; grid-template-columns:40px 1fr 70px 36px 30px 30px 44px; gap:6px; padding:10px 14px; border-top:1px solid var(--border); align-items:center; background:#fff; }
   .squad-row:hover { background:#f8f9fb; }
   .squad-num { font-size:13px; font-weight:700; color:var(--muted); text-align:center; }
   .squad-name { font-size:13px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:5px; }
@@ -954,7 +954,7 @@ async function loadSquad() {
     </div>`;
   };
 
-  let html = `<div class="squad-table-header"><div></div><div>이름</div><div>닉네임</div><div style="text-align:center">No</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div><div style="text-align:center">상태</div></div>`;
+  let html = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:left">닉네임</div><div style="text-align:center">No</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div><div style="text-align:center">상태</div></div>`;
   posOrder.forEach(pos=>{
     if(!groups[pos].length) return;
     html += `<div class="squad-group-title">${posLabel[pos]}</div>${groups[pos].map(row).join('')}`;
