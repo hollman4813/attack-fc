@@ -573,6 +573,28 @@
         <button onclick="updatePlayer()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">정보 저장</button>
       </div>
 
+      <!-- 경기 결과 수정 -->
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 결과 수정</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
+          <select id="er-match-select" onchange="loadEditResult()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">경기를 선택하세요</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">우리팀 득점</div>
+            <input id="er-our-score" type="number" min="0" placeholder="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상대팀 득점</div>
+            <input id="er-opp-score" type="number" min="0" placeholder="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
+          </div>
+        </div>
+        <button onclick="updateResult()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">결과 수정 저장</button>
+      </div>
+
       <!-- 참석 관리 -->
       <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">참석 관리</div>
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
@@ -1276,6 +1298,11 @@ async function loadAdminData() {
   emSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
     matches.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponents?.name||m.opponent} ${m.status==='upcoming'?'(예정)':''}</option>`).join('');
 
+  // 결과 수정용 (finished만)
+  const erSel = document.getElementById('er-match-select');
+  erSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
+    finished.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponents?.name||m.opponent}</option>`).join('');
+
   // 기록 입력용 (finished)
   const statSel = document.getElementById('a-stat-match');
   statSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
@@ -1516,6 +1543,42 @@ async function loadExistingStat() {
     document.getElementById('a-mom').value = 'false';
     document.getElementById('a-stat-hint').textContent = '신규 기록입니다';
     document.getElementById('a-stat-hint').style.color = 'var(--muted)';
+  }
+}
+
+function loadEditResult() {
+  const id = parseInt(document.getElementById('er-match-select').value);
+  const m = allAdminMatches?.find(x=>x.id===id);
+  if (!m) return;
+  document.getElementById('er-our-score').value = m.our_score ?? '';
+  document.getElementById('er-opp-score').value = m.opponent_score ?? '';
+}
+
+async function updateResult() {
+  const id = document.getElementById('er-match-select').value;
+  if (!id) { alert('경기를 선택해주세요!'); return; }
+  const ourScore = parseInt(document.getElementById('er-our-score').value);
+  const oppScore = parseInt(document.getElementById('er-opp-score').value);
+  if (isNaN(ourScore) || isNaN(oppScore)) { alert('스코어를 입력해주세요!'); return; }
+
+  const result = ourScore > oppScore ? 'Win' : ourScore < oppScore ? 'Lose' : 'Draw';
+
+  const res = await fetch(`${SUPA_URL}/rest/v1/matches?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ our_score: ourScore, opponent_score: oppScore, result, status: 'finished' })
+  });
+
+  if (res.ok) {
+    alert(`결과 수정 완료! ✅ ${ourScore}:${oppScore} (${result==='Win'?'승':result==='Lose'?'패':'무'})`);
+    document.getElementById('er-match-select').value = '';
+    document.getElementById('er-our-score').value = '';
+    document.getElementById('er-opp-score').value = '';
+    await loadAdminData();
+    loaded['matches'] = false;
+    loaded['overview'] = false;
+  } else {
+    alert('오류가 발생했어요.');
   }
 }
 
