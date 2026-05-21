@@ -557,9 +557,15 @@
             </select>
           </div>
         </div>
-        <div style="margin-bottom:10px">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">생년월일</div>
-          <input id="ep-birth" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">생년월일</div>
+            <input id="ep-birth" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">입단일</div>
+            <input id="ep-join-date" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
@@ -1694,6 +1700,7 @@ function loadEditPlayer() {
   document.getElementById('ep-foot').value = p.dominant_foot || '';
   document.getElementById('ep-birth').value = p.birth_date || '';
   document.getElementById('ep-nickname').value = p.nickname || '';
+  document.getElementById('ep-join-date').value = p.join_date || '';
   document.getElementById('ep-nationality').value = p.nationality || '대한민국';
   document.getElementById('ep-status').value = p.status || 'active';
 }
@@ -1708,6 +1715,7 @@ async function updatePlayer() {
     birth_date: document.getElementById('ep-birth').value || null,
     nickname: document.getElementById('ep-nickname').value.trim() || null,
     nationality: document.getElementById('ep-nationality').value.trim() || '대한민국',
+    join_date: document.getElementById('ep-join-date').value || null,
     status: document.getElementById('ep-status').value
   };
 
