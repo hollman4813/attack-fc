@@ -31,7 +31,7 @@
 
 
   .team-hero-header { background:linear-gradient(180deg,#1a3a6b,#1e4d8c); position:sticky; top:0; z-index:100; }
-  .team-tab-bar { background:linear-gradient(180deg,#1e4d8c,#2558a0); border-bottom:none; display:flex; overflow-x:auto; position:sticky; top:77px; z-index:99; touch-action:pan-x; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
+  .team-tab-bar { background:linear-gradient(180deg,#1e4d8c,#2558a0); border-bottom:none; display:flex; overflow-x:auto; position:sticky; top:0; z-index:99; touch-action:pan-x; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
   .team-tab-bar::-webkit-scrollbar { display:none; }
   .team-tab { background:none; border:none; color:var(--muted); font-family:inherit; font-size:13px; font-weight:500; padding:13px 16px; cursor:pointer; white-space:nowrap; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; }
   .team-tab.active { color:#fff; border-bottom-color:#fff; font-weight:700; }
@@ -229,7 +229,8 @@
 
 
 
-<div class="team-hero-header" id="team-hero-header">
+<div id="sticky-header" style="position:sticky;top:0;z-index:100">
+<div class="team-hero-header" id="team-hero-header" style="position:relative">
   <div class="hero-main" style="padding:14px 16px">
     <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
     <div class="hero-info" style="flex:1;margin-left:12px">
@@ -246,6 +247,7 @@
   </div>
 </div>
 
+</div>
 <div class="team-tab-bar" id="team-tab-bar">
   <button class="team-tab active" onclick="switchTab('overview',this)">팀 개요</button>
   <button class="team-tab" onclick="switchTab('matches',this)">경기</button>
