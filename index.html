@@ -798,6 +798,42 @@ async function loadOverview() {
   if (upcoming.length > 0) {
     const u = upcoming[0];
     const d = new Date(u.match_date);
+
+    // 날씨 예보
+    let weatherHtml = '';
+    if (u.grounds?.lat && u.grounds?.lng) {
+      try {
+        const today = new Date();
+        const diffDays = Math.ceil((new Date(u.match_date) - today) / (1000*60*60*24));
+        if (diffDays >= 0 && diffDays <= 15) {
+          const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${u.grounds.lat}&longitude=${u.grounds.lng}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=16`);
+          const wData = await wRes.json();
+          const dayIdx = wData.daily.time.indexOf(u.match_date);
+          if (dayIdx >= 0) {
+            const code = wData.daily.weathercode[dayIdx];
+            const tMax = wData.daily.temperature_2m_max[dayIdx];
+            const tMin = wData.daily.temperature_2m_min[dayIdx];
+            const rain = wData.daily.precipitation_probability_max[dayIdx];
+            const emoji = code===0?'☀️':code<=2?'🌤️':code<=3?'☁️':code<=49?'🌫️':code<=59?'🌦️':code<=69?'🌧️':code<=79?'❄️':code<=82?'🌧️':'⛈️';
+            const desc = code===0?'맑음':code<=2?'대체로 맑음':code<=3?'흐림':code<=49?'안개':code<=59?'이슬비':code<=69?'비':code<=79?'눈':code<=82?'소나기':'뇌우';
+            weatherHtml = `<div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#f8faff">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:22px">${emoji}</span>
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text)">${desc}</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:1px">강수확률 ${rain}%</div>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:14px;font-weight:700;color:#c62828">${tMax}°</div>
+                <div style="font-size:12px;color:var(--skyblue)">${tMin}°</div>
+              </div>
+            </div>`;
+          }
+        }
+      } catch(e) { console.log('날씨 로드 실패:', e); }
+    }
+
     document.getElementById('next-match-card').innerHTML = `
       <div class="next-match-league" style="cursor:pointer" onclick="showMatch(${u.id})">📅 예정 경기 · 탭하여 상세보기 ›</div>
       <div class="next-match-body" onclick="showMatch(${u.id})">
@@ -815,7 +851,8 @@ async function loadOverview() {
           <div class="next-team-name">${u.opponents?.name || u.opponent}</div>
         </div>
       </div>
-      <div class="next-match-ground">📍 ${u.grounds?.name || u.ground||'미정'}</div>`
+      <div class="next-match-ground">📍 ${u.grounds?.name || u.ground||'미정'}</div>
+      ${weatherHtml}`;
     document.getElementById('next-match-wrap').style.display = 'block';
   }
 
