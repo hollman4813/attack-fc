@@ -385,6 +385,84 @@
     <div id="match-detail-content"></div>
   </div>
 
+
+
+
+
+    </div>
+  </div>
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+    </div>
+  </div>
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+    </div>
+  </div>
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+    </div>
+  </div>
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+    </div>
+  </div>
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
   <!-- 관리자 페이지 -->
   <div class="section" id="admin-page">
     <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:20px 16px">
@@ -393,6 +471,58 @@
       <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">ATTACK F.C. 데이터 관리</div>
     </div>
     <div style="padding:16px 12px">
+
+      <!-- 참석 관리 -->
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">참석 관리</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
+          <select id="a-attend-match" onchange="loadAttendance()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">경기를 선택하세요</option>
+          </select>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">참석 선수 선택 <span id="a-attend-count" style="color:var(--skyblue);font-weight:700"></span></div>
+        <div id="a-attendance-list" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+          <div style="color:var(--muted);font-size:12px;grid-column:span 2;padding:8px 0">경기를 먼저 선택해주세요</div>
+        </div>
+        <button onclick="saveAttendance()" style="width:100%;padding:10px;background:var(--win);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 참석 저장</button>
+      </div>
+
+      <!-- 경기 기록 입력 -->
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 기록 입력</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
+          <select id="a-stat-match" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">경기를 선택하세요</option>
+          </select>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">선수 선택</div>
+          <select id="a-player-select" onchange="loadExistingStat()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">선수를 선택하세요</option>
+          </select>
+          <div id="a-stat-hint" style="font-size:11px;color:var(--muted);margin-top:6px"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">골</div>
+            <input id="a-goals" type="number" min="0" value="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">어시스트</div>
+            <input id="a-assists" type="number" min="0" value="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">MOM</div>
+            <select id="a-mom" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+              <option value="false">아니오</option>
+              <option value="true">예</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="saveStat()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">기록 저장</button>
+      </div>
 
       <!-- 경기 일정 추가 -->
       <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 일정 추가</div>
@@ -438,6 +568,28 @@
           </div>
         </div>
         <button onclick="saveResult()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">결과 저장</button>
+      </div>
+
+      <!-- 경기 결과 수정 -->
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 결과 수정</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
+          <select id="er-match-select" onchange="loadEditResult()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">경기를 선택하세요</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">우리팀 득점</div>
+            <input id="er-our-score" type="number" min="0" placeholder="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상대팀 득점</div>
+            <input id="er-opp-score" type="number" min="0" placeholder="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
+          </div>
+        </div>
+        <button onclick="updateResult()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">결과 수정 저장</button>
       </div>
 
       <!-- 경기 정보 수정 -->
@@ -588,44 +740,6 @@
         <button onclick="updatePlayer()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">정보 저장</button>
       </div>
 
-      <!-- 경기 결과 수정 -->
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 결과 수정</div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
-        <div style="margin-bottom:10px">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
-          <select id="er-match-select" onchange="loadEditResult()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
-            <option value="">경기를 선택하세요</option>
-          </select>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">우리팀 득점</div>
-            <input id="er-our-score" type="number" min="0" placeholder="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상대팀 득점</div>
-            <input id="er-opp-score" type="number" min="0" placeholder="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
-          </div>
-        </div>
-        <button onclick="updateResult()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">결과 수정 저장</button>
-      </div>
-
-      <!-- 참석 관리 -->
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">참석 관리</div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
-        <div style="margin-bottom:12px">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
-          <select id="a-attend-match" onchange="loadAttendance()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
-            <option value="">경기를 선택하세요</option>
-          </select>
-        </div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">참석 선수 선택 <span id="a-attend-count" style="color:var(--skyblue);font-weight:700"></span></div>
-        <div id="a-attendance-list" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
-          <div style="color:var(--muted);font-size:12px;grid-column:span 2;padding:8px 0">경기를 먼저 선택해주세요</div>
-        </div>
-        <button onclick="saveAttendance()" style="width:100%;padding:10px;background:var(--win);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 참석 저장</button>
-      </div>
-
       <!-- 선수 탈퇴 -->
       <div style="font-size:12px;font-weight:700;color:var(--lose);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">선수 탈퇴</div>
       <div style="background:#fff;border:1px solid #ffcdd2;border-radius:10px;padding:16px;margin-bottom:16px">
@@ -640,45 +754,9 @@
         </div>
         <button onclick="deletePlayer()" style="width:100%;padding:10px;background:var(--lose);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">선수 탈퇴 처리</button>
       </div>
-
-      <!-- 경기 기록 입력 -->
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 기록 입력</div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
-        <div style="margin-bottom:10px">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
-          <select id="a-stat-match" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
-            <option value="">경기를 선택하세요</option>
-          </select>
-        </div>
-        <div style="margin-bottom:10px">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">선수 선택</div>
-          <select id="a-player-select" onchange="loadExistingStat()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
-            <option value="">선수를 선택하세요</option>
-          </select>
-          <div id="a-stat-hint" style="font-size:11px;color:var(--muted);margin-top:6px"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">골</div>
-            <input id="a-goals" type="number" min="0" value="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">어시스트</div>
-            <input id="a-assists" type="number" min="0" value="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">MOM</div>
-            <select id="a-mom" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
-              <option value="false">아니오</option>
-              <option value="true">예</option>
-            </select>
-          </div>
-        </div>
-        <button onclick="saveStat()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">기록 저장</button>
-      </div>
-
     </div>
   </div>
+
 
   <!-- 선수 상세 페이지 -->
   <div class="section" id="player-detail">
