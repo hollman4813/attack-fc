@@ -1061,6 +1061,7 @@ function switchStatTabByName(tab) {
 function switchStatTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  window._currentStatTab = tab;
   if (tab === 'overview') renderStatOverview();
   else renderStatList(tab);
 }
@@ -1931,6 +1932,9 @@ async function showPlayer(playerId) {
   window._prevSection = document.querySelector('.section.active')?.id || 'home';
   window._prevTab = document.querySelector('.tab-section.active')?.id || 'tab-overview';
   window._prevTabBtn = document.querySelector('.team-tab.active');
+  // 서브탭 상태 저장
+  const activeStatBtn = document.querySelector('.tab-btn.active');
+  window._prevStatTab = activeStatBtn ? activeStatBtn.textContent.trim() : null;
   history.pushState({ page: 'player', id: playerId }, '');
   document.getElementById('team-hero-header').style.display = 'none';
   ['home','match-detail','player-detail','admin-page'].forEach(id=>{
@@ -2489,13 +2493,36 @@ function backFromPlayer() {
   const idx = TAB_ORDER.indexOf(tabName);
   if (window._prevTabBtn) window._prevTabBtn.classList.add('active');
   else if (document.querySelectorAll('.team-tab')[idx]) document.querySelectorAll('.team-tab')[idx].classList.add('active');
-  // 캐시 초기화
-  allStats = [];
-  loaded[tabName] = false;
-  if (tabName==='overview') loadOverview();
-  else if (tabName==='matches') loadMatches();
-  else if (tabName==='scorers') loadScorers();
-  else if (tabName==='squad') loadSquad();
+  // 뒤로가기 시 탭 내용 유지 (캐시 초기화 안 함)
+  if (!loaded[tabName]) {
+    allStats = [];
+    if (tabName==='overview') loadOverview();
+    else if (tabName==='matches') loadMatches();
+    else if (tabName==='scorers') {
+      loadScorers().then(() => {
+        const prevTab = window._currentStatTab;
+        if (prevTab && prevTab !== 'overview') {
+          const btns = document.querySelectorAll('.tab-btn');
+          const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4 };
+          const idx = tabMap[prevTab];
+          if (btns[idx]) switchStatTab(prevTab, btns[idx]);
+        }
+      });
+    }
+    else if (tabName==='squad') loadSquad();
+    else if (tabName==='teamstats') loadTeamStats();
+  } else {
+    // 이미 로드됨 - scorers 서브탭만 복원
+    if (tabName==='scorers') {
+      const prevTab = window._currentStatTab;
+      if (prevTab && prevTab !== 'overview') {
+        const btns = document.querySelectorAll('.tab-btn');
+        const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4 };
+        const idx = tabMap[prevTab];
+        if (btns[idx]) switchStatTab(prevTab, btns[idx]);
+      }
+    }
+  }
 }
 
 function backToSquad() {
