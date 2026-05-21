@@ -234,7 +234,7 @@
     <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
     <div class="hero-info" style="flex:1;margin-left:12px">
       <div class="team-name" style="font-size:17px;font-weight:700;color:#fff">ATTACK F.C.</div>
-      <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px">창단 2006 · 안산시 · <img src="https://flagcdn.com/w20/kr.png" style="width:16px;height:12px;border-radius:2px;vertical-align:middle;margin-right:2px"> 대한민국</div>
+      <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px">창단 2006 · <img src="https://flagcdn.com/w40/kr.png" style="width:16px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:2px"> 대한민국</div>
     </div>
     <!-- @ch.attack4905 -->
     <a href="https://www.youtube.com/@ch.attack4905" target="_blank" rel="noopener" onclick="mobileYoutube(event)" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:7px 12px;cursor:pointer;text-decoration:none;flex-shrink:0">
@@ -1983,6 +1983,57 @@ async function showPlayer(playerId) {
     }
   });
 
+  // 승무패 통계 로드
+  api(`match_stats?select=attended,matches(result)&player_id=eq.${playerId}&attended=eq.true`).then(attended => {
+    const el = document.getElementById(`player-wdl-${playerId}`);
+    if (!el) return;
+    const w = attended.filter(x=>x.matches?.result==='Win').length;
+    const d = attended.filter(x=>x.matches?.result==='Draw').length;
+    const l = attended.filter(x=>x.matches?.result==='Lose').length;
+    const total = w+d+l;
+    if (total === 0) return;
+    const circ = 238.8;
+    const wp = w/total*circ, dp = d/total*circ, lp = l/total*circ;
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 16px">
+        <div style="position:relative;width:72px;height:72px;flex-shrink:0">
+          <svg viewBox="0 0 100 100" style="width:100%;height:100%;transform:rotate(-90deg)">
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#eee" stroke-width="14"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#2e7d32" stroke-width="14" stroke-dasharray="${wp-1} ${circ}" stroke-dashoffset="0"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#9e9e9e" stroke-width="14" stroke-dasharray="${dp-1} ${circ}" stroke-dashoffset="${-wp}"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#c62828" stroke-width="14" stroke-dasharray="${lp-1} ${circ}" stroke-dashoffset="${-(wp+dp)}"/>
+          </svg>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+            <div style="font-size:12px;font-weight:700;color:var(--text)">${Math.round(w/total*100)}%</div>
+            <div style="font-size:9px;color:var(--muted)">승률</div>
+          </div>
+        </div>
+        <div style="display:flex;flex:1;justify-content:space-around">
+          <div style="text-align:center">
+            <div style="font-size:22px;font-weight:700;color:#2e7d32">${w}</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:3px;margin-top:4px">
+              <span style="width:7px;height:7px;border-radius:2px;background:#2e7d32;display:inline-block"></span>
+              <span style="font-size:11px;color:var(--muted)">승</span>
+            </div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:22px;font-weight:700;color:#9e9e9e">${d}</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:3px;margin-top:4px">
+              <span style="width:7px;height:7px;border-radius:2px;background:#9e9e9e;display:inline-block"></span>
+              <span style="font-size:11px;color:var(--muted)">무</span>
+            </div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:22px;font-weight:700;color:#c62828">${l}</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:3px;margin-top:4px">
+              <span style="width:7px;height:7px;border-radius:2px;background:#c62828;display:inline-block"></span>
+              <span style="font-size:11px;color:var(--muted)">패</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  });
+
   document.getElementById('player-detail-content').innerHTML = `
     <!-- 헤더 -->
     <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:20px 16px 24px;position:relative">
@@ -2095,6 +2146,14 @@ async function showPlayer(playerId) {
             <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당어시</div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- 승무패 -->
+    <div style="padding:0 12px;margin-top:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">참석 경기 승무패</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden" id="player-wdl-${p.id}">
+        <div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">참석 데이터 로딩 중...</div>
       </div>
     </div>
 
