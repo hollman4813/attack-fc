@@ -1866,28 +1866,49 @@ async function showPlayer(playerId) {
       </div>
     </div>
 
-    <!-- 기본 정보 -->
-    <div style="background:#fff;border-bottom:1px solid var(--border)">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)">
-        <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
-          <div style="font-size:18px;font-weight:700;color:var(--text)">${age}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">나이</div>
+    <!-- 기본 정보 - FOTMOB 스타일 -->
+    <div style="background:#fff;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr">
+      <!-- 왼쪽 -->
+      <div style="border-right:1px solid var(--border)">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+          <div style="font-size:15px;font-weight:700;color:var(--text)">${age !== '-' ? age + '세' : '-'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${p.birth_date ? new Date(p.birth_date).toLocaleDateString('ko-KR') : '-'}</div>
         </div>
-        <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
-          <div style="font-size:14px;font-weight:600;color:var(--text)">${footMap[p.dominant_foot]||'-'}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">주발</div>
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+          <div style="font-size:15px;font-weight:700;color:var(--text)">#${p.number}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">등번호</div>
         </div>
-        <div style="padding:14px;text-align:center">
-          <div style="font-size:13px;font-weight:600;color:var(--skyblue)">${p.nickname||'-'}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">닉네임</div>
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+          <div style="font-size:15px;font-weight:700;color:var(--text)">${footMap[p.dominant_foot]||'-'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">주발</div>
+        </div>
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:6px">
+            ${p.nationality ? `<img src="https://flagcdn.com/w20/kr.png" style="width:18px;height:13px;border-radius:2px;flex-shrink:0">` : ''}
+            <span style="font-size:15px;font-weight:700;color:var(--text)">${p.nationality||'-'}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">국가</div>
+        </div>
+        <div style="padding:14px 16px">
+          <div style="font-size:15px;font-weight:700;color:var(--text)">${p.join_date ? new Date(p.join_date).toLocaleDateString('ko-KR') : '-'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">입단일</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr">
-        <div style="padding:14px;text-align:center">
-          <div style="font-size:13px;font-weight:600;color:var(--text)">${p.birth_date?new Date(p.birth_date).toLocaleDateString('ko-KR'):'-'}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">생년월일</div>
+      <!-- 오른쪽: 포지션 -->
+      <div style="padding:14px 16px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600">포지션</div>
+        <div style="font-size:11px;font-weight:700;color:var(--skyblue);margin-bottom:4px">주 포지션</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text)">${posMap[p.position]||p.position||'-'}</div>
+        <div style="margin-top:14px;position:relative;background:#3a8f3a;border-radius:6px;overflow:hidden;aspect-ratio:2/3">
+          <div style="position:absolute;left:10%;right:10%;height:1px;background:rgba(255,255,255,0.4);top:50%"></div>
+          <div style="position:absolute;left:25%;right:25%;height:25%;border:1.5px solid rgba(255,255,255,0.4);bottom:0"></div>
+          <div style="position:absolute;left:25%;right:25%;height:25%;border:1.5px solid rgba(255,255,255,0.4);top:0"></div>
+          <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:30%;padding-bottom:30%;border:1.5px solid rgba(255,255,255,0.4);border-radius:50%"></div>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);
+            ${p.position==='GK'?'bottom:6%':p.position==='DF'?'bottom:28%':p.position==='MF'?'top:40%':'top:8%'}">
+            <div style="background:var(--skyblue);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:4px;white-space:nowrap">${p.position||'?'}</div>
+          </div>
         </div>
-
       </div>
     </div>
 
