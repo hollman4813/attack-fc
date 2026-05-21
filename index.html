@@ -234,7 +234,7 @@
     <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
     <div class="hero-info" style="flex:1;margin-left:12px">
       <div class="team-name" style="font-size:17px;font-weight:700;color:#fff">ATTACK F.C.</div>
-      <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px">창단 2006 · 안산시 · 🇰🇷 대한민국</div>
+      <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px">창단 2006 · 안산시 · <img src="https://flagcdn.com/w20/kr.png" style="width:16px;height:12px;border-radius:2px;vertical-align:middle;margin-right:2px"> 대한민국</div>
     </div>
     <!-- @ch.attack4905 -->
     <a href="https://www.youtube.com/@ch.attack4905" target="_blank" rel="noopener" onclick="mobileYoutube(event)" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:7px 12px;cursor:pointer;text-decoration:none;flex-shrink:0">
@@ -1845,7 +1845,14 @@ async function showPlayer(playerId) {
         ${photoEl}
         <div>
           <div style="font-size:22px;font-weight:700;color:#fff">${p.name}</div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:4px">${posMap[p.position]||p.position||'-'} · #${p.number}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+            <span>${posMap[p.position]||p.position||'-'} · #${p.number}</span>
+            ${p.nationality ? `<span style="display:inline-flex;align-items:center;gap:3px"><img src="https://flagcdn.com/w20/kr.png" style="width:14px;height:10px;border-radius:2px;vertical-align:middle"> ${p.nationality}</span>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+            <img src="emblem_v4.png" style="width:16px;height:16px;border-radius:50%;object-fit:cover">
+            <span style="font-size:11px;color:rgba(255,255,255,0.8);font-weight:600">ATTACK F.C.</span>
+          </div>
           <div style="margin-top:8px"><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:rgba(255,255,255,0.15);color:${stColor}">${stMap[p.status||'active']}</span></div>
         </div>
       </div>
