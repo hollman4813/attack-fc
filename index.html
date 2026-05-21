@@ -30,10 +30,11 @@
 
 
 
-  .team-tab-bar { background:#fff; border-bottom:1px solid var(--border); display:flex; overflow-x:auto; position:sticky; top:0; z-index:99; touch-action:pan-x; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
+  .team-hero-header { background:linear-gradient(180deg,#1a3a6b,#1e4d8c); position:sticky; top:0; z-index:100; }
+  .team-tab-bar { background:linear-gradient(180deg,#1e4d8c,#2558a0); border-bottom:none; display:flex; overflow-x:auto; position:sticky; top:77px; z-index:99; touch-action:pan-x; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
   .team-tab-bar::-webkit-scrollbar { display:none; }
   .team-tab { background:none; border:none; color:var(--muted); font-family:inherit; font-size:13px; font-weight:500; padding:13px 16px; cursor:pointer; white-space:nowrap; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; }
-  .team-tab.active { color:var(--skyblue); border-bottom-color:var(--skyblue); font-weight:700; }
+  .team-tab.active { color:#fff; border-bottom-color:#fff; font-weight:700; }
 
 
 
@@ -228,6 +229,23 @@
 
 
 
+<div class="team-hero-header" id="team-hero-header">
+  <div class="hero-main" style="padding:14px 16px">
+    <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
+    <div class="hero-info" style="flex:1;margin-left:12px">
+      <div class="team-name" style="font-size:17px;font-weight:700;color:#fff">ATTACK F.C.</div>
+      <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px">창단 2006 · 안산시 · 🇰🇷 대한민국</div>
+    </div>
+    <!-- @ch.attack4905 -->
+    <a href="https://www.youtube.com/@ch.attack4905" target="_blank" rel="noopener" onclick="mobileYoutube(event)" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:7px 12px;cursor:pointer;text-decoration:none;flex-shrink:0">
+      <span style="width:24px;height:24px;background:#FF0000;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+      </span>
+      <span style="color:#fff;font-size:11px;font-weight:600">@ch.attack4905</span>
+    </a>
+  </div>
+</div>
+
 <div class="team-tab-bar" id="team-tab-bar">
   <button class="team-tab active" onclick="switchTab('overview',this)">팀 개요</button>
   <button class="team-tab" onclick="switchTab('matches',this)">경기</button>
@@ -242,22 +260,7 @@
 
     <!-- 팀 개요 -->
     <div class="tab-section active" id="tab-overview">
-      <div class="team-hero">
-        <div class="hero-main">
-          <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC">
-          <div class="hero-info" style="flex:1">
-            <div class="team-name">ATTACK F.C.</div>
-            <div class="team-sub">창단 2006 · 안산시</div>
-          </div>
-          <!-- @ch.attack4905 -->
-          <a href="https://www.youtube.com/@ch.attack4905" target="_blank" rel="noopener" onclick="mobileYoutube(event)" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:7px 12px;cursor:pointer;text-decoration:none;flex-shrink:0">
-            <span style="width:24px;height:24px;background:#FF0000;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-            </span>
-            <span style="color:#fff;font-size:11px;font-weight:600">@ch.attack4905</span>
-          </a>
-        </div>
-      </div>
+
       <div class="loading" id="ov-loading"><div class="spinner"></div>불러오는 중...</div>
       <div id="ov-content" style="display:none">
         <div class="content-wrap">
@@ -558,9 +561,15 @@
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">생년월일</div>
           <input id="ep-birth" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
         </div>
-        <div style="margin-bottom:10px">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">닉네임</div>
-          <input id="ep-nickname" type="text" placeholder="닉네임" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">닉네임</div>
+            <input id="ep-nickname" type="text" placeholder="닉네임" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">국가</div>
+            <input id="ep-nationality" type="text" placeholder="대한민국" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
         </div>
         <div style="margin-bottom:10px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상태</div>
@@ -1263,6 +1272,7 @@ function toggleAdmin() {
 
 async function showAdminPage() {
   history.pushState({ page: 'admin' }, '');
+  document.getElementById('team-hero-header').style.display = 'none';
   ['home','match-detail','player-detail','admin-page'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.classList.remove('active');
@@ -1684,6 +1694,7 @@ function loadEditPlayer() {
   document.getElementById('ep-foot').value = p.dominant_foot || '';
   document.getElementById('ep-birth').value = p.birth_date || '';
   document.getElementById('ep-nickname').value = p.nickname || '';
+  document.getElementById('ep-nationality').value = p.nationality || '대한민국';
   document.getElementById('ep-status').value = p.status || 'active';
 }
 
@@ -1696,6 +1707,7 @@ async function updatePlayer() {
     dominant_foot: document.getElementById('ep-foot').value || null,
     birth_date: document.getElementById('ep-birth').value || null,
     nickname: document.getElementById('ep-nickname').value.trim() || null,
+    nationality: document.getElementById('ep-nationality').value.trim() || '대한민국',
     status: document.getElementById('ep-status').value
   };
 
@@ -1724,6 +1736,7 @@ function exitAdmin() {
   document.getElementById('home').classList.add('active');
   document.querySelectorAll('.team-tab')[0].classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'flex';
+  document.getElementById('team-hero-header').style.display = 'block';
   loaded['overview'] = false;
   loadOverview();
 }
@@ -1734,6 +1747,7 @@ async function showPlayer(playerId) {
   window._prevTab = document.querySelector('.tab-section.active')?.id || 'tab-overview';
   window._prevTabBtn = document.querySelector('.team-tab.active');
   history.pushState({ page: 'player', id: playerId }, '');
+  document.getElementById('team-hero-header').style.display = 'none';
   ['home','match-detail','player-detail','admin-page'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.classList.remove('active');
@@ -1920,6 +1934,7 @@ async function showMatch(matchId) {
   window._prevTab = document.querySelector('.tab-section.active')?.id || 'tab-matches';
   window._prevTabBtn = document.querySelector('.team-tab.active');
   history.pushState({ page: 'match', id: matchId }, '');
+  document.getElementById('team-hero-header').style.display = 'none';
   ['home','match-detail','player-detail','admin-page'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.classList.remove('active');
@@ -2187,6 +2202,7 @@ function backFromPlayer() {
   document.querySelectorAll('.team-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('home').classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'flex';
+  document.getElementById('team-hero-header').style.display = 'block';
   const prevTab = window._prevTab || 'tab-overview';
   const tabName = prevTab.replace('tab-', '');
   const idx = TAB_ORDER.indexOf(tabName);
