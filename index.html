@@ -626,6 +626,21 @@
         <button onclick="saveAttendance()" style="width:100%;padding:10px;background:var(--win);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 참석 저장</button>
       </div>
 
+      <!-- 선수 탈퇴 -->
+      <div style="font-size:12px;font-weight:700;color:var(--lose);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">선수 탈퇴</div>
+      <div style="background:#fff;border:1px solid #ffcdd2;border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">탈퇴할 선수 선택</div>
+          <select id="del-player-select" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">선수를 선택하세요</option>
+          </select>
+        </div>
+        <div style="font-size:11px;color:var(--lose);margin-bottom:12px;padding:8px 12px;background:#ffebee;border-radius:6px">
+          ⚠️ 탈퇴 시 해당 선수의 모든 기록이 함께 삭제됩니다.
+        </div>
+        <button onclick="deletePlayer()" style="width:100%;padding:10px;background:var(--lose);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">선수 탈퇴 처리</button>
+      </div>
+
       <!-- 경기 기록 입력 -->
       <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 기록 입력</div>
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
@@ -1333,6 +1348,11 @@ async function loadAdminData() {
   const epSel = document.getElementById('ep-select');
   epSel.innerHTML = '<option value="">선수를 선택하세요</option>' +
     players.map(p=>`<option value="${p.id}">#${p.number} ${p.name}</option>`).join('');
+
+  // 탈퇴용
+  const delSel = document.getElementById('del-player-select');
+  delSel.innerHTML = '<option value="">선수를 선택하세요</option>' +
+    players.map(p=>`<option value="${p.id}">#${p.number} ${p.name}</option>`).join('');
 }
 
 function loadStatPlayers() {
@@ -1729,6 +1749,46 @@ async function updatePlayer() {
     alert('선수 정보 저장 완료! ✅');
     await loadAdminData();
     loaded['squad'] = false;
+  } else {
+    alert('오류가 발생했어요.');
+  }
+}
+
+async function deletePlayer() {
+  const id = document.getElementById('del-player-select').value;
+  if (!id) { alert('선수를 선택해주세요!'); return; }
+
+  const p = allPlayers.find(x=>x.id===parseInt(id));
+  if (!p) return;
+
+  const confirm1 = confirm(`${p.name} 선수를 탈퇴 처리하시겠습니까?
+
+⚠️ 해당 선수의 모든 경기 기록도 삭제됩니다.`);
+  if (!confirm1) return;
+
+  const confirm2 = confirm(`정말로 삭제하시겠습니까?
+이 작업은 되돌릴 수 없습니다.`);
+  if (!confirm2) return;
+
+  // match_stats 먼저 삭제
+  await fetch(`${SUPA_URL}/rest/v1/match_stats?player_id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+  });
+
+  // players 삭제
+  const res = await fetch(`${SUPA_URL}/rest/v1/players?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+  });
+
+  if (res.ok) {
+    alert(`${p.name} 선수 탈퇴 처리 완료! ✅`);
+    document.getElementById('del-player-select').value = '';
+    await loadAdminData();
+    loaded['squad'] = false;
+    loaded['overview'] = false;
+    allStats = [];
   } else {
     alert('오류가 발생했어요.');
   }
