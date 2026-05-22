@@ -966,16 +966,25 @@ async function loadMatches() {
 }
 
 /* ── 플레이어 통계 ── */
-async function loadScorers() {
+async function loadScorers(restoreTab) {
   if (!allStats.length) allStats = await api('view_season_stats?select=*');
   // photo_url 병합
   const players = await api('players?select=name,photo_url');
   const photoMap = {};
   players.forEach(p => photoMap[p.name] = p.photo_url);
   allStats = allStats.map(s => ({...s, photo_url: photoMap[s.name]||null}));
-  renderStatOverview();
   document.getElementById('scorers-loading').style.display = 'none';
   document.getElementById('scorers-content').style.display = 'block';
+  // 서브탭 복원
+  const prevTab = restoreTab || window._currentStatTab;
+  if (prevTab && prevTab !== 'overview') {
+    const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4 };
+    const btns = document.querySelectorAll('.tab-btn');
+    const idx = tabMap[prevTab];
+    if (btns[idx]) switchStatTab(prevTab, btns[idx]);
+  } else {
+    renderStatOverview();
+  }
 }
 
 function statCard(p, i, key) {
@@ -2084,16 +2093,14 @@ async function showPlayer(playerId) {
       <div style="display:flex;align-items:center;gap:16px">
         ${photoEl}
         <div>
-          <div style="font-size:22px;font-weight:700;color:#fff">${p.name}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-            <span>${posMap[p.position]||p.position||'-'} · #${p.number}</span>
-            ${p.nationality ? `<span style="color:rgba(255,255,255,0.6)">·</span><span style="display:inline-flex;align-items:center;gap:3px"><img src="https://flagcdn.com/w20/kr.png" style="width:14px;height:10px;border-radius:2px;vertical-align:middle"> ${p.nationality}</span>` : ''}
+          <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+            <div style="font-size:22px;font-weight:700;color:#fff;line-height:1.2">${p.name}</div>
+            ${p.nickname ? `<div style="font-size:14px;color:rgba(255,255,255,0.55)">${p.nickname}</div>` : ''}
           </div>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-            <img src="emblem_v4.png" style="width:16px;height:16px;border-radius:50%;object-fit:cover">
-            <span style="font-size:11px;color:rgba(255,255,255,0.8);font-weight:600">ATTACK F.C.</span>
+          <div style="display:flex;align-items:center;gap:5px;margin-top:8px">
+            <img src="emblem_v4.png" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0">
+            <span style="font-size:12px;color:rgba(255,255,255,0.9);font-weight:600">ATTACK F.C.</span>
           </div>
-          <div style="margin-top:8px"><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:rgba(255,255,255,0.15);color:${stColor}">${stMap[p.status||'active']}</span></div>
         </div>
       </div>
     </div>
@@ -2512,15 +2519,13 @@ function backFromPlayer() {
     else if (tabName==='squad') loadSquad();
     else if (tabName==='teamstats') loadTeamStats();
   } else {
-    // 이미 로드됨 - scorers 서브탭만 복원
+    // 이미 로드됨 - scorers 서브탭 복원
     if (tabName==='scorers') {
       const prevTab = window._currentStatTab;
-      if (prevTab && prevTab !== 'overview') {
-        const btns = document.querySelectorAll('.tab-btn');
-        const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4 };
-        const idx = tabMap[prevTab];
-        if (btns[idx]) switchStatTab(prevTab, btns[idx]);
-      }
+      const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4 };
+      const btns = document.querySelectorAll('.tab-btn');
+      const idx = tabMap[prevTab||'overview'];
+      if (btns[idx]) switchStatTab(prevTab||'overview', btns[idx]);
     }
   }
 }
