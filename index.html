@@ -533,21 +533,33 @@
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">날짜</div>
-            <input id="a-date" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">날짜 *</div>
+            <input id="new-date" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
           </div>
           <div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:4px">시간</div>
-            <input id="a-time" type="time" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+            <input id="new-time" type="time" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
           </div>
         </div>
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상대팀</div>
-          <input id="a-opponent" type="text" placeholder="상대팀 이름" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상대팀 *</div>
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <select id="new-opponent-select" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+              <option value="">팀 선택</option>
+            </select>
+            <button onclick="toggleNewOpponent()" style="padding:8px 12px;background:#f0f2f5;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">+ 신규</button>
+          </div>
+          <input id="new-opponent-input" type="text" placeholder="새 팀 이름 입력" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;display:none">
         </div>
         <div style="margin-bottom:14px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기장</div>
-          <input id="a-ground" type="text" placeholder="경기장 이름" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <select id="new-ground-select" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+              <option value="">경기장 선택</option>
+            </select>
+            <button onclick="toggleNewGround()" style="padding:8px 12px;background:#f0f2f5;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">+ 신규</button>
+          </div>
+          <input id="new-ground-input" type="text" placeholder="새 경기장 이름 입력" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;display:none">
         </div>
         <button onclick="addMatch()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">일정 추가</button>
       </div>
@@ -617,11 +629,15 @@
         </div>
         <div style="margin-bottom:10px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상대팀</div>
-          <input id="em-opponent" type="text" placeholder="상대팀 이름" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          <select id="em-opponent-select" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">팀 선택</option>
+          </select>
         </div>
         <div style="margin-bottom:14px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기장</div>
-          <input id="em-ground" type="text" placeholder="경기장 이름" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          <select id="em-ground-select" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">경기장 선택</option>
+          </select>
         </div>
         <button onclick="updateMatch()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">경기 정보 저장</button>
       </div>
@@ -660,20 +676,10 @@
             </select>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
           <div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:4px">생년월일</div>
             <input id="np-birth" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">키 (cm)</div>
-            <input id="np-height" type="number" placeholder="175" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">전화번호</div>
-            <input id="np-phone" type="tel" placeholder="010-0000-0000" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
           </div>
           <div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:4px">닉네임</div>
@@ -1166,17 +1172,45 @@ async function loadGrounds() {
 /* ── 상대팀 정보 ── */
 async function loadOpponents() {
   const opponents = await api('opponents?select=*&order=name.asc');
+  window._opponentsData = opponents;
 
-  let html = '';
-  for (const o of opponents) {
-    html += `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px">
-      <div style="font-size:14px;font-weight:700;color:var(--text)">${o.name}</div>
-    </div>`;
-  }
+  let html = opponents.map(o => `
+    <div onclick="showOpponentDetail(${o.id})" style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--text)">${o.name}</div>
+        ${o.location||o.age_group ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${[o.location,o.age_group].filter(Boolean).join(' · ')}</div>` : ''}
+      </div>
+      <div style="font-size:18px;color:var(--muted)">›</div>
+    </div>`).join('');
 
-  document.getElementById('opponents-content').innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--muted)">경기 기록이 없습니다</div>';
+  let html2 = html || '<div style="padding:20px;text-align:center;color:var(--muted)">등록된 팀이 없습니다</div>';
+
+  document.getElementById('opponents-content').innerHTML = html2;
   document.getElementById('opponents-loading').style.display = 'none';
   document.getElementById('opponents-content').style.display = 'block';
+}
+
+function showOpponentDetail(id) {
+  const o = window._opponentsData.find(x=>x.id===id);
+  if (!o) return;
+  history.pushState({ page: 'opponent', id }, '');
+  document.getElementById('opponents-content').innerHTML = `
+    <button onclick="backToOpponentsList()" style="background:none;border:none;color:var(--skyblue);font-size:13px;cursor:pointer;padding:0;margin-bottom:14px;display:flex;align-items:center;gap:4px;font-family:inherit">← 목록으로</button>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px">
+      <div style="padding:16px;border-bottom:1px solid var(--border)">
+        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px">${o.name}</div>
+        ${o.location||o.age_group ? `<div style="font-size:12px;color:var(--muted)">${[o.location,o.age_group].filter(Boolean).join(' · ')}</div>` : ''}
+      </div>
+      ${o.description ? `<div style="padding:14px 16px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">팀 정보</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.6">${o.description}</div>
+      </div>` : ''}
+    </div>`;
+}
+
+function backToOpponentsList() {
+  history.back();
+  loadOpponents();
 }
 
 /* ── 팀 통계 ── */
@@ -1424,6 +1458,10 @@ window.addEventListener('popstate', (e) => {
     backToMatches();
   } else if (state.page === 'admin') {
     exitAdmin();
+  } else if (state.page === 'ground') {
+    loadGrounds();
+  } else if (state.page === 'opponent') {
+    loadOpponents();
   }
 });
 
@@ -1518,6 +1556,12 @@ async function loadAdminData() {
 
   const gndSel = document.getElementById('new-ground-select');
   if (gndSel) gndSel.innerHTML = '<option value="">경기장 선택</option>' + grounds.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+
+  const emGndSel = document.getElementById('em-ground-select');
+  if (emGndSel) emGndSel.innerHTML = '<option value="">경기장 선택</option>' + grounds.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+
+  const emOppSel = document.getElementById('em-opponent-select');
+  if (emOppSel) emOppSel.innerHTML = '<option value="">팀 선택</option>' + opponents.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
 
   // 기록 입력용 (finished)
   const statSel = document.getElementById('a-stat-match');
@@ -1844,39 +1888,29 @@ function loadEditMatch() {
   if (!m) return;
   document.getElementById('em-date').value = m.match_date || '';
   document.getElementById('em-time').value = m.match_time || '';
-  document.getElementById('em-opponent').value = m.opponents?.name || m.opponent || '';
-  document.getElementById('em-ground').value = m.grounds?.name || m.ground || '';
+  document.getElementById('em-opponent-select').value = m.opponent_id || '';
+  document.getElementById('em-ground-select').value = m.ground_id || '';
 }
 
 async function updateMatch() {
   const id = document.getElementById('em-match-select').value;
   if (!id) { alert('경기를 선택해주세요!'); return; }
 
-  const opponent = document.getElementById('em-opponent').value.trim();
   const date = document.getElementById('em-date').value;
-  if (!opponent || !date) { alert('날짜와 상대팀은 필수입니다!'); return; }
+  const opponentId = parseInt(document.getElementById('em-opponent-select').value);
+  if (!date || !opponentId) { alert('날짜와 상대팀은 필수입니다!'); return; }
 
-  // opponents 테이블에 없으면 추가
-  let opponentId = null;
-  const existOpp = await api(`opponents?select=id&name=eq.${encodeURIComponent(opponent)}`);
-  if (existOpp.length > 0) {
-    opponentId = existOpp[0].id;
-  } else {
-    const res = await fetch(`${SUPA_URL}/rest/v1/opponents`, {
-      method: 'POST',
-      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify({ name: opponent })
-    });
-    const data = await res.json();
-    opponentId = data[0]?.id;
-  }
+  const opponent = allOpponents.find(o=>o.id===opponentId)?.name || '';
+  const groundId = parseInt(document.getElementById('em-ground-select').value) || null;
+  const ground = allGrounds.find(g=>g.id===groundId)?.name || '';
 
   const body = {
     match_date: date,
     match_time: document.getElementById('em-time').value || null,
     opponent,
     opponent_id: opponentId,
-    ground: document.getElementById('em-ground').value.trim() || null,
+    ground: ground || null,
+    ground_id: groundId,
   };
 
   const res = await fetch(`${SUPA_URL}/rest/v1/matches?id=eq.${id}`, {
