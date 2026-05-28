@@ -254,6 +254,8 @@
   <button class="team-tab" onclick="switchTab('scorers',this)">플레이어 통계</button>
   <button class="team-tab" onclick="switchTab('squad',this)">스쿼드</button>
   <button class="team-tab" onclick="switchTab('teamstats',this)">팀 통계</button>
+  <button class="team-tab" onclick="switchTab('grounds',this)">운동장</button>
+  <button class="team-tab" onclick="switchTab('opponents',this)">상대팀</button>
   <button class="team-tab" onclick="openAdminTab(this)">🔒</button>
 </div>
 
@@ -495,7 +497,7 @@
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
         <div style="margin-bottom:10px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
-          <select id="a-stat-match" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+          <select id="a-stat-match" onchange="loadAttendedPlayers()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
             <option value="">경기를 선택하세요</option>
           </select>
         </div>
@@ -781,6 +783,8 @@ const api = async path => {
 
 let allStats = [];
 let allAdminMatches = [];
+let allOpponents = [];
+let allGrounds = [];
 const loaded = {};
 
 /* ── 팀 개요 ── */
@@ -1135,6 +1139,46 @@ async function loadSquad() {
 }
 
 /* ── 탭 전환 ── */
+/* ── 운동장 정보 ── */
+async function loadGrounds() {
+  const grounds = await api('grounds?select=*&order=name.asc');
+
+  let html = '';
+  for (const g of grounds) {
+    html += `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px">
+      <div style="margin-bottom:8px">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">${g.name}</div>
+        ${g.location ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">📍 ${g.location}</div>` : ''}
+      </div>
+
+      ${g.lat && g.lng ? `
+      <div style="border-radius:8px;overflow:hidden;height:140px">
+        <iframe src="https://www.google.com/maps?q=${g.lat},${g.lng}&z=16&output=embed" width="100%" height="140" style="border:0;display:block" loading="lazy"></iframe>
+      </div>` : ''}
+    </div>`;
+  }
+
+  document.getElementById('grounds-content').innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--muted)">등록된 경기장이 없습니다</div>';
+  document.getElementById('grounds-loading').style.display = 'none';
+  document.getElementById('grounds-content').style.display = 'block';
+}
+
+/* ── 상대팀 정보 ── */
+async function loadOpponents() {
+  const opponents = await api('opponents?select=*&order=name.asc');
+
+  let html = '';
+  for (const o of opponents) {
+    html += `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px">
+      <div style="font-size:14px;font-weight:700;color:var(--text)">${o.name}</div>
+    </div>`;
+  }
+
+  document.getElementById('opponents-content').innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--muted)">경기 기록이 없습니다</div>';
+  document.getElementById('opponents-loading').style.display = 'none';
+  document.getElementById('opponents-content').style.display = 'block';
+}
+
 /* ── 팀 통계 ── */
 async function loadTeamStats() {
   const matches = await api('matches?select=*&status=eq.finished&order=match_date.asc');
@@ -1313,7 +1357,7 @@ async function loadTeamStats() {
   document.getElementById('teamstats-content').style.display = 'block';
 }
 
-const TAB_ORDER = ['overview','matches','scorers','squad','teamstats'];
+const TAB_ORDER = ['overview','matches','scorers','squad','teamstats','grounds','opponents'];
 
 function switchTab(tab, btn) {
   document.querySelectorAll('.team-tab').forEach(b=>b.classList.remove('active'));
@@ -1330,6 +1374,8 @@ function switchTab(tab, btn) {
     if (tab==='scorers') loadScorers();
     if (tab==='squad') loadSquad();
     if (tab==='teamstats') loadTeamStats();
+    if (tab==='grounds') loadGrounds();
+    if (tab==='opponents') loadOpponents();
   }
 }
 
@@ -1461,15 +1507,26 @@ async function loadAdminData() {
   erSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
     finished.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponents?.name||m.opponent}</option>`).join('');
 
+  // 상대팀 목록
+  const opponents = await api('opponents?select=*&order=name.asc');
+  const grounds = await api('grounds?select=*&order=name.asc');
+  allOpponents = opponents;
+  allGrounds = grounds;
+
+  const oppSel = document.getElementById('new-opponent-select');
+  if (oppSel) oppSel.innerHTML = '<option value="">팀 선택</option>' + opponents.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
+
+  const gndSel = document.getElementById('new-ground-select');
+  if (gndSel) gndSel.innerHTML = '<option value="">경기장 선택</option>' + grounds.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+
   // 기록 입력용 (finished)
   const statSel = document.getElementById('a-stat-match');
   statSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
     finished.map(m=>`<option value="${m.id}">${m.match_date} vs ${m.opponents?.name||m.opponent}</option>`).join('');
 
-  // 선수 목록 (기록용)
+  // 선수 목록 (기록용) - 경기 선택 후 참석자만 표시
   const playerSel = document.getElementById('a-player-select');
-  playerSel.innerHTML = '<option value="">선수를 선택하세요</option>' +
-    players.map(p=>`<option value="${p.id}">#${p.number} ${p.name}</option>`).join('');
+  playerSel.innerHTML = '<option value="">경기를 먼저 선택하세요</option>';
 
   // 선수 정보 수정용
   const epSel = document.getElementById('ep-select');
@@ -1617,6 +1674,26 @@ async function saveStat() {
   }
 }
 
+async function loadAttendedPlayers() {
+  const matchId = document.getElementById('a-stat-match').value;
+  const playerSel = document.getElementById('a-player-select');
+  if (!matchId) {
+    playerSel.innerHTML = '<option value="">경기를 먼저 선택하세요</option>';
+    return;
+  }
+  const attended = await api(`match_stats?select=player_id,players(id,name,number)&match_id=eq.${matchId}&attended=eq.true`);
+  if (attended.length > 0) {
+    playerSel.innerHTML = '<option value="">선수를 선택하세요</option>' +
+      attended.sort((a,b)=>a.players.number-b.players.number)
+              .map(s=>`<option value="${s.players.id}">#${s.players.number} ${s.players.name}</option>`).join('');
+  } else {
+    // 참석 데이터 없으면 전체 선수
+    playerSel.innerHTML = '<option value="">선수를 선택하세요 (참석 미입력)</option>' +
+      allPlayers.map(p=>`<option value="${p.id}">#${p.number} ${p.name}</option>`).join('');
+  }
+  document.getElementById('a-stat-hint').textContent = '';
+}
+
 async function loadAttendance() {
   const matchId = document.getElementById('a-attend-match').value;
   if (!matchId) return;
@@ -1707,6 +1784,22 @@ async function loadExistingStat() {
     document.getElementById('a-stat-hint').textContent = '신규 기록입니다';
     document.getElementById('a-stat-hint').style.color = 'var(--muted)';
   }
+}
+
+function toggleNewOpponent() {
+  const input = document.getElementById('new-opponent-input');
+  const sel = document.getElementById('new-opponent-select');
+  const show = input.style.display === 'none';
+  input.style.display = show ? 'block' : 'none';
+  sel.style.display = show ? 'none' : 'block';
+}
+
+function toggleNewGround() {
+  const input = document.getElementById('new-ground-input');
+  const sel = document.getElementById('new-ground-select');
+  const show = input.style.display === 'none';
+  input.style.display = show ? 'block' : 'none';
+  sel.style.display = show ? 'none' : 'block';
 }
 
 function loadEditResult() {
@@ -2542,4 +2635,16 @@ function backToSquad() {
 }
 </script>
 </body>
-</html>
+</html>    <!-- 운동장 정보 -->
+    <div class="tab-section" id="tab-grounds">
+      <div class="loading" id="grounds-loading"><div class="spinner"></div>불러오는 중...</div>
+      <div id="grounds-content" style="display:none;padding:12px"></div>
+    </div>
+
+    <!-- 상대팀 -->
+    <div class="tab-section" id="tab-opponents">
+      <div class="loading" id="opponents-loading"><div class="spinner"></div>불러오는 중...</div>
+      <div id="opponents-content" style="display:none;padding:12px"></div>
+    </div>
+
+    
