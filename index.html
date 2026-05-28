@@ -750,6 +750,70 @@
         <button onclick="updatePlayer()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">정보 저장</button>
       </div>
 
+      <!-- 운동장 등록/수정 -->
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">운동장 등록/수정</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">운동장 선택 (수정) 또는 비워두면 신규 등록</div>
+          <select id="gm-select" onchange="loadEditGround()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">+ 신규 등록</option>
+          </select>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">운동장 이름 *</div>
+          <input id="gm-name" type="text" placeholder="운동장 이름" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">주소</div>
+          <input id="gm-location" type="text" placeholder="경기도 안산시 ..." style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">위도 (lat)</div>
+            <input id="gm-lat" type="number" step="any" placeholder="37.000000" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경도 (lng)</div>
+            <input id="gm-lng" type="number" step="any" placeholder="126.000000" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">운동장 정보</div>
+          <textarea id="gm-desc" placeholder="운동장에 대한 추가 정보" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;height:70px;resize:none"></textarea>
+        </div>
+        <button onclick="saveGround()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">운동장 저장</button>
+      </div>
+
+      <!-- 상대팀 등록/수정 -->
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">상대팀 등록/수정</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">팀 선택 (수정) 또는 비워두면 신규 등록</div>
+          <select id="om-select" onchange="loadEditOpponent()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">+ 신규 등록</option>
+          </select>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">팀명 *</div>
+          <input id="om-name" type="text" placeholder="팀명" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">연고지</div>
+            <input id="om-location" type="text" placeholder="안산시" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">연령대</div>
+            <input id="om-age" type="text" placeholder="30대" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">팀 정보</div>
+          <textarea id="om-desc" placeholder="팀에 대한 추가 정보" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;height:70px;resize:none"></textarea>
+        </div>
+        <button onclick="saveOpponent()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">팀 저장</button>
+      </div>
+
       <!-- 선수 탈퇴 -->
       <div style="font-size:12px;font-weight:700;color:var(--lose);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">선수 탈퇴</div>
       <div style="background:#fff;border:1px solid #ffcdd2;border-radius:10px;padding:16px;margin-bottom:16px">
@@ -1563,6 +1627,12 @@ async function loadAdminData() {
   const emOppSel = document.getElementById('em-opponent-select');
   if (emOppSel) emOppSel.innerHTML = '<option value="">팀 선택</option>' + opponents.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
 
+  const gmSel = document.getElementById('gm-select');
+  if (gmSel) gmSel.innerHTML = '<option value="">+ 신규 등록</option>' + grounds.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+
+  const omSel = document.getElementById('om-select');
+  if (omSel) omSel.innerHTML = '<option value="">+ 신규 등록</option>' + opponents.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
+
   // 기록 입력용 (finished)
   const statSel = document.getElementById('a-stat-match');
   statSel.innerHTML = '<option value="">경기를 선택하세요</option>' +
@@ -1828,6 +1898,84 @@ async function loadExistingStat() {
     document.getElementById('a-stat-hint').textContent = '신규 기록입니다';
     document.getElementById('a-stat-hint').style.color = 'var(--muted)';
   }
+}
+
+function loadEditGround() {
+  const id = parseInt(document.getElementById('gm-select').value);
+  const g = allGrounds.find(x=>x.id===id);
+  if (!g) {
+    ['gm-name','gm-location','gm-lat','gm-lng','gm-desc'].forEach(i=>document.getElementById(i).value='');
+    return;
+  }
+  document.getElementById('gm-name').value = g.name || '';
+  document.getElementById('gm-location').value = g.location || '';
+  document.getElementById('gm-lat').value = g.lat || '';
+  document.getElementById('gm-lng').value = g.lng || '';
+  document.getElementById('gm-desc').value = g.description || '';
+}
+
+async function saveGround() {
+  const name = document.getElementById('gm-name').value.trim();
+  if (!name) { alert('운동장 이름은 필수입니다!'); return; }
+  const id = parseInt(document.getElementById('gm-select').value);
+  const body = {
+    name,
+    location: document.getElementById('gm-location').value.trim() || null,
+    lat: parseFloat(document.getElementById('gm-lat').value) || null,
+    lng: parseFloat(document.getElementById('gm-lng').value) || null,
+    description: document.getElementById('gm-desc').value.trim() || null,
+  };
+  const isNew = !id;
+  const url = isNew ? `${SUPA_URL}/rest/v1/grounds` : `${SUPA_URL}/rest/v1/grounds?id=eq.${id}`;
+  const method = isNew ? 'POST' : 'PATCH';
+  const res = await fetch(url, {
+    method,
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify(body)
+  });
+  if (res.ok) {
+    alert(`운동장 ${isNew?'등록':'수정'} 완료! ✅`);
+    await loadAdminData();
+    loaded['grounds'] = false;
+  } else { alert('오류가 발생했어요.'); }
+}
+
+function loadEditOpponent() {
+  const id = parseInt(document.getElementById('om-select').value);
+  const o = allOpponents.find(x=>x.id===id);
+  if (!o) {
+    ['om-name','om-location','om-age','om-desc'].forEach(i=>document.getElementById(i).value='');
+    return;
+  }
+  document.getElementById('om-name').value = o.name || '';
+  document.getElementById('om-location').value = o.location || '';
+  document.getElementById('om-age').value = o.age_group || '';
+  document.getElementById('om-desc').value = o.description || '';
+}
+
+async function saveOpponent() {
+  const name = document.getElementById('om-name').value.trim();
+  if (!name) { alert('팀명은 필수입니다!'); return; }
+  const id = parseInt(document.getElementById('om-select').value);
+  const body = {
+    name,
+    location: document.getElementById('om-location').value.trim() || null,
+    age_group: document.getElementById('om-age').value.trim() || null,
+    description: document.getElementById('om-desc').value.trim() || null,
+  };
+  const isNew = !id;
+  const url = isNew ? `${SUPA_URL}/rest/v1/opponents` : `${SUPA_URL}/rest/v1/opponents?id=eq.${id}`;
+  const method = isNew ? 'POST' : 'PATCH';
+  const res = await fetch(url, {
+    method,
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify(body)
+  });
+  if (res.ok) {
+    alert(`팀 ${isNew?'등록':'수정'} 완료! ✅`);
+    await loadAdminData();
+    loaded['opponents'] = false;
+  } else { alert('오류가 발생했어요.'); }
 }
 
 function toggleNewOpponent() {
