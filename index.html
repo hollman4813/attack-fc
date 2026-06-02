@@ -2189,9 +2189,12 @@ async function updatePlayer() {
   let photoUrl = null;
   const photoFile = document.getElementById('ep-photo-input').files[0];
   if (photoFile) {
+    // 선수 등번호 가져오기
+    const playerInfo = allPlayers.find(p=>p.id===parseInt(id));
+    const number = playerInfo?.number || id;
     const ext = photoFile.name.split('.').pop().toLowerCase();
-    const fileName = `player_${id}_${Date.now()}.${ext}`;
-    const uploadRes = await fetch(`${SUPA_URL}/storage/v1/object/players/${fileName}`, {
+    const fileName = `${number}.${ext}`;
+    const uploadRes = await fetch(`${SUPA_URL}/storage/v1/object/profile/${fileName}`, {
       method: 'POST',
       headers: {
         'apikey': SUPA_KEY,
@@ -2203,7 +2206,7 @@ async function updatePlayer() {
       body: photoFile
     });
     if (uploadRes.ok) {
-      photoUrl = `${SUPA_URL}/storage/v1/object/public/players/${fileName}?t=${Date.now()}`;
+      photoUrl = `${SUPA_URL}/storage/v1/object/public/profile/${fileName}?t=${Date.now()}`;
     } else {
       const errText = await uploadRes.text();
       console.error('업로드 실패:', uploadRes.status, errText);
