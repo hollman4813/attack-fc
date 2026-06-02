@@ -1212,25 +1212,39 @@ async function loadSquad() {
 /* ── 운동장 정보 ── */
 async function loadGrounds() {
   const grounds = await api('grounds?select=*&order=name.asc');
+  window._groundsData = grounds;
 
-  let html = '';
-  for (const g of grounds) {
-    html += `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px">
-      <div style="margin-bottom:8px">
-        <div style="font-size:14px;font-weight:700;color:var(--text)">${g.name}</div>
-        ${g.location ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">📍 ${g.location}</div>` : ''}
+  const html = grounds.map(g => `
+    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden">
+      <div onclick="toggleGroundDetail(${g.id})" style="padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text)">${g.name}</div>
+          ${g.location ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">📍 ${g.location}</div>` : ''}
+        </div>
+        <div id="ground-arrow-${g.id}" style="font-size:16px;color:var(--muted);transition:transform 0.2s">›</div>
       </div>
-
-      ${g.lat && g.lng ? `
-      <div style="border-radius:8px;overflow:hidden;height:140px">
-        <iframe src="https://www.google.com/maps?q=${g.lat},${g.lng}&z=16&output=embed" width="100%" height="140" style="border:0;display:block" loading="lazy"></iframe>
-      </div>` : ''}
-    </div>`;
-  }
+      <div id="ground-detail-${g.id}" style="display:none;border-top:1px solid var(--border)">
+        ${g.description ? `<div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">운동장 정보</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.6">${g.description}</div>
+        </div>` : ''}
+        ${g.lat && g.lng
+          ? `<iframe src="https://www.google.com/maps?q=${g.lat},${g.lng}&z=16&output=embed" width="100%" height="180" style="border:0;display:block" loading="lazy"></iframe>`
+          : '<div style="padding:12px 16px;color:var(--muted);font-size:12px;text-align:center">지도 정보 없음</div>'}
+      </div>
+    </div>`).join('');
 
   document.getElementById('grounds-content').innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--muted)">등록된 경기장이 없습니다</div>';
   document.getElementById('grounds-loading').style.display = 'none';
   document.getElementById('grounds-content').style.display = 'block';
+}
+
+function toggleGroundDetail(id) {
+  const detail = document.getElementById(`ground-detail-${id}`);
+  const arrow = document.getElementById(`ground-arrow-${id}`);
+  const isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'block';
+  arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
 }
 
 /* ── 상대팀 정보 ── */
@@ -1523,7 +1537,6 @@ window.addEventListener('popstate', (e) => {
   } else if (state.page === 'admin') {
     exitAdmin();
   } else if (state.page === 'ground') {
-    loadGrounds();
   } else if (state.page === 'opponent') {
     loadOpponents();
   }
@@ -1870,7 +1883,9 @@ async function saveAttendance() {
 
   if (success) {
     alert(`참석 저장 완료! ✅ ${attendedIds.length}명`);
-    await loadAttendance();
+    document.getElementById('a-attend-match').value = '';
+    document.getElementById('a-attendance-list').innerHTML = '<div style="color:var(--muted);font-size:12px;grid-column:span 2;padding:8px 0">경기를 먼저 선택해주세요</div>';
+    document.getElementById('a-attend-count').textContent = '';
   } else {
     alert('일부 저장에 실패했어요.');
   }
@@ -1935,6 +1950,11 @@ async function saveGround() {
   });
   if (res.ok) {
     alert(`운동장 ${isNew?'등록':'수정'} 완료! ✅`);
+    ['gm-name','gm-location','gm-lat','gm-lng','gm-desc'].forEach(i=>{
+      const el = document.getElementById(i);
+      if(el) el.value='';
+    });
+    document.getElementById('gm-select').value = '';
     await loadAdminData();
     loaded['grounds'] = false;
   } else { alert('오류가 발생했어요.'); }
@@ -1973,6 +1993,11 @@ async function saveOpponent() {
   });
   if (res.ok) {
     alert(`팀 ${isNew?'등록':'수정'} 완료! ✅`);
+    ['om-name','om-location','om-age','om-desc'].forEach(i=>{
+      const el = document.getElementById(i);
+      if(el) el.value='';
+    });
+    document.getElementById('om-select').value = '';
     await loadAdminData();
     loaded['opponents'] = false;
   } else { alert('오류가 발생했어요.'); }
@@ -2019,9 +2044,7 @@ async function updateResult() {
 
   if (res.ok) {
     alert(`결과 수정 완료! ✅ ${ourScore}:${oppScore} (${result==='Win'?'승':result==='Lose'?'패':'무'})`);
-    document.getElementById('er-match-select').value = '';
-    document.getElementById('er-our-score').value = '';
-    document.getElementById('er-opp-score').value = '';
+    ['er-match-select','er-our-score','er-opp-score'].forEach(i=>document.getElementById(i).value='');
     await loadAdminData();
     loaded['matches'] = false;
     loaded['overview'] = false;
@@ -2149,6 +2172,9 @@ async function updatePlayer() {
 
   if (res.ok) {
     alert('선수 정보 저장 완료! ✅');
+    document.getElementById('ep-select').value = '';
+    ['ep-position','ep-foot','ep-status'].forEach(i=>document.getElementById(i).value='');
+    ['ep-birth','ep-nickname','ep-nationality','ep-join-date'].forEach(i=>document.getElementById(i).value='');
     await loadAdminData();
     loaded['squad'] = false;
   } else {
