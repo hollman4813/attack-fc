@@ -2189,17 +2189,25 @@ async function updatePlayer() {
   let photoUrl = null;
   const photoFile = document.getElementById('ep-photo-input').files[0];
   if (photoFile) {
-    const ext = photoFile.name.split('.').pop();
-    const fileName = `player_${id}.${ext}`;
+    const ext = photoFile.name.split('.').pop().toLowerCase();
+    const fileName = `player_${id}_${Date.now()}.${ext}`;
     const uploadRes = await fetch(`${SUPA_URL}/storage/v1/object/players/${fileName}`, {
       method: 'POST',
-      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': photoFile.type, 'x-upsert': 'true' },
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`,
+        'Content-Type': photoFile.type,
+        'x-upsert': 'true',
+        'Cache-Control': '3600'
+      },
       body: photoFile
     });
     if (uploadRes.ok) {
-      photoUrl = `${SUPA_URL}/storage/v1/object/public/players/${fileName}`;
+      photoUrl = `${SUPA_URL}/storage/v1/object/public/players/${fileName}?t=${Date.now()}`;
     } else {
-      alert('사진 업로드 실패. 정보는 계속 저장합니다.');
+      const errText = await uploadRes.text();
+      console.error('업로드 실패:', uploadRes.status, errText);
+      alert(`사진 업로드 실패 (${uploadRes.status}): ${errText}`);
     }
   }
 
