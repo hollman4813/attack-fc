@@ -466,6 +466,96 @@
     <div id="match-detail-content"></div>
   </div>
 
+
+
+
+
+    </div>
+  </div>
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+    </div>
+  </div>
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+    </div>
+  </div>
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+    </div>
+  </div>
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+    </div>
+  </div>
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
+
+
+
+
+    </div>
+  </div>
+
+  <!-- 경기 상세 페이지 -->
+  <div class="section" id="match-detail">
+    <div id="match-detail-content"></div>
+  </div>
+
   <!-- 관리자 페이지 -->
   <div class="section" id="admin-page">
     <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:20px 16px">
@@ -489,6 +579,28 @@
           <div style="color:var(--muted);font-size:12px;grid-column:span 2;padding:8px 0">경기를 먼저 선택해주세요</div>
         </div>
         <button onclick="saveAttendance()" style="width:100%;padding:10px;background:var(--win);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 참석 저장</button>
+      </div>
+
+      <!-- 경기 결과 입력 -->
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 결과 입력</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
+          <select id="a-match-select" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <option value="">경기를 선택하세요</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">우리팀 득점</div>
+            <input id="a-our-score" type="number" min="0" placeholder="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상대팀 득점</div>
+            <input id="a-opp-score" type="number" min="0" placeholder="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
+          </div>
+        </div>
+        <button onclick="saveResult()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">결과 저장</button>
       </div>
 
       <!-- 경기 기록 입력 -->
@@ -561,28 +673,6 @@
           <input id="new-ground-input" type="text" placeholder="새 경기장 이름 입력" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;display:none">
         </div>
         <button onclick="addMatch()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">일정 추가</button>
-      </div>
-
-      <!-- 경기 결과 입력 -->
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 결과 입력</div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
-        <div style="margin-bottom:10px">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
-          <select id="a-match-select" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
-            <option value="">경기를 선택하세요</option>
-          </select>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">우리팀 득점</div>
-            <input id="a-our-score" type="number" min="0" placeholder="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상대팀 득점</div>
-            <input id="a-opp-score" type="number" min="0" placeholder="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
-          </div>
-        </div>
-        <button onclick="saveResult()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">결과 저장</button>
       </div>
 
       <!-- 경기 결과 수정 -->
@@ -2134,8 +2224,6 @@ async function addPlayer() {
     position: document.getElementById('np-position').value || null,
     dominant_foot: document.getElementById('np-foot').value || null,
     birth_date: document.getElementById('np-birth').value || null,
-    height: parseInt(document.getElementById('np-height').value) || null,
-    phone: document.getElementById('np-phone').value.trim() || null,
     nickname: document.getElementById('np-nickname').value.trim() || null,
     status: 'active'
   };
@@ -2148,7 +2236,7 @@ async function addPlayer() {
 
   if (res.ok) {
     alert(`${name} 선수 등록 완료! ✅`);
-    ['np-name','np-number','np-birth','np-height','np-phone','np-nickname'].forEach(id => document.getElementById(id).value = '');
+    ['np-name','np-number','np-birth','np-nickname'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('np-position').value = '';
     document.getElementById('np-foot').value = '';
     await loadAdminData();
