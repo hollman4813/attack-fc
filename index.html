@@ -1774,7 +1774,7 @@ async function addMatch() {
   const date = document.getElementById('a-date').value;
   const time = document.getElementById('a-time').value;
   const opponent = document.getElementById('a-opponent').value.trim();
-  const ground = document.getElementById('a-ground').value.trim();
+
 
   if (!date || !opponent) { alert('날짜와 상대팀은 필수입니다!'); return; }
 
@@ -1798,10 +1798,9 @@ async function addMatch() {
 
   if (res.ok) {
     alert('경기 일정이 추가됐어요! ✅');
-    document.getElementById('a-date').value = '';
-    document.getElementById('a-time').value = '';
+
     document.getElementById('a-opponent').value = '';
-    document.getElementById('a-ground').value = '';
+
     await loadAdminData();
   } else {
     alert('오류가 발생했어요. 다시 시도해주세요.');
