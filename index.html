@@ -1070,7 +1070,10 @@ async function loadOverview() {
   // TOP3
   const ri = (p,i,k,lbl) => {
     const cls=['p1','p2','p3'][i]||'';
-    return `<div class="rank-item" onclick="showPlayer(${p.id})" style="cursor:pointer"><div class="rank-pos ${cls}">${i+1}</div><div class="rank-avatar">${p.name.slice(0,1)}</div><div class="rank-info"><div class="rank-name">${p.name}</div><div class="rank-sub">#${p.number||'-'}</div></div><div><div class="rank-val">${p[k]}</div><div class="rank-val-label">${lbl}</div></div></div>`;
+    const avatar = p.photo_url
+      ? `<img src="${p.photo_url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+      : `<div class="rank-avatar">${p.name.slice(0,1)}</div>`;
+    return `<div class="rank-item" onclick="showPlayer(${p.id})" style="cursor:pointer"><div class="rank-pos ${cls}">${i+1}</div>${avatar}<div class="rank-info"><div class="rank-name">${p.name}</div><div class="rank-sub">#${p.number||'-'}</div></div><div><div class="rank-val">${p[k]}</div><div class="rank-val-label">${lbl}</div></div></div>`;
   };
   document.getElementById('ov-goals').innerHTML = [...stats].sort((a,b)=>b['총골']-a['총골']).slice(0,3).map((p,i)=>ri(p,i,'총골','골')).join('');
   document.getElementById('ov-assists').innerHTML = [...stats].sort((a,b)=>b['총어시스트']-a['총어시스트']).slice(0,3).map((p,i)=>ri(p,i,'총어시스트','어시스트')).join('');
