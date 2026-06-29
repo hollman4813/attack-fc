@@ -1771,37 +1771,81 @@ function loadStatPlayers() {
 }
 
 async function addMatch() {
-  const date = document.getElementById('a-date').value;
-  const time = document.getElementById('a-time').value;
-  const opponent = document.getElementById('a-opponent').value.trim();
+  const date = document.getElementById('new-date').value;
+  const time = document.getElementById('new-time').value;
+  if (!date) { alert('날짜는 필수입니다!'); return; }
 
+  // 상대팀
+  const oppInput = document.getElementById('new-opponent-input');
+  const oppSel = document.getElementById('new-opponent-select');
+  let opponent = '', opponentId = null;
 
-  if (!date || !opponent) { alert('날짜와 상대팀은 필수입니다!'); return; }
+  if (oppInput.style.display !== 'none') {
+    opponent = oppInput.value.trim();
+    if (!opponent) { alert('상대팀 이름을 입력해주세요!'); return; }
+    const res = await fetch(`${SUPA_URL}/rest/v1/opponents`, {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ name: opponent })
+    });
+    const data = await res.json();
+    opponentId = data[0]?.id;
+  } else {
+    opponentId = parseInt(oppSel.value);
+    if (!opponentId) { alert('상대팀을 선택해주세요!'); return; }
+    opponent = allOpponents.find(o=>o.id===opponentId)?.name || '';
+  }
+
+  // 경기장
+  const gndInput = document.getElementById('new-ground-input');
+  const gndSel = document.getElementById('new-ground-select');
+  let ground = '', groundId = null;
+
+  if (gndInput.style.display !== 'none') {
+    ground = gndInput.value.trim();
+    if (ground) {
+      const res = await fetch(`${SUPA_URL}/rest/v1/grounds`, {
+        method: 'POST',
+        headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify({ name: ground })
+      });
+      const data = await res.json();
+      groundId = data[0]?.id;
+    }
+  } else {
+    groundId = parseInt(gndSel.value) || null;
+    ground = allGrounds.find(g=>g.id===groundId)?.name || '';
+  }
+
+  const body = {
+    match_date: date,
+    match_time: time || null,
+    opponent,
+    opponent_id: opponentId,
+    ground: ground || null,
+    ground_id: groundId || null,
+    status: 'upcoming',
+    season_id: 1
+  };
 
   const res = await fetch(`${SUPA_URL}/rest/v1/matches`, {
     method: 'POST',
-    headers: {
-      'apikey': SUPA_KEY,
-      'Authorization': `Bearer ${SUPA_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=minimal'
-    },
-    body: JSON.stringify({
-      season_id: 1,
-      match_date: date,
-      match_time: time || null,
-      opponent,
-      ground: ground || null,
-      status: 'upcoming'
-    })
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify(body)
   });
 
   if (res.ok) {
-    alert('경기 일정이 추가됐어요! ✅');
-
-    document.getElementById('a-opponent').value = '';
-
+    alert('일정이 추가됐어요! ✅');
+    ['new-date','new-time','new-opponent-input','new-ground-input'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('new-opponent-select').value = '';
+    document.getElementById('new-ground-select').value = '';
+    document.getElementById('new-opponent-input').style.display = 'none';
+    document.getElementById('new-opponent-select').style.display = 'block';
+    document.getElementById('new-ground-input').style.display = 'none';
+    document.getElementById('new-ground-select').style.display = 'block';
     await loadAdminData();
+    loaded['matches'] = false;
+    loaded['overview'] = false;
   } else {
     alert('오류가 발생했어요. 다시 시도해주세요.');
   }
