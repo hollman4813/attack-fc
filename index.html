@@ -965,6 +965,11 @@ async function loadOverview() {
     api('matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.finished&order=match_date.desc&limit=7'),
     api('matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.upcoming&order=match_date.asc&limit=1')
   ]);
+  // photo_url 병합
+  const photoPlayers = await api('players?select=name,photo_url');
+  const overviewPhotoMap = {};
+  photoPlayers.forEach(p => overviewPhotoMap[p.name] = p.photo_url);
+  stats.forEach(s => s.photo_url = overviewPhotoMap[s.name] || null);
   allStats = stats;
   const s = summary[0] || {};
 
