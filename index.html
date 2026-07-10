@@ -787,6 +787,10 @@
             <option value="">선수를 선택하세요</option>
           </select>
         </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">등번호</div>
+          <input id="ep-number" type="number" placeholder="등번호" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:4px">포지션</div>
@@ -2301,6 +2305,7 @@ function loadEditPlayer() {
   const id = parseInt(document.getElementById('ep-select').value);
   const p = allPlayers.find(pl=>pl.id===id);
   if (!p) return;
+  document.getElementById('ep-number').value = p.number || '';
   document.getElementById('ep-position').value = p.position || '';
   document.getElementById('ep-foot').value = p.dominant_foot || '';
   document.getElementById('ep-birth').value = p.birth_date || '';
@@ -2353,6 +2358,7 @@ async function updatePlayer() {
   }
 
   const body = {
+    number: parseInt(document.getElementById('ep-number').value) || null,
     position: document.getElementById('ep-position').value || null,
     dominant_foot: document.getElementById('ep-foot').value || null,
     birth_date: document.getElementById('ep-birth').value || null,
@@ -2373,6 +2379,7 @@ async function updatePlayer() {
     alert('선수 정보 저장 완료! ✅');
     document.getElementById('ep-select').value = '';
     ['ep-position','ep-foot','ep-status'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('ep-number').value = '';
     ['ep-birth','ep-nickname','ep-nationality','ep-join-date'].forEach(i=>document.getElementById(i).value='');
     await loadAdminData();
     loaded['squad'] = false;
