@@ -1111,7 +1111,7 @@ async function loadMatches() {
     console.error('경기 로드 실패:', e);
   }
 
-  let html = chartHtml;
+  let html = '';
 
   if (upcoming.length > 0) {
     html += '<div class="match-group-date" style="padding-top:16px">예정 경기</div>';
@@ -1486,64 +1486,7 @@ async function loadTeamStats() {
 
   const sectionTitle = (icon, title) => `<div style="font-size:13px;font-weight:700;color:var(--text);margin:20px 0 10px;display:flex;align-items:center;gap:6px">${icon} ${title}</div>`;
 
-  // 월별 데이터 계산 (그래프용)
-  const monthlyData = Object.entries(monthMap).map(([month, s]) => ({
-    month: month.replace('년 ', '.').replace('월', ''),
-    goals: s.goals,
-    concede: s.concede,
-    games: s.games,
-    wins: s.wins
-  }));
-  const maxVal = Math.max(...monthlyData.map(d => Math.max(d.goals, d.concede)), 1);
 
-  // SVG 바 차트
-  const chartW = 320, chartH = 140, barW = 14, gap = 8;
-  const leftPad = 28, bottomPad = 30;
-  const availW = chartW - leftPad;
-  const availH = chartH - bottomPad;
-  const groupW = barW * 2 + gap + 10;
-  const totalGroups = monthlyData.length;
-
-  let bars = '', labels = '', yLines = '';
-  const ySteps = 4;
-  for (let i = 0; i <= ySteps; i++) {
-    const val = Math.round(maxVal / ySteps * i);
-    const y = availH - (val / maxVal * availH);
-    yLines += `<line x1="${leftPad}" y1="${y}" x2="${chartW}" y2="${y}" stroke="#eee" stroke-width="1"/>`;
-    yLines += `<text x="${leftPad - 4}" y="${y + 4}" text-anchor="end" font-size="9" fill="#999">${val}</text>`;
-  }
-
-  monthlyData.forEach((d, i) => {
-    const x = leftPad + i * (availW / totalGroups) + (availW / totalGroups - barW * 2 - gap) / 2;
-    const goalH = d.goals / maxVal * availH;
-    const concedeH = d.concede / maxVal * availH;
-    bars += `<rect x="${x}" y="${availH - goalH}" width="${barW}" height="${goalH}" fill="var(--skyblue)" rx="2"/>`;
-    bars += `<rect x="${x + barW + gap}" y="${availH - concedeH}" width="${barW}" height="${concedeH}" fill="#ef9a9a" rx="2"/>`;
-    const labelX = x + barW + gap / 2;
-    labels += `<text x="${labelX}" y="${availH + 16}" text-anchor="middle" font-size="9" fill="#999">${d.month}</text>`;
-    if (d.goals > 0) bars += `<text x="${x + barW/2}" y="${availH - goalH - 3}" text-anchor="middle" font-size="8" fill="var(--skyblue)">${d.goals}</text>`;
-    if (d.concede > 0) bars += `<text x="${x + barW + gap + barW/2}" y="${availH - concedeH - 3}" text-anchor="middle" font-size="8" fill="#e57373">${d.concede}</text>`;
-  });
-
-  const chartHtml = `
-    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:700;color:var(--text)">월별 득점/실점</div>
-        <div style="display:flex;gap:12px;font-size:11px;color:var(--muted)">
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:var(--skyblue);border-radius:2px;display:inline-block"></span>득점</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#ef9a9a;border-radius:2px;display:inline-block"></span>실점</span>
-        </div>
-      </div>
-      <div style="overflow-x:auto">
-        <svg width="${Math.max(chartW, totalGroups * (barW*2+gap+10) + leftPad + 10)}" height="${chartH}" style="display:block">
-          ${yLines}
-          <line x1="${leftPad}" y1="0" x2="${leftPad}" y2="${availH}" stroke="#ddd" stroke-width="1"/>
-          <line x1="${leftPad}" y1="${availH}" x2="${chartW}" y2="${availH}" stroke="#ddd" stroke-width="1"/>
-          ${bars}
-          ${labels}
-        </svg>
-      </div>
-    </div>`;
 
   const card = (inner) => `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:4px">${inner}</div>`;
 
@@ -1556,7 +1499,7 @@ async function loadTeamStats() {
       </div>
     </div>`;
 
-  let html = chartHtml;
+  let html = '';
 
   // 🏆 핵심 기록
   html += sectionTitle('🏆', '핵심 기록');
@@ -1597,13 +1540,14 @@ async function loadTeamStats() {
   // 📅 월별 통계
   html += sectionTitle('📅', '월별 통계');
   html += card(`<div style="padding:0">
-    <div style="display:grid;grid-template-columns:1fr 60px 80px;padding:8px 16px;background:var(--bg3);font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
-      <div>월</div><div style="text-align:center">경기</div><div style="text-align:right">승/무/패</div>
+    <div style="display:grid;grid-template-columns:1fr 40px 50px 80px;padding:8px 16px;background:var(--bg3);font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
+      <div>월</div><div style="text-align:center">경기</div><div style="text-align:center">득:실</div><div style="text-align:right">승/무/패</div>
     </div>
     ${Object.entries(monthMap).map(([month, s]) => `
-      <div style="display:grid;grid-template-columns:1fr 60px 80px;padding:11px 16px;border-top:1px solid var(--border);align-items:center">
+      <div style="display:grid;grid-template-columns:1fr 40px 50px 80px;padding:11px 16px;border-top:1px solid var(--border);align-items:center">
         <div style="font-size:13px;font-weight:600;color:var(--text)">${month}</div>
         <div style="text-align:center;font-size:13px;color:var(--muted)">${s.games}</div>
+        <div style="text-align:center;font-size:12px;color:var(--skyblue);font-weight:600">${s.goals}:${s.concede}</div>
         <div style="text-align:right;font-size:12px">${wdlBadge(s.wins,s.draws,s.losses)}</div>
       </div>`).join('')}
   </div>`);
@@ -3151,3 +3095,5 @@ function backToSquad() {
       <div class="loading" id="opponents-loading"><div class="spinner"></div>불러오는 중...</div>
       <div id="opponents-content" style="display:none;padding:12px"></div>
     </div>
+
+    
