@@ -1541,7 +1541,7 @@ async function loadTeamStats() {
   html += sectionTitle('📅', '월별 통계');
   html += card(`<div style="padding:0">
     <div style="display:grid;grid-template-columns:1fr 40px 50px 80px;padding:8px 16px;background:var(--bg3);font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
-      <div>월</div><div style="text-align:center">경기</div><div style="text-align:center">득:실</div><div style="text-align:right">승/무/패</div>
+      <div>월</div><div style="text-align:center">경기</div><div style="text-align:center">득점/실점</div><div style="text-align:right">승/무/패</div>
     </div>
     ${Object.entries(monthMap).map(([month, s]) => `
       <div style="display:grid;grid-template-columns:1fr 40px 50px 80px;padding:11px 16px;border-top:1px solid var(--border);align-items:center">
@@ -1555,8 +1555,8 @@ async function loadTeamStats() {
   // 🏟️ 경기장별 통계
   html += sectionTitle('🏟️', '경기장별 통계');
   html += card(`<div style="padding:0">
-    <div style="display:grid;grid-template-columns:1fr 50px 80px;padding:8px 16px;background:var(--bg3);font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
-      <div>경기장</div><div style="text-align:center">경기</div><div style="text-align:right">승/무/패</div>
+    <div style="display:grid;grid-template-columns:1fr 40px 60px 80px;padding:8px 16px;background:var(--bg3);font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
+      <div>경기장</div><div style="text-align:center">경기</div><div style="text-align:center">득점/실점</div><div style="text-align:right">승/무/패</div>
     </div>
     ${grounds.map(([g, s]) => `
       <div style="display:grid;grid-template-columns:1fr 50px 80px;padding:11px 16px;border-top:1px solid var(--border);align-items:center">
