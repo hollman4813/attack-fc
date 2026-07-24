@@ -235,7 +235,11 @@
     <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
     <div class="hero-info" style="flex:1;margin-left:12px">
       <div class="team-name" style="font-size:17px;font-weight:700;color:#fff">ATTACK F.C.</div>
-      <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px">창단 2006 · <img src="https://flagcdn.com/w40/kr.png" style="width:16px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:2px"> 대한민국</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6)">창단 2006 · <img src="https://flagcdn.com/w40/kr.png" style="width:16px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:2px"> 대한민국</div>
+        <select id="season-select" onchange="changeSeason(this.value)" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:12px;color:#fff;font-size:11px;font-weight:600;padding:2px 8px;font-family:inherit;cursor:pointer;outline:none">
+        </select>
+      </div>
     </div>
     <!-- @ch.attack4905 -->
     <a href="https://www.youtube.com/@ch.attack4905" target="_blank" rel="noopener" onclick="mobileYoutube(event)" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:7px 12px;cursor:pointer;text-decoration:none;flex-shrink:0">
@@ -956,6 +960,9 @@ const api = async path => {
 };
 
 let allStats = [];
+let currentSeasonId = 1;
+let currentSeasonName = "2026 시즌";
+let allSeasons = [];
 let allAdminMatches = [];
 let allOpponents = [];
 let allGrounds = [];
@@ -966,8 +973,8 @@ async function loadOverview() {
   const [summary, stats, matches, upcoming] = await Promise.all([
     api('view_season_summary?select=*'),
     api('view_season_stats?select=*'),
-    api('matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.finished&order=match_date.desc&limit=7'),
-    api('matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.upcoming&order=match_date.asc&limit=1')
+    api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.finished&season_id=eq.${currentSeasonId}&order=match_date.desc&limit=7`),
+    api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.upcoming&season_id=eq.${currentSeasonId}&order=match_date.asc&limit=1`)
   ]);
   // photo_url 병합
   const photoPlayers = await api('players?select=name,photo_url');
@@ -1603,6 +1610,24 @@ function switchTab(tab, btn) {
   }
 }
 
+/* ── 시즌 변경 ── */
+function changeSeason(id) {
+  currentSeasonId = parseInt(id);
+  const s = allSeasons.find(x=>x.id===currentSeasonId);
+  currentSeasonName = s?.name || '';
+  // 모든 탭 캐시 초기화
+  Object.keys(loaded).forEach(k=>loaded[k]=false);
+  allStats = [];
+  // 현재 탭 다시 로드
+  const activeTab = document.querySelector('.team-tab.active');
+  const tabName = document.querySelector('.tab-section.active')?.id?.replace('tab-','') || 'overview';
+  if (tabName==='overview') loadOverview();
+  else if (tabName==='matches') loadMatches();
+  else if (tabName==='scorers') loadScorers();
+  else if (tabName==='squad') loadSquad();
+  else if (tabName==='teamstats') loadTeamStats();
+}
+
 /* ── 유튜브 앱 열기 ── */
 function mobileYoutube(e) {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -1656,6 +1681,13 @@ window.addEventListener('popstate', (e) => {
 
 // 초기 히스토리 상태 설정
 history.replaceState({ page: 'home' }, '');
+
+// 시즌 목록 로드
+(async () => {
+  allSeasons = await api('seasons?select=*&order=year.desc');
+  const sel = document.getElementById('season-select');
+  sel.innerHTML = allSeasons.map(s=>`<option value="${s.id}" ${s.id===currentSeasonId?'selected':''}>${s.name}</option>`).join('');
+})();
 
 loadOverview();
 loaded['overview'] = true;
@@ -1837,7 +1869,7 @@ async function addMatch() {
     ground: ground || null,
     ground_id: groundId || null,
     status: 'upcoming',
-    season_id: 1
+    season_id: currentSeasonId
   };
 
   const res = await fetch(`${SUPA_URL}/rest/v1/matches`, {
@@ -2669,7 +2701,7 @@ async function showPlayer(playerId) {
 
     <!-- 시즌 통계 -->
     <div style="padding:0 12px;margin-top:20px">
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">2026 시즌 통계</div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">${currentSeasonName} 통계</div>
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
         <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)">
           <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
