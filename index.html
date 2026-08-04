@@ -235,11 +235,7 @@
     <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
     <div class="hero-info" style="flex:1;margin-left:12px">
       <div class="team-name" style="font-size:17px;font-weight:700;color:#fff">ATTACK F.C.</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
-        <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6)">창단 2006 · <img src="https://flagcdn.com/w40/kr.png" style="width:16px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:2px"> 대한민국</div>
-        <select id="season-select" onchange="changeSeason(this.value)" style="background:#1a3a6b;border:1px solid rgba(255,255,255,0.25);border-radius:12px;color:#fff;font-size:11px;font-weight:600;padding:2px 8px;font-family:inherit;cursor:pointer;outline:none">
-        </select>
-      </div>
+      <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px">창단 2006 · <img src="https://flagcdn.com/w40/kr.png" style="width:16px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:2px"> 대한민국</div>
     </div>
     <!-- @ch.attack4905 -->
     <a href="https://www.youtube.com/@ch.attack4905" target="_blank" rel="noopener" onclick="mobileYoutube(event)" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:7px 12px;cursor:pointer;text-decoration:none;flex-shrink:0">
@@ -1613,24 +1609,6 @@ function switchTab(tab, btn) {
   }
 }
 
-/* ── 시즌 변경 ── */
-function changeSeason(id) {
-  currentSeasonId = parseInt(id);
-  const s = allSeasons.find(x=>x.id===currentSeasonId);
-  currentSeasonName = s?.name || '';
-  // 모든 탭 캐시 초기화
-  Object.keys(loaded).forEach(k=>loaded[k]=false);
-  allStats = [];
-  // 현재 탭 다시 로드
-  const activeTab = document.querySelector('.team-tab.active');
-  const tabName = document.querySelector('.tab-section.active')?.id?.replace('tab-','') || 'overview';
-  if (tabName==='overview') loadOverview();
-  else if (tabName==='matches') loadMatches();
-  else if (tabName==='scorers') loadScorers();
-  else if (tabName==='squad') loadSquad();
-  else if (tabName==='teamstats') loadTeamStats();
-}
-
 /* ── 유튜브 앱 열기 ── */
 function mobileYoutube(e) {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -1684,13 +1662,6 @@ window.addEventListener('popstate', (e) => {
 
 // 초기 히스토리 상태 설정
 history.replaceState({ page: 'home' }, '');
-
-// 시즌 목록 로드
-(async () => {
-  allSeasons = await api('seasons?select=*&order=year.desc');
-  const sel = document.getElementById('season-select');
-  sel.innerHTML = allSeasons.map(s=>`<option value="${s.id}" ${s.id===currentSeasonId?'selected':''}>${s.name}</option>`).join('');
-})();
 
 loadOverview();
 loaded['overview'] = true;
