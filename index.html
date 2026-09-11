@@ -619,7 +619,7 @@
           </select>
           <div id="a-stat-hint" style="font-size:11px;color:var(--muted);margin-top:6px"></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:4px">골</div>
             <input id="a-goals" type="number" min="0" value="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
@@ -635,6 +635,20 @@
               <option value="true">예</option>
             </select>
           </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">MOM 득표수</div>
+            <input id="a-votes" type="number" min="0" value="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">총 참여인원</div>
+            <input id="a-total-participants" type="number" min="0" value="0" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;text-align:center">
+          </div>
+        </div>
+        <div style="margin-bottom:14px;display:flex;align-items:center;gap:8px;padding:10px;background:#f8f9fb;border-radius:8px">
+          <input type="checkbox" id="a-is-defender" style="width:16px;height:16px;accent-color:var(--skyblue)">
+          <label for="a-is-defender" style="font-size:13px;color:var(--text);cursor:pointer">수비 출전 (클린시트 보너스 대상)</label>
         </div>
         <button onclick="saveStat()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">기록 저장</button>
       </div>
@@ -1273,8 +1287,14 @@ async function loadSquad() {
 
   const posOrder = ['GK','DF','MF','FW'];
   const posLabel = {GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수'};
+
+  // 정상/부상/휴식 분리
+  const active = players.filter(p=>!p.status || p.status==='active');
+  const inactive = players.filter(p=>p.status==='injured'||p.status==='resting');
+
   const groups = {GK:[],DF:[],MF:[],FW:[],etc:[]};
-  players.forEach(p=>(p.position&&groups[p.position]?groups[p.position]:groups.etc).push(p));
+  active.forEach(p=>(p.position&&groups[p.position]?groups[p.position]:groups.etc).push(p));
+  Object.values(groups).forEach(arr=>arr.sort((a,b)=>a.name.localeCompare(b.name,'ko')));
 
   const row = p => {
     const s = sm[p.name]||{};
@@ -1311,12 +1331,20 @@ async function loadSquad() {
     </div>`;
   };
 
-  let html = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:left">닉네임</div><div style="text-align:center">No</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div><div style="text-align:center">상태</div></div>`;
+  const header = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:left">닉네임</div><div style="text-align:center">No</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div><div style="text-align:center">상태</div></div>`;
+  let html = header;
   posOrder.forEach(pos=>{
     if(!groups[pos].length) return;
     html += `<div class="squad-group-title">${posLabel[pos]}</div>${groups[pos].map(row).join('')}`;
   });
   if (groups.etc.length) html += `<div class="squad-group-title">기타</div>${groups.etc.map(row).join('')}`;
+
+  // 부상/휴식 섹션
+  if (inactive.length) {
+    html += `<div class="squad-group-title" style="margin-top:16px;color:var(--lose)">⚠️ 부상/휴식</div>`;
+    html += header;
+    html += inactive.sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(row).join('');
+  }
 
   document.getElementById('squad-list').innerHTML = html;
   document.getElementById('squad-loading').style.display = 'none';
@@ -1607,6 +1635,56 @@ function switchTab(tab, btn) {
     if (tab==='grounds') loadGrounds();
     if (tab==='opponents') loadOpponents();
   }
+}
+
+/* ── MOM 레이팅 계산 ── */
+function calcRating(playerVotes, totalGames, teamAvgRate, goalsConceded, isDefender) {
+  // 보정 득표율
+  const m = 2;
+  const R = playerVotes.totalVotes / Math.max(playerVotes.totalParticipants, 1);
+  const C = teamAvgRate;
+  const v = playerVotes.games;
+  const adjustedRate = (v * R + m * C) / (v + m);
+
+  // 기본 레이팅
+  const baseRating = 6.5 + (adjustedRate * 100 - teamAvgRate * 100) / 5;
+
+  // 클린시트 보너스
+  let bonus = 0;
+  if (isDefender) {
+    if (goalsConceded === 0) bonus = 1.0;
+    else if (goalsConceded === 1) bonus = 0.5;
+    else if (goalsConceded === 2) bonus = 0.2;
+  }
+
+  const finalRating = Math.min(10, Math.round((baseRating + bonus) * 2) / 2);
+  return Math.max(1, finalRating);
+}
+
+async function loadPlayerRatings(playerId) {
+  const votes = await api(`match_votes?select=*,matches(goals_conceded)&player_id=eq.${playerId}`);
+  if (!votes.length) return null;
+
+  const totalVotes = votes.reduce((s,v)=>s+v.vote_count,0);
+  const totalParticipants = votes.reduce((s,v)=>s+v.total_participants,0);
+  const games = votes.length;
+
+  // 팀 평균 득표율
+  const allVotes = await api(`match_votes?select=vote_count,total_participants`);
+  const teamTotalVotes = allVotes.reduce((s,v)=>s+v.vote_count,0);
+  const teamTotalParticipants = allVotes.reduce((s,v)=>s+v.total_participants,0);
+  const teamAvgRate = teamTotalParticipants > 0 ? teamTotalVotes/teamTotalParticipants : 0;
+
+  const ratings = votes.map(v => {
+    const conceded = v.matches?.goals_conceded ?? 99;
+    return calcRating(
+      { totalVotes: v.vote_count, totalParticipants: v.total_participants, games },
+      games, teamAvgRate, conceded, v.is_defender
+    );
+  });
+
+  const avgRating = ratings.reduce((s,r)=>s+r,0) / ratings.length;
+  return { avgRating: Math.round(avgRating*10)/10, games };
 }
 
 /* ── 유튜브 앱 열기 ── */
@@ -2057,14 +2135,17 @@ async function loadExistingStat() {
   const playerId = document.getElementById('a-player-select').value;
   if (!matchId || !playerId) return;
 
-  const existing = await api(`match_stats?select=*&match_id=eq.${matchId}&player_id=eq.${playerId}`);
+  const [existing, votes, player] = await Promise.all([
+    api(`match_stats?select=*&match_id=eq.${matchId}&player_id=eq.${playerId}`),
+    api(`match_votes?select=*&match_id=eq.${matchId}&player_id=eq.${playerId}`),
+    api(`players?select=position&id=eq.${playerId}`)
+  ]);
 
   if (existing.length > 0) {
     const s = existing[0];
     document.getElementById('a-goals').value = s.goals || 0;
     document.getElementById('a-assists').value = s.assists || 0;
     document.getElementById('a-mom').value = s.is_mom ? 'true' : 'false';
-    // 기존 기록 있음 표시
     document.getElementById('a-stat-hint').textContent = '✅ 기존 기록 불러옴 - 수정 후 저장하세요';
     document.getElementById('a-stat-hint').style.color = '#2e7d32';
   } else {
@@ -2073,6 +2154,19 @@ async function loadExistingStat() {
     document.getElementById('a-mom').value = 'false';
     document.getElementById('a-stat-hint').textContent = '신규 기록입니다';
     document.getElementById('a-stat-hint').style.color = 'var(--muted)';
+  }
+
+  // 득표수 로드
+  if (votes.length > 0) {
+    document.getElementById('a-votes').value = votes[0].vote_count || 0;
+    document.getElementById('a-total-participants').value = votes[0].total_participants || 0;
+    document.getElementById('a-is-defender').checked = votes[0].is_defender || false;
+  } else {
+    document.getElementById('a-votes').value = 0;
+    document.getElementById('a-total-participants').value = 0;
+    // 포지션 기반 수비출전 자동 체크
+    const pos = player[0]?.position;
+    document.getElementById('a-is-defender').checked = ['GK','DF'].includes(pos);
   }
 }
 
@@ -2548,6 +2642,14 @@ async function showPlayer(playerId) {
     }
   });
 
+  // 레이팅 로드
+  loadPlayerRatings(playerId).then(rating => {
+    const el = document.getElementById(`player-rating-${playerId}`);
+    if (!el || !rating) return;
+    const color = rating.avgRating >= 8 ? '#2e7d32' : rating.avgRating >= 6 ? '#f5a623' : '#c62828';
+    el.innerHTML = `<span style="font-size:22px;font-weight:800;color:${color}">${rating.avgRating}</span><span style="font-size:12px;color:var(--muted);margin-left:4px">/ 10</span><div style="font-size:10px;color:var(--muted);margin-top:2px">${rating.games}경기 평균</div>`;
+  });
+
   // 승무패 통계 로드
   api(`match_stats?select=attended,matches(result)&player_id=eq.${playerId}&attended=eq.true`).then(attended => {
     const el = document.getElementById(`player-wdl-${playerId}`);
@@ -2670,6 +2772,14 @@ async function showPlayer(playerId) {
             <div style="background:#6b1a3a;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.2)">${posMap[p.position]||p.position||'?'}</div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- 레이팅 -->
+    <div style="padding:0 12px;margin-top:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">시즌 평균 레이팅</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px" id="player-rating-${p.id}">
+        <div style="color:var(--muted);font-size:13px">집계 중...</div>
       </div>
     </div>
 
