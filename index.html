@@ -1164,6 +1164,7 @@ async function loadMatches() {
   });
 
   document.getElementById('matches-list').innerHTML = html;
+  window._cachedMatches = [...finished, ...upcoming];
   document.getElementById('matches-loading').style.display = 'none';
   document.getElementById('matches-content').style.display = 'block';
 }
@@ -1658,7 +1659,7 @@ function calcRating(playerVotes, totalGames, teamAvgRate, goalsConceded, isDefen
   }
 
   const finalRating = Math.min(10, Math.round((baseRating + bonus) * 2) / 2);
-  return Math.max(1, finalRating);
+  return Math.max(1, Math.round(finalRating * 10) / 10);
 }
 
 async function loadPlayerRatings(playerId) {
@@ -1684,7 +1685,65 @@ async function loadPlayerRatings(playerId) {
   });
 
   const avgRating = ratings.reduce((s,r)=>s+r,0) / ratings.length;
-  return { avgRating: Math.round(avgRating*10)/10, games };
+  return { avgRating: (Math.round(avgRating*10)/10).toFixed(1), games };
+}
+
+/* ── 캘린더 추가 (ICS) ── */
+function addToCalendar(matchId) {
+  // 경기 데이터는 allAdminMatches 또는 캐시에서 가져오기
+  const findMatch = () => {
+    // matches 캐시에서 찾기
+    const allM = window._cachedMatches || [];
+    return allM.find(m=>m.id===matchId);
+  };
+
+  const m = findMatch();
+  if (!m) {
+    alert('경기 정보를 찾을 수 없어요. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+
+  const opponent = m.opponents?.name || m.opponent || '상대팀';
+  const ground = m.grounds?.name || m.ground || '';
+  const dateStr = m.match_date.replace(/-/g, '');
+  const timeStr = m.match_time ? m.match_time.replace(':', '') + '00' : '100000';
+  const endTimeStr = m.match_time
+    ? String(parseInt(m.match_time.split(':')[0]) + 2).padStart(2,'0') + m.match_time.split(':')[1] + '00'
+    : '120000';
+
+  const dtStart = `${dateStr}T${timeStr}`;
+  const dtEnd = `${dateStr}T${endTimeStr}`;
+
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//ATTACK FC//Match Schedule//KO',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:ATTACK F.C. vs ${opponent}`,
+    `DESCRIPTION:ATTACK F.C. vs ${opponent} 경기`,
+    ground ? `LOCATION:${ground}` : '',
+    `STATUS:CONFIRMED`,
+    `BEGIN:VALARM`,
+    `TRIGGER:-PT60M`,
+    `ACTION:DISPLAY`,
+    `DESCRIPTION:경기 1시간 전입니다!`,
+    `END:VALARM`,
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].filter(Boolean).join('
+');
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ATTACKFC_vs_${opponent}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 /* ── 유튜브 앱 열기 ── */
