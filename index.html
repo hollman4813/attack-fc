@@ -1096,7 +1096,7 @@ async function loadOverview() {
     const rc=m.result==='Win'?'win':m.result==='Lose'?'lose':'draw';
     const lbl=m.result==='Win'?'승':m.result==='Lose'?'패':'무';
     const opp=m.opponent.length>6?m.opponent.slice(0,6)+'…':m.opponent;
-    return `<div class="form-card"><div class="form-card-score"><div class="score-txt">${m.our_score}:${m.opponent_score}</div><div class="opp-txt">${opp}</div></div><div class="form-card-result ${rc}">${lbl}</div></div>`;
+    return `<div class="form-card" onclick="showMatch(${m.id})" style="cursor:pointer"><div class="form-card-score"><div class="score-txt">${m.our_score}:${m.opponent_score}</div><div class="opp-txt">${opp}</div></div><div class="form-card-result ${rc}">${lbl}</div></div>`;
   }).join('');
 
   // TOP3
