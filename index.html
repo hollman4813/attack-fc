@@ -1688,9 +1688,10 @@ async function loadPlayerRatings(playerId) {
   const ratings = votes.map(v => {
     const conceded = v.matches?.goals_conceded ?? 0;
     const s = statsMap[v.match_id] || {};
+    const ms = await api(`match_stats?select=is_mom&match_id=eq.${v.match_id}&player_id=eq.${playerId}`);
     return calcRating(
       { totalVotes: v.vote_count, totalParticipants: v.total_participants, games },
-      games, teamAvgRate, conceded, v.is_defender, s.goals, s.assists
+      games, teamAvgRate, conceded, v.is_defender, s.goals, s.assists, ms[0]?.is_mom
     );
   });
 
@@ -3036,11 +3037,15 @@ async function showMatch(matchId) {
     const adj = (1 * R + mVal * C) / (1 + mVal);
     let base = 7.0 + (adj * 100 - C * 100) / 5;
     let bonus = 0;
-    if (isDefender && goalsConceded === 0) bonus = 1.0;
-    else if (isDefender && goalsConceded === 1) bonus = 0.5;
-    else if (isDefender && goalsConceded === 2) bonus = 0.2;
-    bonus += (goals || 0) * 0.5;
-    bonus += (assists || 0) * 0.3;
+    if (isDefender) {
+      if (goalsConceded === 0) bonus = 1.0;
+      else if (goalsConceded === 1) bonus = 0.5;
+      else if (goalsConceded === 2) bonus = 0.2;
+    }
+    bonus += (goals || 0) * 0.2;
+    bonus += (assists || 0) * 0.1;
+    const statData = stats.find(x=>x.player_id===playerId);
+    if (statData?.is_mom) bonus += 0.5;
     return Math.min(10, Math.max(1, Math.round((base + bonus) * 10) / 10)).toFixed(1);
   }
   const goalsConceded = m.opponent_score || 0;
