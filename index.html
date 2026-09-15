@@ -1682,11 +1682,15 @@ async function loadPlayerRatings(playerId) {
   const teamTotalParticipants = allVotes.reduce((s,v)=>s+v.total_participants,0);
   const teamAvgRate = teamTotalParticipants > 0 ? teamTotalVotes/teamTotalParticipants : 0;
 
+  const matchStats = await api(`match_stats?select=goals,assists,match_id&player_id=eq.${playerId}`);
+  const statsMap = {};
+  matchStats.forEach(s => statsMap[s.match_id] = s);
   const ratings = votes.map(v => {
-    const conceded = v.matches?.goals_conceded ?? 99;
+    const conceded = v.matches?.goals_conceded ?? 0;
+    const s = statsMap[v.match_id] || {};
     return calcRating(
       { totalVotes: v.vote_count, totalParticipants: v.total_participants, games },
-      games, teamAvgRate, conceded, v.is_defender
+      games, teamAvgRate, conceded, v.is_defender, s.goals, s.assists
     );
   });
 
@@ -3023,21 +3027,20 @@ async function showMatch(matchId) {
     ? matchVotes.reduce((s,v)=>s+v.vote_count,0) / (totalParticipants * matchVotes.length)
     : 0;
 
-  function getMatchRating(playerId, isDefender, goalsConceded) {
+  function getMatchRating(playerId, isDefender, goalsConceded, goals, assists) {
     const v = voteMap[playerId];
     if (!v || totalParticipants === 0) return null;
     const mVal = 2;
     const R = v.vote_count / totalParticipants;
     const C = teamAvgRate;
-    const games = 1;
-    const adj = (games * R + mVal * C) / (games + mVal);
-    let base = 6.5 + (adj * 100 - C * 100) / 5;
+    const adj = (1 * R + mVal * C) / (1 + mVal);
+    let base = 7.0 + (adj * 100 - C * 100) / 5;
     let bonus = 0;
-    if (isDefender) {
-      if (goalsConceded === 0) bonus = 1.0;
-      else if (goalsConceded === 1) bonus = 0.5;
-      else if (goalsConceded === 2) bonus = 0.2;
-    }
+    if (isDefender && goalsConceded === 0) bonus = 1.0;
+    else if (isDefender && goalsConceded === 1) bonus = 0.5;
+    else if (isDefender && goalsConceded === 2) bonus = 0.2;
+    bonus += (goals || 0) * 0.5;
+    bonus += (assists || 0) * 0.3;
     return Math.min(10, Math.max(1, Math.round((base + bonus) * 10) / 10)).toFixed(1);
   }
   const goalsConceded = m.opponent_score || 0;
@@ -3236,7 +3239,7 @@ async function showMatch(matchId) {
                 ? `<img src="${p.photo_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
                 : `<div style="width:32px;height:32px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--skyblue);flex-shrink:0">${(p.name||'?').slice(0,1)}</div>`;
               const isDefender = voteMap[s.player_id]?.is_defender ?? ['GK','DF'].includes(p.position);
-              const rating = getMatchRating(s.player_id, isDefender, goalsConceded);
+              const rating = getMatchRating(s.player_id, isDefender, goalsConceded, s.goals, s.assists);
               const rColor = !rating ? 'var(--muted)' : rating >= 8 ? '#2e7d32' : rating >= 6 ? '#f5a623' : '#c62828';
               const voteCount = voteMap[s.player_id]?.vote_count;
               return `<div style="display:grid;grid-template-columns:1fr 40px 48px 24px;padding:10px 14px;border-top:1px solid var(--border);align-items:center">
