@@ -1359,13 +1359,13 @@ async function loadSquad() {
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px">${[p.sub_position1,p.sub_position2].filter(Boolean).join(' / ')||{GK:'GK',DF:'DF',MF:'MF',FW:'FW'}[p.position]||p.position||'-'}${p.region?` · ${p.region}`:''}</div>
       </div>
-      <div class="squad-col" style="font-size:11px;color:var(--muted);text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nickname||''}</div>
-      <div class="squad-col" style="font-size:12px;text-align:center">${age}</div>
-      <div class="squad-col" style="font-size:12px;text-align:center">${foot}</div>
+      <div class="squad-col" style="font-size:11px;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nickname||''}</div>
+      <div class="squad-col" style="font-size:12px;text-align:center;color:var(--muted)">${age}</div>
+      <div class="squad-col" style="font-size:12px;text-align:center;color:var(--muted)">${foot}</div>
     </div>`;
   };
 
-  const header = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:left">역할</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div></div>`;
+  const header = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:center">역할</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div></div>`;
   let html = header;
   posOrder.forEach(pos=>{
     if(!groups[pos].length) return;
@@ -2950,27 +2950,43 @@ async function showPlayer(playerId) {
       </div>
       <!-- 오른쪽: 포지션 -->
       <div style="padding:14px 16px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600">포지션</div>
-        <div style="font-size:11px;font-weight:700;color:var(--skyblue);margin-bottom:4px">주 포지션</div>
-        <div style="font-size:15px;font-weight:600;color:var(--text)">${posMap[p.position]||p.position||'-'}</div>
-        <div style="margin-top:14px;position:relative;border-radius:8px;overflow:hidden;aspect-ratio:3/4;border:1px solid var(--border)">
-          <!-- 잔디 배경 -->
-          <div style="position:absolute;inset:0;background:#f0f0f0"></div>
-          <!-- 외곽선 -->
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600">포지션</div>
+        ${p.sub_position1 ? `
+        <div style="font-size:10px;font-weight:700;color:var(--skyblue);margin-bottom:2px">기본</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:10px">${{GK:'골키퍼',CB:'중앙 수비수',FB:'측면 수비수',CDM:'수비형 미드필더',CM:'중앙 미드필더',CAM:'공격형 미드필더',CF:'중앙 공격수',WF:'측면 공격수'}[p.sub_position1]||p.sub_position1}</div>
+        ` : ''}
+        ${p.sub_position2 ? `
+        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:2px">기타</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:10px">${{GK:'골키퍼',CB:'중앙 수비수',FB:'측면 수비수',CDM:'수비형 미드필더',CM:'중앙 미드필더',CAM:'공격형 미드필더',CF:'중앙 공격수',WF:'측면 공격수'}[p.sub_position2]||p.sub_position2}</div>
+        ` : ''}
+        <!-- 축구장 -->
+        <div style="position:relative;width:100%;aspect-ratio:3/4;background:#e8e8e8;border-radius:8px;overflow:hidden;border:1px solid var(--border)">
           <div style="position:absolute;inset:6px;border:1.5px solid #ccc;border-radius:2px"></div>
-          <!-- 센터라인 -->
           <div style="position:absolute;left:6px;right:6px;height:1.5px;background:#ccc;top:50%"></div>
-          <!-- 센터서클 -->
           <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:28%;padding-bottom:28%;border:1.5px solid #ccc;border-radius:50%"></div>
-          <!-- 상단 페널티 박스 -->
-          <div style="position:absolute;left:28%;right:28%;height:16%;border:1.5px solid #ccc;top:6px;border-top:none"></div>
-          <!-- 하단 페널티 박스 -->
-          <div style="position:absolute;left:28%;right:28%;height:16%;border:1.5px solid #ccc;bottom:6px;border-bottom:none"></div>
-          <!-- 포지션 뱃지 -->
-          <div style="position:absolute;left:50%;transform:translateX(-50%);
-            ${p.position==='GK'?'bottom:8%':p.position==='DF'?'bottom:20%':p.position==='MF'?'top:42%':'top:10%'}">
-            <div style="background:#6b1a3a;color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.2)">${posMap[p.position]||p.position||'?'}</div>
-          </div>
+          <div style="position:absolute;left:25%;right:25%;height:18%;border:1.5px solid #ccc;top:6px;border-top:none"></div>
+          <div style="position:absolute;left:25%;right:25%;height:18%;border:1.5px solid #ccc;bottom:6px;border-bottom:none"></div>
+          ${(()=>{
+            const coords = {
+              GK:  [{t:'82%',l:'50%'}],
+              CB:  [{t:'67%',l:'50%'}],
+              FB:  [{t:'67%',l:'25%'},{t:'67%',l:'75%'}],
+              CDM: [{t:'54%',l:'50%'}],
+              CM:  [{t:'43%',l:'30%'},{t:'43%',l:'70%'}],
+              CAM: [{t:'32%',l:'50%'}],
+              CF:  [{t:'18%',l:'50%'}],
+              WF:  [{t:'18%',l:'22%'},{t:'18%',l:'78%'}],
+            };
+            const subs = [p.sub_position1, p.sub_position2].filter(Boolean);
+            return subs.map((sp,i) => {
+              const pts = coords[sp]||[{t:'50%',l:'50%'}];
+              const isPrimary = i === 0;
+              const bg = isPrimary ? '#1a3a6b' : '#9e9e9e';
+              return pts.map(pt =>
+                `<div style="position:absolute;top:${pt.t};left:${pt.l};transform:translate(-50%,-50%);background:${bg};color:#fff;font-size:9px;font-weight:800;padding:3px 7px;border-radius:12px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.25)">${sp}</div>`
+              ).join('');
+            }).join('');
+          })()}
         </div>
       </div>
     </div>
