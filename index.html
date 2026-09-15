@@ -785,7 +785,7 @@
             </select>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:4px">생년월일</div>
             <input id="np-birth" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
@@ -794,6 +794,14 @@
             <div style="font-size:11px;color:var(--muted);margin-bottom:4px">닉네임</div>
             <input id="np-nickname" type="text" placeholder="닉네임" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
           </div>
+        </div>
+        <div id="np-subpos-wrap" style="margin-bottom:10px;display:none">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">세부 포지션</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="np-subpos-btns"></div>
+        </div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">거주 지역</div>
+          <input id="np-region" type="text" placeholder="경기 안산시" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
         </div>
         <button onclick="addPlayer()" style="width:100%;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">선수 등록</button>
       </div>
@@ -814,7 +822,7 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:4px">포지션</div>
-            <select id="ep-position" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <select id="ep-position" onchange="updateSubPosOptions(this.value,'','')" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
               <option value="">선택</option>
               <option value="GK">GK</option>
               <option value="DF">DF</option>
@@ -1339,7 +1347,7 @@ async function loadSquad() {
     </div>`;
   };
 
-  const header = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:left">닉네임</div><div style="text-align:center">No</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div><div style="text-align:center">상태</div></div>`;
+  const header = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:left">닉네임</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div><div style="text-align:center">지역</div></div>`;
   let html = header;
   posOrder.forEach(pos=>{
     if(!groups[pos].length) return;
@@ -2323,6 +2331,26 @@ function previewPhoto() {
   reader.readAsDataURL(file);
 }
 
+const SUB_POS = {
+  GK: ['GK'],
+  DF: ['CB','FB'],
+  MF: ['CDM','CM','CAM'],
+  FW: ['CF','WF']
+};
+
+function updateSubPosOptions(position, sub1, sub2) {
+  const sub1El = document.getElementById('ep-sub1');
+  const sub2El = document.getElementById('ep-sub2');
+  if (!sub1El) return;
+  sub1El.innerHTML = getSubOptions(position, sub1);
+  sub2El.innerHTML = getSubOptions(position, sub2);
+}
+
+function getSubOptions(position, selected) {
+  const opts = SUB_POS[position] || ['GK','CB','FB','CDM','CM','CAM','CF','WF'];
+  return '<option value="">선택 안함</option>' + opts.map(p=>`<option value="${p}" ${selected===p?'selected':''}>${p}</option>`).join('');
+}
+
 function loadEditGround() {
   const id = parseInt(document.getElementById('gm-select').value);
   const g = allGrounds.find(x=>x.id===id);
@@ -2549,6 +2577,8 @@ function loadEditPlayer() {
   if (!p) return;
   document.getElementById('ep-number').value = p.number || '';
   document.getElementById('ep-position').value = p.position || '';
+  updateSubPosOptions(p.position, p.sub_position1, p.sub_position2);
+  document.getElementById('ep-region').value = p.region || '';
   document.getElementById('ep-foot').value = p.dominant_foot || '';
   document.getElementById('ep-birth').value = p.birth_date || '';
   document.getElementById('ep-nickname').value = p.nickname || '';
@@ -2602,6 +2632,9 @@ async function updatePlayer() {
   const body = {
     number: parseInt(document.getElementById('ep-number').value) || null,
     position: document.getElementById('ep-position').value || null,
+    sub_position1: document.getElementById('ep-sub1').value || null,
+    sub_position2: document.getElementById('ep-sub2').value || null,
+    region: document.getElementById('ep-region').value.trim() || null,
     dominant_foot: document.getElementById('ep-foot').value || null,
     birth_date: document.getElementById('ep-birth').value || null,
     nickname: document.getElementById('ep-nickname').value.trim() || null,
@@ -2622,7 +2655,9 @@ async function updatePlayer() {
     document.getElementById('ep-select').value = '';
     ['ep-position','ep-foot','ep-status'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('ep-number').value = '';
-    ['ep-birth','ep-nickname','ep-nationality','ep-join-date'].forEach(i=>document.getElementById(i).value='');
+    ['ep-birth','ep-nickname','ep-nationality','ep-join-date','ep-region'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('ep-sub1').value = '';
+    document.getElementById('ep-sub2').value = '';
     await loadAdminData();
     loaded['squad'] = false;
   } else {
