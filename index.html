@@ -1351,21 +1351,22 @@ async function loadSquad() {
     const stPill = `<span style="font-size:9px;font-weight:700;padding:2px 5px;border-radius:10px;background:${stBg};color:${stColor};white-space:nowrap">${stMap[st]}</span>`;
     const footMap = {right:'R', left:'L', both:'B'};
     const foot = footMap[p.dominant_foot] || '-';
-    return `<div class="squad-row" onclick="showPlayer(${p.id})" style="cursor:pointer">
+    return `<div class="squad-row" onclick="showPlayer(${p.id})" style="cursor:pointer;border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:center">${photoEl}</div>
       <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:4px">${dot}${p.name}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px">${{GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수'}[p.position]||p.position||'-'}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px">
+          ${dot}<span style="font-size:13px;font-weight:700;color:var(--muted);min-width:18px">${p.number||'-'}</span> ${p.name}
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${[p.sub_position1,p.sub_position2].filter(Boolean).join(' / ')||{GK:'GK',DF:'DF',MF:'MF',FW:'FW'}[p.position]||p.position||'-'}${p.region?` · ${p.region}`:''}</div>
       </div>
       <div class="squad-col" style="font-size:11px;color:var(--skyblue);font-weight:600;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nickname||''}</div>
-      <div class="squad-col" style="font-size:13px;font-weight:700;color:var(--muted);text-align:center">${p.number}</div>
       <div class="squad-col" style="font-size:12px;text-align:center">${age}</div>
       <div class="squad-col" style="font-size:12px;text-align:center">${foot}</div>
-      <div class="squad-col">${stPill}</div>
+      <div class="squad-col" style="font-size:11px;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.region||'-'}</div>
     </div>`;
   };
 
-  const header = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:left">닉네임</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div><div style="text-align:center">지역</div></div>`;
+  const header = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:left">닉네임</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div></div>`;
   let html = header;
   posOrder.forEach(pos=>{
     if(!groups[pos].length) return;
@@ -2361,12 +2362,17 @@ function updateSubPosOptions(position, sub1, sub2) {
   const sub2El = document.getElementById('ep-sub2');
   if (!sub1El) return;
   sub1El.innerHTML = getSubOptions(position, sub1);
-  sub2El.innerHTML = getSubOptions(position, sub2);
+  sub2El.innerHTML = getAllSubOptions(sub2);
 }
 
 function getSubOptions(position, selected) {
   const opts = SUB_POS[position] || ['GK','CB','FB','CDM','CM','CAM','CF','WF'];
   return '<option value="">선택 안함</option>' + opts.map(p=>`<option value="${p}" ${selected===p?'selected':''}>${p}</option>`).join('');
+}
+
+function getAllSubOptions(selected) {
+  const all = ['GK','CB','FB','CDM','CM','CAM','CF','WF'];
+  return '<option value="">선택 안함</option>' + all.map(p=>`<option value="${p}" ${selected===p?'selected':''}>${p}</option>`).join('');
 }
 
 function loadEditGround() {
