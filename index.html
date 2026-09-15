@@ -975,6 +975,7 @@ const api = async path => {
   return Array.isArray(d) ? d : [];
 };
 
+const TAB_ORDER = ['overview','matches','scorers','squad','teamstats','grounds','opponents'];
 let allStats = [];
 let currentSeasonId = 1;
 let currentSeasonName = "2026 시즌";
@@ -1622,8 +1623,6 @@ async function loadTeamStats() {
   document.getElementById('teamstats-content').style.display = 'block';
 }
 
-const TAB_ORDER = ['overview','matches','scorers','squad','teamstats','grounds','opponents'];
-
 function switchTab(tab, btn) {
   document.querySelectorAll('.team-tab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
@@ -1682,16 +1681,15 @@ async function loadPlayerRatings(playerId) {
   const teamTotalParticipants = allVotes.reduce((s,v)=>s+v.total_participants,0);
   const teamAvgRate = teamTotalParticipants > 0 ? teamTotalVotes/teamTotalParticipants : 0;
 
-  const matchStats = await api(`match_stats?select=goals,assists,match_id&player_id=eq.${playerId}`);
+  const matchStats = await api(`match_stats?select=goals,assists,is_mom,match_id&player_id=eq.${playerId}`);
   const statsMap = {};
   matchStats.forEach(s => statsMap[s.match_id] = s);
   const ratings = votes.map(v => {
     const conceded = v.matches?.goals_conceded ?? 0;
     const s = statsMap[v.match_id] || {};
-    const ms = await api(`match_stats?select=is_mom&match_id=eq.${v.match_id}&player_id=eq.${playerId}`);
     return calcRating(
       { totalVotes: v.vote_count, totalParticipants: v.total_participants, games },
-      games, teamAvgRate, conceded, v.is_defender, s.goals, s.assists, ms[0]?.is_mom
+      games, teamAvgRate, conceded, v.is_defender, s.goals, s.assists, s.is_mom
     );
   });
 
