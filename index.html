@@ -3183,16 +3183,16 @@ async function showMatch(matchId) {
         <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:4px">예정 경기</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:12px">${dateStr}${m.match_time ? ' · ' + m.match_time : ''}</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:16px">
-          <div style="flex:1;text-align:right">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center">
+            <img src="emblem_v4.png" style="width:44px;height:44px;border-radius:50%;margin-bottom:6px">
             <div style="font-size:13px;font-weight:600;color:#fff">ATTACK F.C.</div>
-            <img src="emblem_v4.png" style="width:44px;height:44px;border-radius:50%;margin-top:6px">
           </div>
           <div style="text-align:center;min-width:80px">
             <div style="font-size:28px;font-weight:800;color:rgba(255,255,255,0.6)">VS</div>
           </div>
-          <div style="flex:1;text-align:left">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center">
+            <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:6px">⚽</div>
             <div style="font-size:13px;font-weight:600;color:#fff">${oppName}</div>
-            <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;margin-top:6px">⚽</div>
           </div>
         </div>
         <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.6)">📍 ${m.grounds?.name||m.ground||'미정'}</div>
@@ -3203,17 +3203,17 @@ async function showMatch(matchId) {
       <div style="text-align:center">
         <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:12px">${dateStr} · ${m.grounds?.name||m.ground||'미정'}</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:16px">
-          <div style="flex:1;text-align:right">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center">
+            <img src="emblem_v4.png" style="width:44px;height:44px;border-radius:50%;margin-bottom:6px">
             <div style="font-size:13px;font-weight:600;color:#fff">ATTACK F.C.</div>
-            <img src="emblem_v4.png" style="width:44px;height:44px;border-radius:50%;margin-top:6px">
           </div>
           <div style="text-align:center;min-width:80px">
             <div style="font-size:32px;font-weight:800;color:#fff;letter-spacing:2px">${m.our_score} : ${m.opponent_score}</div>
             <span style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:10px;background:${rcBg};color:${rcColor};margin-top:6px;display:inline-block">${rlKo}</span>
           </div>
-          <div style="flex:1;text-align:left">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center">
+            <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:6px">⚽</div>
             <div style="font-size:13px;font-weight:600;color:#fff">${oppName}</div>
-            <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;margin-top:6px">⚽</div>
           </div>
         </div>
       </div>
@@ -3377,6 +3377,7 @@ function backFromPlayer() {
   document.getElementById('home').classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'flex';
   document.getElementById('team-hero-header').style.display = 'block';
+  document.getElementById('sticky-header').style.display = 'block';
   const prevTab = window._prevTab || 'tab-overview';
   const tabName = prevTab.replace('tab-', '');
   const idx = TAB_ORDER.indexOf(tabName);
