@@ -1608,18 +1608,17 @@ async function loadTeamStats() {
     return monthsSince >= 3;
   });
 
-  const threeMonthsAgo = new Date();
-  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  const threeMonthsAgoStr = new Date(Date.now() - 90*24*60*60*1000).toISOString().slice(0,10);
 
   const attendanceRank = eligiblePlayers.map(p => {
     const playerStats = allStatsData.filter(s => s.player_id === p.id && s.matches?.season_id === currentSeasonId);
     const attended = playerStats.length;
     // 입단일 이후 전체 경기 수
-    const eligibleMatches = matches.filter(m => new Date(m.match_date) >= new Date(p.join_date));
+    const eligibleMatches = matches.filter(m => m.match_date >= p.join_date);
     const totalEligible = eligibleMatches.length;
     const rate = totalEligible > 0 ? Math.round(attended/totalEligible*100) : 0;
-    // 최근 3개월 내 참석 여부
-    const recentAttended = playerStats.some(s => new Date(s.matches?.match_date) >= threeMonthsAgo);
+    // 최근 3개월 내 참석 여부 (문자열 비교, YYYY-MM-DD 형식)
+    const recentAttended = playerStats.some(s => s.matches?.match_date >= threeMonthsAgoStr);
     return { ...p, attended, totalEligible, rate, recentAttended };
   }).filter(p => p.totalEligible > 0 && p.recentAttended).sort((a,b)=>b.rate-a.rate).slice(0,5);
 
