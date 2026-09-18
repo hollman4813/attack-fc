@@ -1639,6 +1639,8 @@ async function loadTeamStats() {
     const playerStats = allStatsData.filter(s => s.player_id === p.id && s.matches?.season_id === currentSeasonId);
     const attended = playerStats.length;
     if (attended < 3) return null; // 최소 3경기 이상
+    const recentAttended = playerStats.some(s => s.matches?.match_date >= threeMonthsAgoStr);
+    if (!recentAttended) return null; // 최근 3개월 미참여 제외
     const winsWhenPlayed = playerStats.filter(s => s.matches?.result === 'Win').length;
     const winRate = Math.round(winsWhenPlayed/attended*100);
     return { ...p, attended, winsWhenPlayed, winRate };
@@ -1657,9 +1659,13 @@ async function loadTeamStats() {
     </div>`).join('') || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음 (3경기 이상 참석자 없음)</div>');
 
   // 🎯 상대팀 킬러 (특정 팀 상대 최다골)
+  const recentPlayerIds = new Set(
+    allStatsData.filter(s => s.matches?.match_date >= threeMonthsAgoStr).map(s=>s.player_id)
+  );
   const killerMap = {};
   allStatsData.forEach(s => {
     if (s.matches?.season_id !== currentSeasonId) return;
+    if (!recentPlayerIds.has(s.player_id)) return; // 최근 3개월 미참여 제외
     const opp = s.matches?.opponent;
     if (!opp || !s.goals) return;
     const key = `${s.player_id}_${opp}`;
