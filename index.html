@@ -1357,7 +1357,7 @@ async function loadSquad() {
         <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px">
           ${dot}<span style="font-size:13px;font-weight:700;color:var(--muted);min-width:18px">${p.number||'-'}</span> ${p.name}
         </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px">${[p.sub_position1,p.sub_position2].filter(Boolean).join(' / ')||{GK:'GK',DF:'DF',MF:'MF',FW:'FW'}[p.position]||p.position||'-'}${p.region?` · ${p.region}`:''}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${[p.sub_position1,p.sub_position2].filter(Boolean).join(' / ')||{GK:'GK',DF:'DF',MF:'MF',FW:'FW'}[p.position]||p.position||'-'}${p.region?` · ${p.region}`:''}</div>
       </div>
       <div class="squad-col" style="font-size:11px;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nickname||''}</div>
       <div class="squad-col" style="font-size:12px;text-align:center;color:var(--muted)">${age}</div>
@@ -1801,6 +1801,8 @@ window.addEventListener('popstate', (e) => {
     });
     document.getElementById('home').classList.add('active');
     document.getElementById('team-tab-bar').style.display = 'flex';
+    document.getElementById('team-hero-header').style.display = 'block';
+    document.getElementById('sticky-header').style.display = 'block';
     return;
   }
   if (state.page === 'tab') {
@@ -1810,6 +1812,8 @@ window.addEventListener('popstate', (e) => {
     });
     document.getElementById('home').classList.add('active');
     document.getElementById('team-tab-bar').style.display = 'flex';
+    document.getElementById('team-hero-header').style.display = 'block';
+    document.getElementById('sticky-header').style.display = 'block';
     const tabs = document.querySelectorAll('.team-tab');
     const idx = TAB_ORDER.indexOf(state.tab);
     if (idx >= 0 && tabs[idx]) {
