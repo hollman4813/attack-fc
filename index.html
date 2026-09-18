@@ -1160,13 +1160,16 @@ async function loadMatches() {
     html += '<div class="match-group-date" style="padding-top:16px">예정 경기</div>';
     upcoming.forEach(m => {
       const d = new Date(m.match_date);
-      html += `<div class="fixture-upcoming" onclick="showMatch(${m.id})" style="cursor:pointer">
-        <div style="width:32px;text-align:center;font-size:11px;font-weight:700;color:var(--skyblue)">VS</div>
-        <div class="fixture-info">
-          <div class="fixture-teams"><span class="fixture-team-name" style="font-weight:700;color:var(--text)">${m.opponents?.name||m.opponent}</span></div>
-          <div class="fixture-ground">📅 ${d.getMonth()+1}월 ${d.getDate()}일${m.match_time?' · '+m.match_time:''} · 📍 ${m.grounds?.name||m.ground||'미정'}</div>
+      html += `<div style="display:flex;align-items:center;background:#f0f7ff;border-top:1px solid var(--border)">
+        <div class="fixture-upcoming" onclick="showMatch(${m.id})" style="cursor:pointer;flex:1;border-top:none">
+          <div style="width:32px;text-align:center;font-size:11px;font-weight:700;color:var(--skyblue)">VS</div>
+          <div class="fixture-info">
+            <div class="fixture-teams"><span class="fixture-team-name" style="font-weight:700;color:var(--text)">${m.opponents?.name||m.opponent}</span></div>
+            <div class="fixture-ground">📅 ${d.getMonth()+1}월 ${d.getDate()}일${m.match_time?' · '+m.match_time:''} · 📍 ${m.grounds?.name||m.ground||'미정'}</div>
+          </div>
+          <div style="font-size:18px;color:var(--skyblue)">›</div>
         </div>
-        <div style="font-size:18px;color:var(--skyblue)">›</div>
+        <button onclick="event.stopPropagation();addToCalendar(${m.id})" style="padding:0 14px;height:100%;background:none;border:none;border-left:1px solid var(--border);cursor:pointer;color:var(--skyblue);font-size:20px;display:flex;align-items:center" title="캘린더에 추가">📆</button>
       </div>`;
     });
   }
