@@ -1608,6 +1608,9 @@ async function loadTeamStats() {
     return monthsSince >= 3;
   });
 
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
   const attendanceRank = eligiblePlayers.map(p => {
     const playerStats = allStatsData.filter(s => s.player_id === p.id && s.matches?.season_id === currentSeasonId);
     const attended = playerStats.length;
@@ -1615,8 +1618,10 @@ async function loadTeamStats() {
     const eligibleMatches = matches.filter(m => new Date(m.match_date) >= new Date(p.join_date));
     const totalEligible = eligibleMatches.length;
     const rate = totalEligible > 0 ? Math.round(attended/totalEligible*100) : 0;
-    return { ...p, attended, totalEligible, rate };
-  }).filter(p => p.totalEligible > 0).sort((a,b)=>b.rate-a.rate).slice(0,5);
+    // 최근 3개월 내 참석 여부
+    const recentAttended = playerStats.some(s => new Date(s.matches?.match_date) >= threeMonthsAgo);
+    return { ...p, attended, totalEligible, rate, recentAttended };
+  }).filter(p => p.totalEligible > 0 && p.recentAttended).sort((a,b)=>b.rate-a.rate).slice(0,5);
 
   html += sectionTitle('🏃', '참석률 TOP 5');
   html += card(attendanceRank.map((p,i) => `
