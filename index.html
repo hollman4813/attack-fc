@@ -1359,13 +1359,12 @@ async function loadSquad() {
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${[p.sub_position1,p.sub_position2].filter(Boolean).join(' / ')||{GK:'GK',DF:'DF',MF:'MF',FW:'FW'}[p.position]||p.position||'-'}${p.region?` · ${p.region}`:''}</div>
       </div>
-      <div class="squad-col" style="font-size:11px;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nickname||''}</div>
       <div class="squad-col" style="font-size:12px;text-align:center;color:var(--muted)">${age}</div>
       <div class="squad-col" style="font-size:12px;text-align:center;color:var(--muted)">${foot}</div>
     </div>`;
   };
 
-  const header = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:center">역할</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div></div>`;
+  const header = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:center">나이</div><div style="text-align:center">주발</div></div>`;
   let html = header;
   posOrder.forEach(pos=>{
     if(!groups[pos].length) return;
