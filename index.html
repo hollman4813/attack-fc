@@ -249,8 +249,8 @@
 <div class="team-tab-bar" id="team-tab-bar">
   <button class="team-tab active" onclick="switchTab('overview',this)">팀 개요</button>
   <button class="team-tab" onclick="switchTab('matches',this)">경기</button>
-  <button class="team-tab" onclick="switchTab('scorers',this)">플레이어 통계</button>
   <button class="team-tab" onclick="switchTab('squad',this)">스쿼드</button>
+  <button class="team-tab" onclick="switchTab('scorers',this)">플레이어 통계</button>
   <button class="team-tab" onclick="switchTab('teamstats',this)">팀 통계</button>
   <button class="team-tab" onclick="switchTab('grounds',this)">운동장</button>
   <button class="team-tab" onclick="switchTab('opponents',this)">상대팀</button>
@@ -1001,7 +1001,7 @@ const api = async path => {
   return Array.isArray(d) ? d : [];
 };
 
-const TAB_ORDER = ['overview','matches','scorers','squad','teamstats','grounds','opponents'];
+const TAB_ORDER = ['overview','matches','squad','scorers','teamstats','grounds','opponents'];
 let allStats = [];
 let currentSeasonId = 1;
 let currentSeasonName = "2026 시즌";
@@ -1473,6 +1473,8 @@ function backToOpponentsList() {
 /* ── 팀 통계 ── */
 async function loadTeamStats() {
   const matches = await api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.finished&season_id=eq.${currentSeasonId}&order=match_date.asc`);
+  const allPlayersData = await api('players?select=id,name,number,photo_url,join_date');
+  const allStatsData = await api('match_stats?select=*,matches(match_date,result,opponent,opponent_id,season_id)&attended=eq.true');
 
   // 기본 계산
   const total = matches.length;
@@ -1596,6 +1598,88 @@ async function loadTeamStats() {
       ${statRow('🎯 5골 이상 경기', `${matches.filter(m=>(m.our_score||0)>=5).length}경기`, '', 'var(--skyblue)')}
     </div>
   `);
+
+  // 🏃 참석률 최다 (입단 3개월 이상자)
+  const now = new Date();
+  const eligiblePlayers = allPlayersData.filter(p => {
+    if (!p.join_date) return false;
+    const joinDate = new Date(p.join_date);
+    const monthsSince = (now - joinDate) / (1000*60*60*24*30);
+    return monthsSince >= 3;
+  });
+
+  const attendanceRank = eligiblePlayers.map(p => {
+    const playerStats = allStatsData.filter(s => s.player_id === p.id && s.matches?.season_id === currentSeasonId);
+    const attended = playerStats.length;
+    // 입단일 이후 전체 경기 수
+    const eligibleMatches = matches.filter(m => new Date(m.match_date) >= new Date(p.join_date));
+    const totalEligible = eligibleMatches.length;
+    const rate = totalEligible > 0 ? Math.round(attended/totalEligible*100) : 0;
+    return { ...p, attended, totalEligible, rate };
+  }).filter(p => p.totalEligible > 0).sort((a,b)=>b.rate-a.rate).slice(0,5);
+
+  html += sectionTitle('🏃', '참석률 TOP 5');
+  html += card(attendanceRank.map((p,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:${i===0?'none':'1px solid var(--border)'}">
+      <div style="font-size:12px;font-weight:800;color:${i<3?'var(--skyblue)':'var(--muted)'};width:16px">${i+1}</div>
+      ${p.photo_url ? `<img src="${p.photo_url}" style="width:30px;height:30px;border-radius:50%;object-fit:cover">` : `<div style="width:30px;height:30px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--skyblue)">${p.name.slice(0,1)}</div>`}
+      <div style="flex:1;font-size:13px;font-weight:600;color:var(--text)">${p.name}</div>
+      <div style="text-align:right">
+        <div style="font-size:14px;font-weight:700;color:var(--skyblue)">${p.rate}%</div>
+        <div style="font-size:10px;color:var(--muted)">${p.attended}/${p.totalEligible}경기</div>
+      </div>
+    </div>`).join('') || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음 (입단 3개월 이상자 없음)</div>');
+
+  // 🍀 승리요정 (참석 시 팀 승률)
+  const luckyRank = allPlayersData.map(p => {
+    const playerStats = allStatsData.filter(s => s.player_id === p.id && s.matches?.season_id === currentSeasonId);
+    const attended = playerStats.length;
+    if (attended < 3) return null; // 최소 3경기 이상
+    const winsWhenPlayed = playerStats.filter(s => s.matches?.result === 'Win').length;
+    const winRate = Math.round(winsWhenPlayed/attended*100);
+    return { ...p, attended, winsWhenPlayed, winRate };
+  }).filter(Boolean).sort((a,b)=>b.winRate-a.winRate).slice(0,5);
+
+  html += sectionTitle('🍀', '승리요정 TOP 5');
+  html += card(luckyRank.map((p,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:${i===0?'none':'1px solid var(--border)'}">
+      <div style="font-size:12px;font-weight:800;color:${i<3?'#2e7d32':'var(--muted)'};width:16px">${i+1}</div>
+      ${p.photo_url ? `<img src="${p.photo_url}" style="width:30px;height:30px;border-radius:50%;object-fit:cover">` : `<div style="width:30px;height:30px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--skyblue)">${p.name.slice(0,1)}</div>`}
+      <div style="flex:1;font-size:13px;font-weight:600;color:var(--text)">${p.name}</div>
+      <div style="text-align:right">
+        <div style="font-size:14px;font-weight:700;color:#2e7d32">${p.winRate}%</div>
+        <div style="font-size:10px;color:var(--muted)">${p.winsWhenPlayed}승/${p.attended}경기</div>
+      </div>
+    </div>`).join('') || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음 (3경기 이상 참석자 없음)</div>');
+
+  // 🎯 상대팀 킬러 (특정 팀 상대 최다골)
+  const killerMap = {};
+  allStatsData.forEach(s => {
+    if (s.matches?.season_id !== currentSeasonId) return;
+    const opp = s.matches?.opponent;
+    if (!opp || !s.goals) return;
+    const key = `${s.player_id}_${opp}`;
+    if (!killerMap[key]) killerMap[key] = { player_id: s.player_id, opponent: opp, goals: 0 };
+    killerMap[key].goals += s.goals;
+  });
+  const killerRank = Object.values(killerMap)
+    .filter(k => k.goals >= 2)
+    .sort((a,b)=>b.goals-a.goals)
+    .slice(0,5)
+    .map(k => ({ ...k, player: allPlayersData.find(p=>p.id===k.player_id) }))
+    .filter(k => k.player);
+
+  html += sectionTitle('🎯', '상대팀 킬러');
+  html += card(killerRank.map((k,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:${i===0?'none':'1px solid var(--border)'}">
+      <div style="font-size:12px;font-weight:800;color:${i<3?'#c62828':'var(--muted)'};width:16px">${i+1}</div>
+      ${k.player.photo_url ? `<img src="${k.player.photo_url}" style="width:30px;height:30px;border-radius:50%;object-fit:cover">` : `<div style="width:30px;height:30px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--skyblue)">${k.player.name.slice(0,1)}</div>`}
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${k.player.name}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px">vs ${k.opponent}</div>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:#c62828">${k.goals}골</div>
+    </div>`).join('') || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음 (동일 상대 2골 이상 없음)</div>');
 
   // 📅 월별 통계
   html += sectionTitle('📅', '월별 통계');
