@@ -267,7 +267,7 @@
 </div>
 </div>
 
-<div id="ptr-indicator" style="position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-50px);z-index:200;transition:transform 0.2s;pointer-events:none;opacity:0">
+<div id="ptr-indicator" style="position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-11px);z-index:200;transition:transform 0.2s;pointer-events:none;opacity:0">
   <svg id="ptr-loading" width="22" height="22" viewBox="0 0 24 24" style="display:block">
     <circle cx="12" cy="12" r="9" fill="none" stroke="var(--border)" stroke-width="2.4"/>
     <circle id="ptr-arc" cx="12" cy="12" r="9" fill="none" stroke="var(--skyblue)" stroke-width="2.4" stroke-dasharray="56.5" stroke-dashoffset="56.5" stroke-linecap="round"/>
@@ -3575,14 +3575,11 @@ function backToSquad() {
       const progress = Math.min(pullDist / THRESHOLD, 1);
       indicator.style.transition = 'none';
       indicator.style.opacity = progress;
-      indicator.style.transform = `translateX(-50%) translateY(${capped - 30}px)`;
+      // 당겨진 공간(capped)의 정중앙에 위치
+      indicator.style.transform = `translateX(-50%) translateY(${capped / 2 - 11}px)`;
       pageBody.style.transition = 'none';
-      pageBody.style.transform = `translateY(${capped * 0.5}px)`;
+      pageBody.style.transform = `translateY(${capped}px)`;
       arc.style.strokeDashoffset = CIRC - (CIRC * progress);
-      const nowTriggered = pullDist > THRESHOLD;
-      if (nowTriggered !== triggered) {
-        triggered = nowTriggered;
-      }
     }
   }, { passive: true });
 
@@ -3594,12 +3591,12 @@ function backToSquad() {
     if (pullDist > THRESHOLD) {
       indicator.style.opacity = 1;
       indicator.style.transform = 'translateX(-50%) translateY(20px)';
-      pageBody.style.transform = 'translateY(40px)';
+      pageBody.style.transform = 'translateY(50px)';
       loading.style.animation = 'ptr-spin 0.7s linear infinite';
       setTimeout(() => location.reload(), 350);
     } else {
       indicator.style.opacity = 0;
-      indicator.style.transform = 'translateX(-50%) translateY(-50px)';
+      indicator.style.transform = 'translateX(-50%) translateY(-11px)';
       pageBody.style.transform = 'translateY(0)';
     }
     pullDist = 0;
