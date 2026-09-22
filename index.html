@@ -267,13 +267,10 @@
 </div>
 </div>
 
-<div id="ptr-indicator" style="position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-50px);z-index:200;transition:transform 0.2s;pointer-events:none">
-  <svg id="ptr-arrow" width="26" height="26" viewBox="0 0 24 24" fill="none" style="transition:transform 0.1s">
-    <path d="M12 19V5M12 5L6 11M12 5L18 11" stroke="#9aa5b1" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-  <svg id="ptr-loading" width="24" height="24" viewBox="0 0 24 24" style="display:none">
+<div id="ptr-indicator" style="position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-50px);z-index:200;transition:transform 0.2s;pointer-events:none;opacity:0">
+  <svg id="ptr-loading" width="22" height="22" viewBox="0 0 24 24" style="display:block">
     <circle cx="12" cy="12" r="9" fill="none" stroke="var(--border)" stroke-width="2.4"/>
-    <circle cx="12" cy="12" r="9" fill="none" stroke="var(--skyblue)" stroke-width="2.4" stroke-dasharray="42" stroke-dashoffset="30" stroke-linecap="round"/>
+    <circle id="ptr-arc" cx="12" cy="12" r="9" fill="none" stroke="var(--skyblue)" stroke-width="2.4" stroke-dasharray="56.5" stroke-dashoffset="56.5" stroke-linecap="round"/>
   </svg>
 </div>
 <main>
@@ -3549,7 +3546,6 @@ function backToSquad() {
   let startY = 0, pulling = false, pullDist = 0, triggered = false;
   const THRESHOLD = 70;
   const indicator = document.getElementById('ptr-indicator');
-  const arrow = document.getElementById('ptr-arrow');
   const loading = document.getElementById('ptr-loading');
 
   function getScrollTop() {
@@ -3567,6 +3563,8 @@ function backToSquad() {
   }, { passive: true });
 
   const pageBody = document.body;
+  const arc = document.getElementById('ptr-arc');
+  const CIRC = 56.5;
 
   document.addEventListener('touchmove', (e) => {
     if (!pulling) return;
@@ -3574,16 +3572,16 @@ function backToSquad() {
     pullDist = currentY - startY;
     if (pullDist > 0 && getScrollTop() <= 0) {
       const capped = Math.min(pullDist, 110);
+      const progress = Math.min(pullDist / THRESHOLD, 1);
       indicator.style.transition = 'none';
-      indicator.style.transform = `translateX(-50%) translateY(${capped - 50}px)`;
+      indicator.style.opacity = progress;
+      indicator.style.transform = `translateX(-50%) translateY(${capped - 30}px)`;
       pageBody.style.transition = 'none';
       pageBody.style.transform = `translateY(${capped * 0.5}px)`;
-      const rotation = Math.min(pullDist / THRESHOLD, 1) * 180;
-      arrow.style.transform = `rotate(${rotation}deg)`;
+      arc.style.strokeDashoffset = CIRC - (CIRC * progress);
       const nowTriggered = pullDist > THRESHOLD;
       if (nowTriggered !== triggered) {
         triggered = nowTriggered;
-        arrow.querySelector('path').setAttribute('stroke', triggered ? 'var(--skyblue)' : '#9aa5b1');
       }
     }
   }, { passive: true });
@@ -3591,19 +3589,18 @@ function backToSquad() {
   document.addEventListener('touchend', () => {
     if (!pulling) return;
     pulling = false;
-    indicator.style.transition = 'transform 0.2s';
+    indicator.style.transition = 'transform 0.2s, opacity 0.2s';
     pageBody.style.transition = 'transform 0.2s';
     if (pullDist > THRESHOLD) {
+      indicator.style.opacity = 1;
       indicator.style.transform = 'translateX(-50%) translateY(20px)';
       pageBody.style.transform = 'translateY(40px)';
-      arrow.style.display = 'none';
-      loading.style.display = 'block';
       loading.style.animation = 'ptr-spin 0.7s linear infinite';
       setTimeout(() => location.reload(), 350);
     } else {
+      indicator.style.opacity = 0;
       indicator.style.transform = 'translateX(-50%) translateY(-50px)';
       pageBody.style.transform = 'translateY(0)';
-      arrow.style.transform = 'rotate(0deg)';
     }
     pullDist = 0;
   }, { passive: true });
