@@ -3566,6 +3566,8 @@ function backToSquad() {
     }
   }, { passive: true });
 
+  const pageBody = document.body;
+
   document.addEventListener('touchmove', (e) => {
     if (!pulling) return;
     const currentY = e.touches[0].clientY;
@@ -3574,12 +3576,13 @@ function backToSquad() {
       const capped = Math.min(pullDist, 110);
       indicator.style.transition = 'none';
       indicator.style.transform = `translateX(-50%) translateY(${capped - 50}px)`;
+      pageBody.style.transition = 'none';
+      pageBody.style.transform = `translateY(${capped * 0.5}px)`;
       const rotation = Math.min(pullDist / THRESHOLD, 1) * 180;
       arrow.style.transform = `rotate(${rotation}deg)`;
       const nowTriggered = pullDist > THRESHOLD;
       if (nowTriggered !== triggered) {
         triggered = nowTriggered;
-        arrow.style.stroke = triggered ? 'var(--skyblue)' : '#9aa5b1';
         arrow.querySelector('path').setAttribute('stroke', triggered ? 'var(--skyblue)' : '#9aa5b1');
       }
     }
@@ -3589,14 +3592,17 @@ function backToSquad() {
     if (!pulling) return;
     pulling = false;
     indicator.style.transition = 'transform 0.2s';
+    pageBody.style.transition = 'transform 0.2s';
     if (pullDist > THRESHOLD) {
       indicator.style.transform = 'translateX(-50%) translateY(20px)';
+      pageBody.style.transform = 'translateY(40px)';
       arrow.style.display = 'none';
       loading.style.display = 'block';
       loading.style.animation = 'ptr-spin 0.7s linear infinite';
       setTimeout(() => location.reload(), 350);
     } else {
       indicator.style.transform = 'translateX(-50%) translateY(-50px)';
+      pageBody.style.transform = 'translateY(0)';
       arrow.style.transform = 'rotate(0deg)';
     }
     pullDist = 0;
