@@ -267,6 +267,11 @@
 </div>
 </div>
 
+<div id="ptr-indicator" style="position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-60px);z-index:200;transition:transform 0.2s;pointer-events:none">
+  <div style="width:36px;height:36px;background:#fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center">
+    <div id="ptr-spinner" style="width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--skyblue);border-radius:50%;transition:transform 0.1s"></div>
+  </div>
+</div>
 <main>
   <div class="section active" id="home">
 
@@ -3535,6 +3540,53 @@ function backToSquad() {
 }
 </script>
 <script>
+// Pull-to-refresh (탭바 아래에서만 동작)
+(() => {
+  let startY = 0, pulling = false, pullDist = 0;
+  const THRESHOLD = 70;
+  const indicator = document.getElementById('ptr-indicator');
+  const spinner = document.getElementById('ptr-spinner');
+
+  function getScrollTop() {
+    return window.scrollY || document.documentElement.scrollTop || 0;
+  }
+
+  document.addEventListener('touchstart', (e) => {
+    if (getScrollTop() <= 0) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+    } else {
+      pulling = false;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!pulling) return;
+    const currentY = e.touches[0].clientY;
+    pullDist = currentY - startY;
+    if (pullDist > 0 && getScrollTop() <= 0) {
+      const capped = Math.min(pullDist, 120);
+      indicator.style.transition = 'none';
+      indicator.style.transform = `translateX(-50%) translateY(${capped - 60}px)`;
+      spinner.style.transform = `rotate(${capped * 3}deg)`;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    if (!pulling) return;
+    pulling = false;
+    indicator.style.transition = 'transform 0.2s';
+    if (pullDist > THRESHOLD) {
+      indicator.style.transform = 'translateX(-50%) translateY(16px)';
+      spinner.style.animation = 'ptr-spin 0.6s linear infinite';
+      setTimeout(() => location.reload(), 300);
+    } else {
+      indicator.style.transform = 'translateX(-50%) translateY(-60px)';
+    }
+    pullDist = 0;
+  }, { passive: true });
+})();
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(()=>{});
