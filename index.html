@@ -9,8 +9,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1a3a6b">
 <link rel="apple-touch-icon" href="emblem_v4.png">
+<link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="emblem_v4.png">
 <link rel="apple-touch-icon" href="emblem_v4.png">
+<link rel="manifest" href="manifest.json">
 <title>ATTACK F.C.</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -3529,6 +3531,13 @@ function backToSquad() {
   document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.team-tab')[3].classList.add('active');
   document.getElementById('tab-squad').classList.add('active');
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
 }
 </script>
 </body>
