@@ -267,11 +267,10 @@
 </div>
 </div>
 
-<div id="ptr-indicator" style="position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-11px);z-index:200;transition:transform 0.2s;pointer-events:none;opacity:0">
-  <svg id="ptr-loading" width="22" height="22" viewBox="0 0 24 24" style="display:block">
-    <circle cx="12" cy="12" r="9" fill="none" stroke="var(--border)" stroke-width="2.4"/>
-    <circle id="ptr-arc" cx="12" cy="12" r="9" fill="none" stroke="var(--skyblue)" stroke-width="2.4" stroke-dasharray="56.5" stroke-dashoffset="56.5" stroke-linecap="round"/>
-  </svg>
+<div id="ptr-indicator" style="position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-8px);z-index:200;transition:transform 0.2s;pointer-events:none;opacity:0;display:flex;gap:5px">
+  <div class="ptr-dot" style="width:7px;height:7px;border-radius:50%;background:var(--skyblue)"></div>
+  <div class="ptr-dot" style="width:7px;height:7px;border-radius:50%;background:var(--skyblue)"></div>
+  <div class="ptr-dot" style="width:7px;height:7px;border-radius:50%;background:var(--skyblue)"></div>
 </div>
 <main>
   <div class="section active" id="home">
@@ -3546,7 +3545,6 @@ function backToSquad() {
   let startY = 0, pulling = false, pullDist = 0, triggered = false;
   const THRESHOLD = 70;
   const indicator = document.getElementById('ptr-indicator');
-  const loading = document.getElementById('ptr-loading');
 
   function getScrollTop() {
     return window.scrollY || document.documentElement.scrollTop || 0;
@@ -3563,8 +3561,7 @@ function backToSquad() {
   }, { passive: true });
 
   const pageBody = document.body;
-  const arc = document.getElementById('ptr-arc');
-  const CIRC = 56.5;
+  const dots = document.querySelectorAll('.ptr-dot');
 
   document.addEventListener('touchmove', (e) => {
     if (!pulling) return;
@@ -3579,7 +3576,10 @@ function backToSquad() {
       indicator.style.transform = `translateX(-50%) translateY(${capped / 2 - 11}px)`;
       pageBody.style.transition = 'none';
       pageBody.style.transform = `translateY(${capped}px)`;
-      arc.style.strokeDashoffset = CIRC - (CIRC * progress);
+      // 당김 진행도에 따라 점이 하나씩 채워짐
+      dots.forEach((d,i) => {
+        d.style.opacity = progress > (i/3) ? 1 : 0.25;
+      });
     }
   }, { passive: true });
 
@@ -3592,7 +3592,7 @@ function backToSquad() {
       indicator.style.opacity = 1;
       indicator.style.transform = 'translateX(-50%) translateY(20px)';
       pageBody.style.transform = 'translateY(50px)';
-      loading.style.animation = 'ptr-spin 0.7s linear infinite';
+      dots.forEach((d,i) => { d.style.opacity = 1; d.style.animation = `ptr-bounce 0.6s ease-in-out ${i*0.15}s infinite`; });
       setTimeout(() => location.reload(), 350);
     } else {
       indicator.style.opacity = 0;
