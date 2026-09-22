@@ -267,10 +267,14 @@
 </div>
 </div>
 
-<div id="ptr-indicator" style="position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-60px);z-index:200;transition:transform 0.2s;pointer-events:none">
-  <div style="width:36px;height:36px;background:#fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center">
-    <div id="ptr-spinner" style="width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--skyblue);border-radius:50%;transition:transform 0.1s"></div>
-  </div>
+<div id="ptr-indicator" style="position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-50px);z-index:200;transition:transform 0.2s;pointer-events:none">
+  <svg id="ptr-arrow" width="26" height="26" viewBox="0 0 24 24" fill="none" style="transition:transform 0.1s">
+    <path d="M12 19V5M12 5L6 11M12 5L18 11" stroke="#9aa5b1" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <svg id="ptr-loading" width="24" height="24" viewBox="0 0 24 24" style="display:none">
+    <circle cx="12" cy="12" r="9" fill="none" stroke="var(--border)" stroke-width="2.4"/>
+    <circle cx="12" cy="12" r="9" fill="none" stroke="var(--skyblue)" stroke-width="2.4" stroke-dasharray="42" stroke-dashoffset="30" stroke-linecap="round"/>
+  </svg>
 </div>
 <main>
   <div class="section active" id="home">
@@ -3542,10 +3546,11 @@ function backToSquad() {
 <script>
 // Pull-to-refresh (탭바 아래에서만 동작)
 (() => {
-  let startY = 0, pulling = false, pullDist = 0;
+  let startY = 0, pulling = false, pullDist = 0, triggered = false;
   const THRESHOLD = 70;
   const indicator = document.getElementById('ptr-indicator');
-  const spinner = document.getElementById('ptr-spinner');
+  const arrow = document.getElementById('ptr-arrow');
+  const loading = document.getElementById('ptr-loading');
 
   function getScrollTop() {
     return window.scrollY || document.documentElement.scrollTop || 0;
@@ -3555,6 +3560,7 @@ function backToSquad() {
     if (getScrollTop() <= 0) {
       startY = e.touches[0].clientY;
       pulling = true;
+      triggered = false;
     } else {
       pulling = false;
     }
@@ -3565,10 +3571,17 @@ function backToSquad() {
     const currentY = e.touches[0].clientY;
     pullDist = currentY - startY;
     if (pullDist > 0 && getScrollTop() <= 0) {
-      const capped = Math.min(pullDist, 120);
+      const capped = Math.min(pullDist, 110);
       indicator.style.transition = 'none';
-      indicator.style.transform = `translateX(-50%) translateY(${capped - 60}px)`;
-      spinner.style.transform = `rotate(${capped * 3}deg)`;
+      indicator.style.transform = `translateX(-50%) translateY(${capped - 50}px)`;
+      const rotation = Math.min(pullDist / THRESHOLD, 1) * 180;
+      arrow.style.transform = `rotate(${rotation}deg)`;
+      const nowTriggered = pullDist > THRESHOLD;
+      if (nowTriggered !== triggered) {
+        triggered = nowTriggered;
+        arrow.style.stroke = triggered ? 'var(--skyblue)' : '#9aa5b1';
+        arrow.querySelector('path').setAttribute('stroke', triggered ? 'var(--skyblue)' : '#9aa5b1');
+      }
     }
   }, { passive: true });
 
@@ -3577,11 +3590,14 @@ function backToSquad() {
     pulling = false;
     indicator.style.transition = 'transform 0.2s';
     if (pullDist > THRESHOLD) {
-      indicator.style.transform = 'translateX(-50%) translateY(16px)';
-      spinner.style.animation = 'ptr-spin 0.6s linear infinite';
-      setTimeout(() => location.reload(), 300);
+      indicator.style.transform = 'translateX(-50%) translateY(20px)';
+      arrow.style.display = 'none';
+      loading.style.display = 'block';
+      loading.style.animation = 'ptr-spin 0.7s linear infinite';
+      setTimeout(() => location.reload(), 350);
     } else {
-      indicator.style.transform = 'translateX(-50%) translateY(-60px)';
+      indicator.style.transform = 'translateX(-50%) translateY(-50px)';
+      arrow.style.transform = 'rotate(0deg)';
     }
     pullDist = 0;
   }, { passive: true });
