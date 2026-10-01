@@ -3238,18 +3238,25 @@ async function showMatch(matchId) {
   // MOM (공동 MOM 지원)
   const moms = stats.filter(s=>s.is_mom);
 
+  const subLine = p => {
+    const posTxt = [p.sub_position1,p.sub_position2].filter(Boolean).join(' · ')||{GK:'GK',DF:'DF',MF:'MF',FW:'FW'}[p.position]||p.position||'-';
+    return posTxt + (p.region ? ` · ${p.region}` : '');
+  };
+
   const playerRow = (s, statKey, statLabel) => {
     const p = s.players||{};
     const photo = p.photo_url
       ? `<img src="${p.photo_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
       : `<div style="width:36px;height:36px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--skyblue)">${(p.name||'?').slice(0,1)}</div>`;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border)">
-      ${photo}
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:600;color:var(--text)">${p.name||'-'}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px">#${p.number||'-'} · ${p.position||'-'}</div>
+    return `<div class="squad-row" onclick="showPlayer(${p.id})" style="cursor:pointer;grid-template-columns:40px 1fr auto;background:#fff">
+      <div style="display:flex;align-items:center;justify-content:center">${photo}</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px">
+          <span style="font-size:13px;font-weight:700;color:var(--muted);min-width:18px">${p.number||'-'}</span> ${p.name||'-'}
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subLine(p)}</div>
       </div>
-      <div style="text-align:right">
+      <div style="text-align:right;padding-left:8px">
         <div style="font-size:20px;font-weight:800;color:var(--skyblue)">${s[statKey]}</div>
         <div style="font-size:10px;color:var(--muted)">${statLabel}</div>
       </div>
@@ -3261,13 +3268,15 @@ async function showMatch(matchId) {
     const photo = p.photo_url
       ? `<img src="${p.photo_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
       : `<div style="width:36px;height:36px;border-radius:50%;background:#fff8e1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#f5a623">${(p.name||'?').slice(0,1)}</div>`;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border)">
-      ${photo}
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:600;color:var(--text)">${p.name||'-'}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px">#${p.number||'-'}</div>
+    return `<div class="squad-row" onclick="showPlayer(${p.id})" style="cursor:pointer;grid-template-columns:40px 1fr auto;background:#fff">
+      <div style="display:flex;align-items:center;justify-content:center">${photo}</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px">
+          <span style="font-size:13px;font-weight:700;color:var(--muted);min-width:18px">${p.number||'-'}</span> ${p.name||'-'}
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subLine(p)}</div>
       </div>
-      <div style="font-size:20px">⭐</div>
+      <div style="font-size:20px;padding-left:8px">⭐</div>
     </div>`;
   }).join('') : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">없음</div>';
 
