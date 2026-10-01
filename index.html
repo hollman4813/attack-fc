@@ -3207,7 +3207,7 @@ async function showMatch(matchId) {
   try {
     [matches, stats, allMatches, matchVotes] = await Promise.all([
       api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&id=eq.${matchId}`),
-      api(`match_stats?select=*,players(name,number,photo_url,position,sub_position1,sub_position2)&match_id=eq.${matchId}&order=players(name).asc`),
+      api(`match_stats?select=*,players(id,name,number,photo_url,position,sub_position1,sub_position2)&match_id=eq.${matchId}&order=players(name).asc`),
       api(`matches?select=*,grounds(name),opponents(name)&status=eq.finished&order=match_date.desc`),
       api(`match_votes?select=*&match_id=eq.${matchId}`)
     ]);
@@ -3265,6 +3265,7 @@ async function showMatch(matchId) {
 
   const playerRow = (s, statKey, statLabel) => {
     const p = s.players||{};
+    if (p.id == null) p.id = s.player_id;
     const photo = p.photo_url
       ? `<img src="${p.photo_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
       : `<div style="width:36px;height:36px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--skyblue)">${(p.name||'?').slice(0,1)}</div>`;
@@ -3285,6 +3286,7 @@ async function showMatch(matchId) {
 
   const momHtml = moms.length > 0 ? moms.map(mom => {
     const p = mom.players||{};
+    if (p.id == null) p.id = mom.player_id;
     const photo = p.photo_url
       ? `<img src="${p.photo_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
       : `<div style="width:36px;height:36px;border-radius:50%;background:#fff8e1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#f5a623">${(p.name||'?').slice(0,1)}</div>`;
