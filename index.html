@@ -1781,42 +1781,37 @@ function switchTab(tab, btn) {
 }
 
 /* ── MOM 레이팅 계산 ── */
-function calcRating(playerVotes, totalGames, teamAvgRate, goalsConceded, isDefender) {
-  // 보정 득표율
-  const m = 2;
-  const R = playerVotes.totalVotes / Math.max(playerVotes.totalParticipants, 1);
-  const C = teamAvgRate;
-  const v = playerVotes.games;
-  const adjustedRate = (v * R + m * C) / (v + m);
+// 경기별 가상득표(참여인원의 절반)를 더해, 득표가 적은 선수의 평점이 지나치게 낮아지는 것을 방지
+function calcMatchAdjustedRate(voteCount, totalParticipants) {
+  if (!totalParticipants) return 0;
+  const virtualVotes = totalParticipants / 2;
+  return (virtualVotes + voteCount) / (totalParticipants * 1.5);
+}
 
-  // 기본 레이팅
-  const baseRating = 6.5 + (adjustedRate * 100 - teamAvgRate * 100) / 5;
+function calcRating(voteCount, totalParticipants, goalsConceded, isDefender, goals, assists, isMom) {
+  const adjustedRate = calcMatchAdjustedRate(voteCount, totalParticipants);
 
-  // 클린시트 보너스
+  // 기본 레이팅 (득표율 33%→5.5, 66.5%→7.0, 100%→8.5 기준)
+  const baseRating = 7.0 + (adjustedRate * 100 - 66.5) / 22;
+
   let bonus = 0;
   if (isDefender) {
     if (goalsConceded === 0) bonus = 1.0;
     else if (goalsConceded === 1) bonus = 0.5;
     else if (goalsConceded === 2) bonus = 0.2;
   }
+  bonus += (goals || 0) * 0.2;
+  bonus += (assists || 0) * 0.1;
+  if (isMom) bonus += 0.5;
 
-  const finalRating = Math.min(10, Math.round((baseRating + bonus) * 2) / 2);
-  return Math.max(1, Math.round(finalRating * 10) / 10);
+  return Math.max(1, Math.min(10, Math.round((baseRating + bonus) * 10) / 10));
 }
 
 async function loadPlayerRatings(playerId) {
   const votes = await api(`match_votes?select=*,matches(goals_conceded)&player_id=eq.${playerId}`);
   if (!votes.length) return null;
 
-  const totalVotes = votes.reduce((s,v)=>s+v.vote_count,0);
-  const totalParticipants = votes.reduce((s,v)=>s+v.total_participants,0);
   const games = votes.length;
-
-  // 팀 평균 득표율
-  const allVotes = await api(`match_votes?select=vote_count,total_participants`);
-  const teamTotalVotes = allVotes.reduce((s,v)=>s+v.vote_count,0);
-  const teamTotalParticipants = allVotes.reduce((s,v)=>s+v.total_participants,0);
-  const teamAvgRate = teamTotalParticipants > 0 ? teamTotalVotes/teamTotalParticipants : 0;
 
   const matchStats = await api(`match_stats?select=goals,assists,is_mom,match_id&player_id=eq.${playerId}`);
   const statsMap = {};
@@ -1825,8 +1820,7 @@ async function loadPlayerRatings(playerId) {
     const conceded = v.matches?.goals_conceded ?? 0;
     const s = statsMap[v.match_id] || {};
     return calcRating(
-      { totalVotes: v.vote_count, totalParticipants: v.total_participants, games },
-      games, teamAvgRate, conceded, v.is_defender, s.goals, s.assists, s.is_mom
+      v.vote_count, v.total_participants, conceded, v.is_defender, s.goals, s.assists, s.is_mom
     );
   });
 
@@ -3211,29 +3205,15 @@ async function showMatch(matchId) {
   const voteMap = {};
   matchVotes.forEach(v => voteMap[v.player_id] = v);
   const totalParticipants = matchVotes[0]?.total_participants || 0;
-  const teamAvgRate = totalParticipants > 0
-    ? matchVotes.reduce((s,v)=>s+v.vote_count,0) / (totalParticipants * matchVotes.length)
-    : 0;
 
   function getMatchRating(playerId, isDefender, goalsConceded, goals, assists) {
     const v = voteMap[playerId];
     if (!v || totalParticipants === 0) return null;
-    const mVal = 2;
-    const R = v.vote_count / totalParticipants;
-    const C = teamAvgRate;
-    const adj = (1 * R + mVal * C) / (1 + mVal);
-    let base = 7.0 + (adj * 100 - C * 100) / 5;
-    let bonus = 0;
-    if (isDefender) {
-      if (goalsConceded === 0) bonus = 1.0;
-      else if (goalsConceded === 1) bonus = 0.5;
-      else if (goalsConceded === 2) bonus = 0.2;
-    }
-    bonus += (goals || 0) * 0.2;
-    bonus += (assists || 0) * 0.1;
     const statData = stats.find(x=>x.player_id===playerId);
-    if (statData?.is_mom) bonus += 0.5;
-    return Math.min(10, Math.max(1, Math.round((base + bonus) * 10) / 10)).toFixed(1);
+    const rating = calcRating(
+      v.vote_count, totalParticipants, goalsConceded, isDefender, goals, assists, statData?.is_mom
+    );
+    return rating.toFixed(1);
   }
   const goalsConceded = m.opponent_score || 0;
   const d = new Date(m.match_date);
