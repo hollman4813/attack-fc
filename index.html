@@ -1800,9 +1800,9 @@ function calcRating(voteCount, totalParticipants, goalsConceded, isDefender, goa
     else if (goalsConceded === 1) bonus = 0.5;
     else if (goalsConceded === 2) bonus = 0.2;
   }
-  bonus += (goals || 0) * 0.3;
+  bonus += (goals || 0) * 0.2;
   bonus += (assists || 0) * 0.2;
-  if (isMom) bonus += 0.7;
+  if (isMom) bonus += 0.5;
 
   return Math.max(1, Math.min(10, Math.round((baseRating + bonus) * 10) / 10));
 }
