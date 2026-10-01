@@ -2874,7 +2874,9 @@ function exitAdmin() {
 
 /* ── 선수 상세 페이지 ── */
 async function showPlayer(playerId) {
-  window._prevSection = document.querySelector('.section.active')?.id || 'home';
+  const fromMatchDetail = document.getElementById('match-detail')?.classList.contains('active');
+  window._prevFromMatch = fromMatchDetail ? (window._currentMatchId ?? null) : null;
+  window._prevSection = fromMatchDetail ? 'match-detail' : (document.querySelector('.section.active')?.id || 'home');
   window._prevTab = document.querySelector('.tab-section.active')?.id || 'tab-overview';
   window._prevTabBtn = document.querySelector('.team-tab.active');
   // 서브탭 상태 저장
@@ -3189,11 +3191,12 @@ async function showPlayer(playerId) {
 }
 
 /* ── 경기 상세 페이지 ── */
-async function showMatch(matchId) {
+async function showMatch(matchId, skipPushState) {
   window._prevSection = document.querySelector('.section.active')?.id || 'home';
   window._prevTab = document.querySelector('.tab-section.active')?.id || 'tab-matches';
   window._prevTabBtn = document.querySelector('.team-tab.active');
-  history.pushState({ page: 'match', id: matchId }, '');
+  window._currentMatchId = matchId;
+  if (!skipPushState) history.pushState({ page: 'match', id: matchId }, '');
   document.getElementById('team-hero-header').style.display = 'none';
   ['home','match-detail','player-detail','admin-page'].forEach(id=>{
     const el = document.getElementById(id);
@@ -3495,6 +3498,15 @@ function backToMatches() {
 }
 
 function backFromPlayer() {
+  if (window._prevSection === 'match-detail' && window._prevFromMatch != null) {
+    const matchId = window._prevFromMatch;
+    ['home','match-detail','player-detail','admin-page'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.classList.remove('active');
+    });
+    showMatch(matchId, true);
+    return;
+  }
   ['home','match-detail','player-detail','admin-page'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.classList.remove('active');
