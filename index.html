@@ -1142,11 +1142,24 @@ async function loadOverview() {
 
   // TOP3
   const ri = (p,i,k,lbl) => {
-    const cls=['p1','p2','p3'][i]||'';
-    const avatar = p.photo_url
-      ? `<img src="${p.photo_url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-      : `<div class="rank-avatar">${p.name.slice(0,1)}</div>`;
-    return `<div class="rank-item" onclick="showPlayer(${p.id})" style="cursor:pointer"><div class="rank-pos ${cls}">${i+1}</div>${avatar}<div class="rank-info"><div class="rank-name">${p.name}</div><div class="rank-sub">#${p.number||'-'}</div></div><div><div class="rank-val">${p[k]}</div><div class="rank-val-label">${lbl}</div></div></div>`;
+    const photo = p.photo_url
+      ? `<img src="${p.photo_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
+      : `<div style="width:36px;height:36px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--skyblue)">${(p.name||'?').slice(0,1)}</div>`;
+    const posTxt = [p.sub_position1,p.sub_position2].filter(Boolean).join(' · ')||{GK:'GK',DF:'DF',MF:'MF',FW:'FW'}[p.position]||p.position||'-';
+    const subTxt = posTxt + (p.region ? ` · ${p.region}` : '');
+    return `<div class="squad-row" onclick="showPlayer(${p.id})" style="cursor:pointer;grid-template-columns:40px 1fr auto;background:#fff">
+      <div style="display:flex;align-items:center;justify-content:center">${photo}</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px">
+          <span style="font-size:13px;font-weight:700;color:var(--muted);min-width:18px">${p.number||'-'}</span> ${p.name}
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subTxt}</div>
+      </div>
+      <div style="text-align:right;padding-left:8px">
+        <div style="font-size:20px;font-weight:800;color:var(--skyblue)">${p[k]}</div>
+        <div style="font-size:10px;color:var(--muted)">${lbl}</div>
+      </div>
+    </div>`;
   };
   document.getElementById('ov-goals').innerHTML = [...stats].sort((a,b)=>b['총골']-a['총골']).slice(0,3).map((p,i)=>ri(p,i,'총골','골')).join('');
   document.getElementById('ov-assists').innerHTML = [...stats].sort((a,b)=>b['총어시스트']-a['총어시스트']).slice(0,3).map((p,i)=>ri(p,i,'총어시스트','어시스트')).join('');
