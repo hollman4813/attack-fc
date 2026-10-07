@@ -3490,6 +3490,8 @@ function backToMatches() {
   document.querySelectorAll('.team-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('home').classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'flex';
+  document.getElementById('team-hero-header').style.display = 'block';
+  document.getElementById('sticky-header').style.display = 'block';
   const prevTab = window._prevTab || 'tab-matches';
   const tabName = prevTab.replace('tab-', '');
   const idx = TAB_ORDER.indexOf(tabName);
