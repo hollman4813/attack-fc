@@ -3238,17 +3238,17 @@ async function showMatch(matchId, skipPushState) {
     );
     return rating.toFixed(1);
   }
-  // 누적 평점 (선수별 전 경기 평균)
+  // 누적 평점 (선수별 현재 시즌 경기 평균)
   const cumRatingMap = {};
   try {
     const [allV, allS] = await Promise.all([
-      api('match_votes?select=player_id,match_id,vote_count,total_participants,is_defender,matches(goals_conceded)'),
+      api('match_votes?select=player_id,match_id,vote_count,total_participants,is_defender,matches(goals_conceded,season_id)'),
       api('match_stats?select=player_id,match_id,goals,assists,is_mom')
     ]);
     const sMap = {};
     allS.forEach(x => sMap[x.player_id+'_'+x.match_id] = x);
     const acc = {};
-    allV.forEach(v => {
+    allV.filter(v => v.matches?.season_id === currentSeasonId).forEach(v => {
       const st = sMap[v.player_id+'_'+v.match_id] || {};
       const r = calcRating(v.vote_count, v.total_participants, v.matches?.goals_conceded ?? 0, v.is_defender, st.goals, st.assists, st.is_mom);
       (acc[v.player_id] = acc[v.player_id] || []).push(r);
