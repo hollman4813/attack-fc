@@ -375,6 +375,7 @@
           <button class="tab-btn" onclick="switchStatTab('assists',this)">어시스트</button>
           <button class="tab-btn" onclick="switchStatTab('points',this)">공격포인트</button>
           <button class="tab-btn" onclick="switchStatTab('mom',this)">MOM</button>
+          <button class="tab-btn" onclick="switchStatTab('power',this)">파워랭킹</button>
         </div>
         <div style="padding:0 12px 16px" id="scorers-body"></div>
       </div>
@@ -1252,7 +1253,7 @@ async function loadScorers(restoreTab) {
   // 서브탭 복원
   const prevTab = restoreTab || window._currentStatTab;
   if (prevTab && prevTab !== 'overview') {
-    const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4 };
+    const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4, power:5 };
     const btns = document.querySelectorAll('.tab-btn');
     const idx = tabMap[prevTab];
     if (btns[idx]) switchStatTab(prevTab, btns[idx]);
@@ -1334,10 +1335,78 @@ function renderStatList(tab) {
   </div>`;
 }
 
+/* ── 파워랭킹 (경기당 1000점 만점: 출석300 + 연속출석 최대100 + 평점 600) ── */
+const POWER_CFG = { attend:300, streakStep:20, streakMax:100, ratingMax:600, defaultRating:7.0 };
+
+async function calcPowerRanking() {
+  const [matches, allMS, allV, players] = await Promise.all([
+    api(`matches?select=id,match_date&status=eq.finished&season_id=eq.${currentSeasonId}&order=match_date.asc`),
+    api('match_stats?select=player_id,match_id,attended,goals,assists,is_mom'),
+    api('match_votes?select=player_id,match_id,vote_count,total_participants,is_defender,matches(goals_conceded)'),
+    api('players?select=id,name,number,photo_url,position,sub_position1,sub_position2,join_date')
+  ]);
+  const matchIds = new Set(matches.map(m=>m.id));
+  const msMap = {}, vMap = {};
+  allMS.forEach(x => { if (matchIds.has(x.match_id)) msMap[x.player_id+'_'+x.match_id] = x; });
+  allV.forEach(x => { if (matchIds.has(x.match_id)) vMap[x.player_id+'_'+x.match_id] = x; });
+
+  const result = [];
+  players.forEach(pl => {
+    const eligible = matches.filter(m => !pl.join_date || m.match_date >= pl.join_date);
+    if (!eligible.length) return;
+    let streak = 0, total = 0, attended = 0, ratingSum = 0;
+    eligible.forEach(m => {
+      const st = msMap[pl.id+'_'+m.id];
+      if (!st || !st.attended) { streak = 0; return; }
+      streak++; attended++;
+      const v = vMap[pl.id+'_'+m.id];
+      const rating = v
+        ? calcRating(v.vote_count, v.total_participants, v.matches?.goals_conceded ?? 0, v.is_defender, st.goals, st.assists, st.is_mom)
+        : POWER_CFG.defaultRating;
+      ratingSum += rating;
+      const streakBonus = Math.min((streak-1) * POWER_CFG.streakStep, POWER_CFG.streakMax);
+      total += POWER_CFG.attend + streakBonus + (rating/10) * POWER_CFG.ratingMax;
+    });
+    if (!attended) return;
+    result.push({ ...pl, power: total / eligible.length, attended, games: eligible.length, avgRating: ratingSum / attended });
+  });
+  return result.sort((a,b) => b.power - a.power);
+}
+
+async function renderPowerRanking() {
+  const body = document.getElementById('scorers-body');
+  body.innerHTML = '<div class="loading"><div class="spinner"></div>계산 중...</div>';
+  let list = [];
+  try { list = await calcPowerRanking(); } catch(e) { console.error('파워랭킹 계산 실패:', e); }
+  if (window._currentStatTab !== 'power') return;
+  const rows = list.map((p,i) => {
+    const cls = ['p1','p2','p3'][i]||'';
+    const img = p.photo_url
+      ? `<img src="${p.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`
+      : `<div style="width:40px;height:40px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--skyblue)">${p.name.slice(0,1)}</div>`;
+    return `<div class="stat-full-row" onclick="showPlayer(${p.id})" style="cursor:pointer">
+      <div class="stat-full-rank ${cls}">${i+1}</div>
+      <div style="display:flex;align-items:center;justify-content:center">${img}</div>
+      <div>
+        <div class="stat-full-name">${p.number||'-'} ${p.name}</div>
+        <div class="stat-full-sub">출석 ${p.attended}/${p.games} · 평균 평점 ${p.avgRating.toFixed(1)}</div>
+      </div>
+      <div class="stat-full-val">${Math.round(p.power)}</div>
+    </div>`;
+  }).join('');
+  body.innerHTML = `<div class="stat-full-list" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    <div class="stat-full-header"><div style="text-align:center">#</div><div></div><div>선수</div><div style="text-align:right">점수</div></div>
+    ${rows || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음</div>'}
+  </div>
+  <div style="margin-top:10px;padding:10px 12px;font-size:11px;line-height:1.6;color:var(--muted);background:#f8f9fb;border-radius:8px">
+    경기당 1000점 만점 · 출석 300 + 연속출석 보너스(2연속부터 +20씩, 최대 +100) + 평점×60. 결석한 경기는 0점으로 평균에 포함되며, 입단일 이후 경기만 계산해요. 투표 기록이 없는 경기는 평점 7.0으로 계산합니다.
+  </div>`;
+}
+
 function switchStatTabByName(tab) {
   // 탭 버튼 찾아서 활성화
   const btns = document.querySelectorAll('.tab-btn');
-  const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4 };
+  const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4, power:5 };
   const idx = tabMap[tab];
   if (btns[idx]) switchStatTab(tab, btns[idx]);
 }
@@ -1347,6 +1416,7 @@ function switchStatTab(tab, btn) {
   btn.classList.add('active');
   window._currentStatTab = tab;
   if (tab === 'overview') renderStatOverview();
+  else if (tab === 'power') renderPowerRanking();
   else renderStatList(tab);
 }
 
@@ -3546,7 +3616,7 @@ function backFromPlayer() {
         const prevTab = window._currentStatTab;
         if (prevTab && prevTab !== 'overview') {
           const btns = document.querySelectorAll('.tab-btn');
-          const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4 };
+          const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4, power:5 };
           const idx = tabMap[prevTab];
           if (btns[idx]) switchStatTab(prevTab, btns[idx]);
         }
@@ -3558,7 +3628,7 @@ function backFromPlayer() {
     // 이미 로드됨 - scorers 서브탭 복원
     if (tabName==='scorers') {
       const prevTab = window._currentStatTab;
-      const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4 };
+      const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4, power:5 };
       const btns = document.querySelectorAll('.tab-btn');
       const idx = tabMap[prevTab||'overview'];
       if (btns[idx]) switchStatTab(prevTab||'overview', btns[idx]);
