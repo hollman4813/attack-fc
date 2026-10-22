@@ -1368,7 +1368,7 @@ async function calcPowerRanking() {
       total += POWER_CFG.attend + streakBonus + (rating/10) * POWER_CFG.ratingMax;
     });
     if (!attended) return;
-    result.push({ ...pl, power: total / eligible.length, attended, games: eligible.length, avgRating: ratingSum / attended });
+    result.push({ ...pl, power: total / attended, attended, games: eligible.length, avgRating: ratingSum / attended });
   });
   return result.sort((a,b) => b.power - a.power);
 }
@@ -1399,7 +1399,7 @@ async function renderPowerRanking() {
     ${rows || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음</div>'}
   </div>
   <div style="margin-top:10px;padding:10px 12px;font-size:11px;line-height:1.6;color:var(--muted);background:#f8f9fb;border-radius:8px">
-    경기당 1000점 만점 · 출석 300 + 연속출석 보너스(2연속부터 +20씩, 최대 +100) + 평점×60. 결석한 경기는 0점으로 평균에 포함되며, 입단일 이후 경기만 계산해요. 투표 기록이 없는 경기는 평점 7.0으로 계산합니다.
+    경기당 1000점 만점 · 출석 300 + 연속출석 보너스(2연속부터 +20씩, 최대 +100) + 평점×60. 평균은 출석한 경기만으로 계산하고(결석은 제외, 대신 연속출석이 끊겨요), 입단일 이후 경기만 계산해요. 투표 기록이 없는 경기는 평점 7.0으로 계산합니다.
   </div>`;
 }
 
