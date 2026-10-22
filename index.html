@@ -375,7 +375,7 @@
           <button class="tab-btn" onclick="switchStatTab('assists',this)">어시스트</button>
           <button class="tab-btn" onclick="switchStatTab('points',this)">공격포인트</button>
           <button class="tab-btn" onclick="switchStatTab('mom',this)">MOM</button>
-          <button class="tab-btn" onclick="switchStatTab('power',this)">어택포인트</button>
+          <button class="tab-btn" onclick="switchStatTab('power',this)">어택 파워랭킹</button>
         </div>
         <div style="padding:0 12px 16px" id="scorers-body"></div>
       </div>
@@ -1404,7 +1404,7 @@ async function renderPowerRanking() {
     </div>`;
   }).join('');
   body.innerHTML = `<div class="stat-full-list" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
-    <div class="stat-full-header"><div style="text-align:center">#</div><div></div><div>선수</div><div style="text-align:right">점수</div></div>
+    <div class="stat-full-header"><div style="text-align:center">#</div><div></div><div>선수</div><div style="text-align:right">포인트</div></div>
     ${rows || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음</div>'}
   </div>
   <div style="margin-top:10px;padding:10px 12px;font-size:11px;line-height:1.6;color:var(--muted);background:#f8f9fb;border-radius:8px">
