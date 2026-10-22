@@ -1337,7 +1337,7 @@ function renderStatList(tab) {
 
 /* ── 어택포인트 (경기당 1000점 만점: 출석200 + 연속출석 최대100 + 평점 700) ── */
 const POWER_CFG = { attend:200, streakStep:20, streakMax:100, ratingMax:700, defaultRating:7.0,
-  matchWeight:0.8, rateMax:100, cumMax:100, cumTarget:10, shrinkK:4 };
+  matchWeight:0.8, rateMax:100, cumMax:100, cumTarget:10, shrinkK:4, preJoinFactor:0.7 };
 
 function powerOf(matchAvg, attended, totalGames) {
   const c = POWER_CFG;
@@ -1391,7 +1391,7 @@ async function calcPowerRanking() {
   // 2차: 입단 전 경기는 팀 평균 출석률만큼 출석한 것으로 반영
   const result = rows.map(r => {
     const preJoin = matches.length - r.eligibleCnt;
-    const adjAttended = r.attended + preJoin * teamAvgRate;
+    const adjAttended = r.attended + preJoin * teamAvgRate * POWER_CFG.preJoinFactor;
     // 출석 경기가 적을수록 팀 평균 쪽으로 보정 (적은 경기에서 평점이 높게 나온 효과를 완화)
     const k = POWER_CFG.shrinkK;
     const shrunkAvg = (r.matchAvg * r.attended + teamMatchAvg * k) / (r.attended + k);
@@ -1428,8 +1428,8 @@ async function renderPowerRanking() {
   <div style="margin-top:10px;padding:10px 12px;font-size:11px;line-height:1.6;color:var(--muted);background:#f8f9fb;border-radius:8px">
     <b>1000점 만점</b> = 경기 점수 평균×0.8 + 출석률×100 + 누적출석×100<br>
     · 경기 점수(경기당 1000점 만점): 출석 200 + 연속출석 보너스(2연속부터 +20씩, 최대 +100) + 평점×70 (출석한 경기만 평균)<br>
-    · 출석률: 시즌 전체 경기 중 출석 비율이에요. 입단 전 경기는 팀원들의 평균 출석률만큼 출석한 것으로 반영해요<br>
-    · 누적출석: 출석 10경기가 목표이고, 입단 전 경기도 팀 평균 출석만큼 인정돼요<br>
+    · 출석률: 시즌 전체 경기 중 출석 비율이에요. 입단 전 경기는 팀원들의 평균 출석률의 70%만큼 출석한 것으로 반영해요<br>
+    · 누적출석: 출석 10경기가 목표이고, 입단 전 경기도 팀 평균 출석의 70%만큼 인정돼요<br>
     · 출석 경기가 적은 선수는 경기 점수가 팀 평균 쪽으로 보정돼요 (4경기 정도의 가상 기록을 더해 평균내요)<br>
     · 투표 기록이 없는 경기는 평점 7.0으로 계산해요.
   </div>`;
