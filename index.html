@@ -3308,23 +3308,11 @@ async function showMatch(matchId, skipPushState) {
     );
     return rating.toFixed(1);
   }
-  // 누적 평점 (선수별 현재 시즌 경기 평균)
-  const cumRatingMap = {};
+  // 누적 파워랭킹 점수 (현재 시즌 기준)
+  const powerMap = {};
   try {
-    const [allV, allS] = await Promise.all([
-      api('match_votes?select=player_id,match_id,vote_count,total_participants,is_defender,matches(goals_conceded,season_id)'),
-      api('match_stats?select=player_id,match_id,goals,assists,is_mom')
-    ]);
-    const sMap = {};
-    allS.forEach(x => sMap[x.player_id+'_'+x.match_id] = x);
-    const acc = {};
-    allV.filter(v => v.matches?.season_id === currentSeasonId).forEach(v => {
-      const st = sMap[v.player_id+'_'+v.match_id] || {};
-      const r = calcRating(v.vote_count, v.total_participants, v.matches?.goals_conceded ?? 0, v.is_defender, st.goals, st.assists, st.is_mom);
-      (acc[v.player_id] = acc[v.player_id] || []).push(r);
-    });
-    Object.keys(acc).forEach(id => cumRatingMap[id] = acc[id].reduce((a,b)=>a+b,0)/acc[id].length);
-  } catch(e) { console.error('누적 평점 로드 실패:', e); }
+    (await calcPowerRanking()).forEach(x => powerMap[x.id] = x.power);
+  } catch(e) { console.error('파워랭킹 로드 실패:', e); }
   const goalsConceded = m.opponent_score || 0;
   const d = new Date(m.match_date);
   const dateStr = `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}`;
@@ -3388,7 +3376,10 @@ async function showMatch(matchId, skipPushState) {
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subLine(p)}</div>
       </div>
-      <div style="font-size:20px;padding-left:8px">⭐</div>
+      <div style="display:flex;align-items:center;gap:10px;padding-left:8px">
+        ${powerMap[p.id] != null ? `<div style="text-align:right"><div style="font-size:16px;font-weight:800;color:var(--skyblue)">${Math.round(powerMap[p.id])}</div><div style="font-size:10px;color:var(--muted)">파워랭킹</div></div>` : ''}
+        <div style="font-size:20px">⭐</div>
+      </div>
     </div>`;
   }).join('') : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">없음</div>';
 
@@ -3532,7 +3523,6 @@ async function showMatch(matchId, skipPushState) {
               const isDefender = voteMap[s.player_id]?.is_defender ?? ['GK','DF'].includes(p.position);
               const rating = getMatchRating(s.player_id, isDefender, goalsConceded, s.goals, s.assists);
               const rColor = !rating ? 'var(--muted)' : rating >= 8 ? '#2e7d32' : rating >= 6 ? '#f5a623' : '#c62828';
-              const cum = cumRatingMap[s.player_id];
               return `<div style="display:grid;grid-template-columns:1fr 56px;padding:10px 14px;border-top:1px solid var(--border);align-items:center">
                 <div style="display:flex;align-items:center;gap:8px">
                   ${photo}
