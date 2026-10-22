@@ -3376,10 +3376,7 @@ async function showMatch(matchId, skipPushState) {
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subLine(p)}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;padding-left:8px">
-        ${powerMap[p.id] != null ? `<div style="text-align:right"><div style="font-size:16px;font-weight:800;color:var(--skyblue)">${Math.round(powerMap[p.id])}</div><div style="font-size:10px;color:var(--muted)">파워랭킹</div></div>` : ''}
-        <div style="font-size:20px">⭐</div>
-      </div>
+      <div style="font-size:20px;padding-left:8px">⭐</div>
     </div>`;
   }).join('') : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">없음</div>';
 
@@ -3511,9 +3508,10 @@ async function showMatch(matchId, skipPushState) {
         </div>
         <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
           ${stats.filter(s=>s.attended).length > 0 ? `
-            <div style="display:grid;grid-template-columns:1fr 56px;padding:8px 14px;background:#f8f9fb;font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
+            <div style="display:grid;grid-template-columns:1fr 48px 56px;padding:8px 14px;background:#f8f9fb;font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
               <div>선수</div>
               <div style="text-align:center">평점</div>
+              <div style="text-align:center">파워랭킹</div>
             </div>
             ${stats.filter(s=>s.attended).map(s=>{
               const p = s.players||{};
@@ -3523,12 +3521,13 @@ async function showMatch(matchId, skipPushState) {
               const isDefender = voteMap[s.player_id]?.is_defender ?? ['GK','DF'].includes(p.position);
               const rating = getMatchRating(s.player_id, isDefender, goalsConceded, s.goals, s.assists);
               const rColor = !rating ? 'var(--muted)' : rating >= 8 ? '#2e7d32' : rating >= 6 ? '#f5a623' : '#c62828';
-              return `<div style="display:grid;grid-template-columns:1fr 56px;padding:10px 14px;border-top:1px solid var(--border);align-items:center">
+              return `<div style="display:grid;grid-template-columns:1fr 48px 56px;padding:10px 14px;border-top:1px solid var(--border);align-items:center">
                 <div style="display:flex;align-items:center;gap:8px">
                   ${photo}
                   <div style="font-size:13px;font-weight:600;color:var(--text)">${p.name||'-'}${s.is_mom ? ' <span style="font-size:14px">⭐</span>' : ''}</div>
                 </div>
                 <div style="text-align:center;font-size:15px;font-weight:800;color:${rColor}">${rating || '-'}</div>
+                <div style="text-align:center;font-size:13px;font-weight:700;color:var(--skyblue)">${powerMap[s.player_id] != null ? Math.round(powerMap[s.player_id]) : '-'}</div>
               </div>`;
             }).join('')}` 
           : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">참석 정보 없음</div>'}
