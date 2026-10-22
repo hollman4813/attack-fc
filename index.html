@@ -1339,10 +1339,10 @@ function renderStatList(tab) {
 const POWER_CFG = { attend:200, streakStep:20, streakMax:100, ratingMax:700, defaultRating:7.0,
   matchWeight:0.8, rateMax:100, cumMax:100, cumTarget:10 };
 
-function powerOf(matchAvg, attended, eligibleCnt) {
+function powerOf(matchAvg, attended, totalGames) {
   const c = POWER_CFG;
-  const rate = attended / eligibleCnt;                       // 입단일 이후 경기 기준 출석률
-  const cumTarget = Math.min(eligibleCnt, c.cumTarget);      // 늦게 입단해도 불리하지 않게 목표치를 경기 수만큼 낮춤
+  const rate = Math.min(attended / totalGames, 1);           // 시즌 전체 경기 기준 출석률 (입단 전 경기는 팀 평균 참석률로 반영)
+  const cumTarget = Math.min(totalGames, c.cumTarget);
   const cum = Math.min(attended, cumTarget) / cumTarget;     // 누적출석 달성도
   return matchAvg * c.matchWeight + rate * c.rateMax + cum * c.cumMax;
 }
@@ -1359,7 +1359,8 @@ async function calcPowerRanking() {
   allMS.forEach(x => { if (matchIds.has(x.match_id)) msMap[x.player_id+'_'+x.match_id] = x; });
   allV.forEach(x => { if (matchIds.has(x.match_id)) vMap[x.player_id+'_'+x.match_id] = x; });
 
-  const result = [];
+  // 1차: 선수별 실제 출석/경기 점수 집계
+  const rows = [];
   players.forEach(pl => {
     const eligible = matches.filter(m => !pl.join_date || m.match_date >= pl.join_date);
     if (!eligible.length) return;
@@ -1377,7 +1378,17 @@ async function calcPowerRanking() {
       total += POWER_CFG.attend + streakBonus + (rating/10) * POWER_CFG.ratingMax;
     });
     if (!attended) return;
-    result.push({ ...pl, power: powerOf(total / attended, attended, eligible.length), matchAvg: total / attended, attended, games: eligible.length, avgRating: ratingSum / attended });
+    rows.push({ pl, attended, eligibleCnt: eligible.length, matchAvg: total / attended, avgRating: ratingSum / attended });
+  });
+
+  // 팀 평균 출석률 (입단일 이후 경기 기준 선수별 출석률의 평균)
+  const teamAvgRate = rows.length ? rows.reduce((sum, r) => sum + r.attended / r.eligibleCnt, 0) / rows.length : 0;
+
+  // 2차: 입단 전 경기는 팀 평균 출석률만큼 출석한 것으로 반영
+  const result = rows.map(r => {
+    const preJoin = matches.length - r.eligibleCnt;
+    const adjAttended = r.attended + preJoin * teamAvgRate;
+    return { ...r.pl, power: powerOf(r.matchAvg, adjAttended, matches.length), matchAvg: r.matchAvg, attended: r.attended, games: r.eligibleCnt, avgRating: r.avgRating };
   });
   return result.sort((a,b) => b.power - a.power);
 }
@@ -1410,8 +1421,8 @@ async function renderPowerRanking() {
   <div style="margin-top:10px;padding:10px 12px;font-size:11px;line-height:1.6;color:var(--muted);background:#f8f9fb;border-radius:8px">
     <b>1000점 만점</b> = 경기 점수 평균×0.8 + 출석률×100 + 누적출석×100<br>
     · 경기 점수(경기당 1000점 만점): 출석 200 + 연속출석 보너스(2연속부터 +20씩, 최대 +100) + 평점×70 (출석한 경기만 평균)<br>
-    · 출석률: 입단일 이후 경기 중 출석 비율<br>
-    · 누적출석: 출석 10경기가 목표이고, 입단 후 경기가 10경기보다 적으면 그 경기 수가 목표라 늦게 입단해도 불리하지 않아요<br>
+    · 출석률: 시즌 전체 경기 중 출석 비율이에요. 입단 전 경기는 팀원들의 평균 출석률만큼 출석한 것으로 반영해요<br>
+    · 누적출석: 출석 10경기가 목표이고, 입단 전 경기도 팀 평균 출석만큼 인정돼요<br>
     · 투표 기록이 없는 경기는 평점 7.0으로 계산해요.
   </div>`;
 }
