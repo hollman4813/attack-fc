@@ -1378,7 +1378,15 @@ async function calcPowerRanking() {
       total += POWER_CFG.attend + streakBonus + (rating/10) * POWER_CFG.ratingMax;
     });
     if (!attended) return;
-    rows.push({ pl, attended, eligibleCnt: eligible.length, matchAvg: total / attended, avgRating: ratedCnt ? ratingSum / ratedCnt : null });
+    // 표시용 평균 평점: 선수 상세와 같은 기준 (올해 투표 기록이 있는 모든 경기)
+    const rated = [];
+    matches.forEach(m => {
+      const v = vMap[pl.id+'_'+m.id];
+      if (!v) return;
+      const st = msMap[pl.id+'_'+m.id] || {};
+      rated.push(calcRating(v.vote_count, v.total_participants, v.matches?.goals_conceded ?? 0, v.is_defender, st.goals, st.assists, st.is_mom));
+    });
+    rows.push({ pl, attended, eligibleCnt: eligible.length, matchAvg: total / attended, avgRating: rated.length ? rated.reduce((a,b)=>a+b,0) / rated.length : null });
   });
 
   // 팀 평균 출석률 (입단일 이후 경기 기준 선수별 출석률의 평균)
