@@ -375,7 +375,7 @@
           <button class="tab-btn" onclick="switchStatTab('assists',this)">어시스트</button>
           <button class="tab-btn" onclick="switchStatTab('points',this)">공격포인트</button>
           <button class="tab-btn" onclick="switchStatTab('mom',this)">MOM</button>
-          <button class="tab-btn" onclick="switchStatTab('power',this)">파워랭킹</button>
+          <button class="tab-btn" onclick="switchStatTab('power',this)">어택포인트</button>
         </div>
         <div style="padding:0 12px 16px" id="scorers-body"></div>
       </div>
@@ -1335,8 +1335,8 @@ function renderStatList(tab) {
   </div>`;
 }
 
-/* ── 파워랭킹 (경기당 1000점 만점: 출석300 + 연속출석 최대100 + 평점 600) ── */
-const POWER_CFG = { attend:300, streakStep:20, streakMax:100, ratingMax:600, defaultRating:7.0,
+/* ── 어택포인트 (경기당 1000점 만점: 출석200 + 연속출석 최대100 + 평점 700) ── */
+const POWER_CFG = { attend:200, streakStep:20, streakMax:100, ratingMax:700, defaultRating:7.0,
   matchWeight:0.8, rateMax:100, cumMax:100, cumTarget:10 };
 
 function powerOf(matchAvg, attended, eligibleCnt) {
@@ -1386,7 +1386,7 @@ async function renderPowerRanking() {
   const body = document.getElementById('scorers-body');
   body.innerHTML = '<div class="loading"><div class="spinner"></div>계산 중...</div>';
   let list = [];
-  try { list = await calcPowerRanking(); } catch(e) { console.error('파워랭킹 계산 실패:', e); }
+  try { list = await calcPowerRanking(); } catch(e) { console.error('어택포인트 계산 실패:', e); }
   if (window._currentStatTab !== 'power') return;
   const rows = list.map((p,i) => {
     const cls = ['p1','p2','p3'][i]||'';
@@ -1409,7 +1409,7 @@ async function renderPowerRanking() {
   </div>
   <div style="margin-top:10px;padding:10px 12px;font-size:11px;line-height:1.6;color:var(--muted);background:#f8f9fb;border-radius:8px">
     <b>1000점 만점</b> = 경기 점수 평균×0.8 + 출석률×100 + 누적출석×100<br>
-    · 경기 점수(경기당 1000점 만점): 출석 300 + 연속출석 보너스(2연속부터 +20씩, 최대 +100) + 평점×60 (출석한 경기만 평균)<br>
+    · 경기 점수(경기당 1000점 만점): 출석 200 + 연속출석 보너스(2연속부터 +20씩, 최대 +100) + 평점×70 (출석한 경기만 평균)<br>
     · 출석률: 입단일 이후 경기 중 출석 비율<br>
     · 누적출석: 출석 10경기가 목표이고, 입단 후 경기가 10경기보다 적으면 그 경기 수가 목표라 늦게 입단해도 불리하지 않아요<br>
     · 투표 기록이 없는 경기는 평점 7.0으로 계산해요.
@@ -3321,11 +3321,11 @@ async function showMatch(matchId, skipPushState) {
     );
     return rating.toFixed(1);
   }
-  // 누적 파워랭킹 점수 (현재 시즌 기준)
+  // 누적 어택포인트 점수 (현재 시즌 기준)
   const powerMap = {};
   try {
     (await calcPowerRanking()).forEach(x => powerMap[x.id] = x.power);
-  } catch(e) { console.error('파워랭킹 로드 실패:', e); }
+  } catch(e) { console.error('어택포인트 로드 실패:', e); }
   const goalsConceded = m.opponent_score || 0;
   const d = new Date(m.match_date);
   const dateStr = `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}`;
@@ -3521,10 +3521,10 @@ async function showMatch(matchId, skipPushState) {
         </div>
         <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
           ${stats.filter(s=>s.attended).length > 0 ? `
-            <div style="display:grid;grid-template-columns:1fr 48px 56px;padding:8px 14px;background:#f8f9fb;font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
+            <div style="display:grid;grid-template-columns:1fr 44px 68px;padding:8px 14px;background:#f8f9fb;font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
               <div>선수</div>
               <div style="text-align:center">평점</div>
-              <div style="text-align:center">파워랭킹</div>
+              <div style="text-align:center">어택포인트</div>
             </div>
             ${stats.filter(s=>s.attended).map(s=>{
               const p = s.players||{};
@@ -3534,7 +3534,7 @@ async function showMatch(matchId, skipPushState) {
               const isDefender = voteMap[s.player_id]?.is_defender ?? ['GK','DF'].includes(p.position);
               const rating = getMatchRating(s.player_id, isDefender, goalsConceded, s.goals, s.assists);
               const rColor = !rating ? 'var(--muted)' : rating >= 8 ? '#2e7d32' : rating >= 6 ? '#f5a623' : '#c62828';
-              return `<div style="display:grid;grid-template-columns:1fr 48px 56px;padding:10px 14px;border-top:1px solid var(--border);align-items:center">
+              return `<div style="display:grid;grid-template-columns:1fr 44px 68px;padding:10px 14px;border-top:1px solid var(--border);align-items:center">
                 <div style="display:flex;align-items:center;gap:8px">
                   ${photo}
                   <div style="font-size:13px;font-weight:600;color:var(--text)">${p.name||'-'}${s.is_mom ? ' <span style="font-size:14px">⭐</span>' : ''}</div>
