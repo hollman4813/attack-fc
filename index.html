@@ -1336,7 +1336,16 @@ function renderStatList(tab) {
 }
 
 /* ── 파워랭킹 (경기당 1000점 만점: 출석300 + 연속출석 최대100 + 평점 600) ── */
-const POWER_CFG = { attend:300, streakStep:20, streakMax:100, ratingMax:600, defaultRating:7.0 };
+const POWER_CFG = { attend:300, streakStep:20, streakMax:100, ratingMax:600, defaultRating:7.0,
+  matchWeight:0.8, rateMax:100, cumMax:100, cumTarget:10 };
+
+function powerOf(matchAvg, attended, eligibleCnt) {
+  const c = POWER_CFG;
+  const rate = attended / eligibleCnt;                       // 입단일 이후 경기 기준 출석률
+  const cumTarget = Math.min(eligibleCnt, c.cumTarget);      // 늦게 입단해도 불리하지 않게 목표치를 경기 수만큼 낮춤
+  const cum = Math.min(attended, cumTarget) / cumTarget;     // 누적출석 달성도
+  return matchAvg * c.matchWeight + rate * c.rateMax + cum * c.cumMax;
+}
 
 async function calcPowerRanking() {
   const [matches, allMS, allV, players] = await Promise.all([
@@ -1368,7 +1377,7 @@ async function calcPowerRanking() {
       total += POWER_CFG.attend + streakBonus + (rating/10) * POWER_CFG.ratingMax;
     });
     if (!attended) return;
-    result.push({ ...pl, power: total / attended, attended, games: eligible.length, avgRating: ratingSum / attended });
+    result.push({ ...pl, power: powerOf(total / attended, attended, eligible.length), matchAvg: total / attended, attended, games: eligible.length, avgRating: ratingSum / attended });
   });
   return result.sort((a,b) => b.power - a.power);
 }
@@ -1389,7 +1398,7 @@ async function renderPowerRanking() {
       <div style="display:flex;align-items:center;justify-content:center">${img}</div>
       <div>
         <div class="stat-full-name">${p.number||'-'} ${p.name}</div>
-        <div class="stat-full-sub">출석 ${p.attended}/${p.games} · 평균 평점 ${p.avgRating.toFixed(1)}</div>
+        <div class="stat-full-sub">출석 ${p.attended}/${p.games}(${Math.round(p.attended/p.games*100)}%) · 평균 평점 ${p.avgRating.toFixed(1)}</div>
       </div>
       <div class="stat-full-val">${Math.round(p.power)}</div>
     </div>`;
@@ -1399,7 +1408,11 @@ async function renderPowerRanking() {
     ${rows || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음</div>'}
   </div>
   <div style="margin-top:10px;padding:10px 12px;font-size:11px;line-height:1.6;color:var(--muted);background:#f8f9fb;border-radius:8px">
-    경기당 1000점 만점 · 출석 300 + 연속출석 보너스(2연속부터 +20씩, 최대 +100) + 평점×60. 평균은 출석한 경기만으로 계산하고(결석은 제외, 대신 연속출석이 끊겨요), 입단일 이후 경기만 계산해요. 투표 기록이 없는 경기는 평점 7.0으로 계산합니다.
+    <b>1000점 만점</b> = 경기 점수 평균×0.8 + 출석률×100 + 누적출석×100<br>
+    · 경기 점수(경기당 1000점 만점): 출석 300 + 연속출석 보너스(2연속부터 +20씩, 최대 +100) + 평점×60 (출석한 경기만 평균)<br>
+    · 출석률: 입단일 이후 경기 중 출석 비율<br>
+    · 누적출석: 출석 10경기가 목표이고, 입단 후 경기가 10경기보다 적으면 그 경기 수가 목표라 늦게 입단해도 불리하지 않아요<br>
+    · 투표 기록이 없는 경기는 평점 7.0으로 계산해요.
   </div>`;
 }
 
