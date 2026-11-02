@@ -259,6 +259,7 @@
   .lu-av .lu-bgrp{position:absolute;bottom:-4px;display:flex;z-index:2}
   .lu-av .lu-bgrp i{position:relative}
   .lu-av .lu-bgrp.g{right:-9px;flex-direction:row-reverse}.lu-av .lu-bgrp.g i+i{margin-right:-11px}
+  .lu-av .lu-bgrp i.og{background:#e5484d}
   .lu-av .lu-bgrp.a{left:-9px}.lu-av .lu-bgrp.a i+i{margin-left:-11px}
   .lu-av i.lu-bsub{left:-7px;top:-4px;background:#e5484d;color:#fff}
   .lu-nm{font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7);line-height:1.15;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -3831,18 +3832,18 @@ function luViewRefresh(){ const el=document.getElementById('lv-wrap'); if(el) el
 function luViewInner(){
   const v = window._lvData, data = v.data, rec = v.rec, plan = data.plan, q = v.q;
   const nm = id => v.info[id] || {name:'?',number:''};
-  const tabs = plan.map((e,i)=>`<button class="lu-qtab ${i===q?'on':''}" onclick="luViewQ(${i})">${i+1}Q <span style="font-weight:400;font-size:10px">${luEsc(e.formation)}</span>${rec?`<div style="font-size:10px;font-weight:700">${luRecOf(rec,i).goals.length}:${luRecOf(rec,i).them||0}</div>`:''}</button>`).join('');
+  const tabs = plan.map((e,i)=>`<button class="lu-qtab ${i===q?'on':''}" onclick="luViewQ(${i})">${i+1}Q <span style="font-weight:400;font-size:10px">${luEsc(e.formation)}</span>${rec?`<div style="font-size:10px;font-weight:700">${luQScoreTxt(luRecOf(rec,i))}</div>`:''}</button>`).join('');
   const e = plan[q]; const used = new Set();
   const bubbles = luSlots(e.formation).map(s=>{
     const x = e.slots[s.id]||{}; const pl = x.p ? nm(x.p) : null; const sub = x.s ? nm(x.s) : null;
     if(x.p) used.add(x.p); if(x.s) used.add(x.s);
-    const st = x.p ? luQStat(rec,q,x.p) : {g:0,a:0};
-    return luBubble({x:s.x,y:s.y,name:pl?pl.name:'비어있음',number:pl?pl.number:'-',photo:pl&&pl.photo_url,empty:!pl,g:st.g,a:st.a,
+    const st = x.p ? luQStat(rec,q,x.p) : {g:0,a:0,og:0};
+    return luBubble({x:s.x,y:s.y,name:pl?pl.name:'비어있음',number:pl?pl.number:'-',photo:pl&&pl.photo_url,empty:!pl,g:st.g,a:st.a,og:st.og,
       sub:sub?{name:sub.name,tag:luBadge(rec,q,x.s)}:null,slot:s.id});
   }).join('');
   const restNames = v.att.filter(s=>!used.has(s.players.id||s.player_id)).map(s=>s.players.name).concat(v.guests.filter(g=>!used.has(g.id)).map(g=>g.name+'(용병)'));
   const rest = restNames.map(n=>`<span class="lu-chip">${luEsc(n)}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">없음</span>';
-  let tu=0, tt=0; if(rec) rec.forEach(x=>{ tu+=x.goals.length; tt+=(+x.them||0); });
+  let tu=0, tt=0; if(rec) rec.forEach(x=>{ const sc=luQScore(x); tu+=sc.us; tt+=sc.them; });
   const np = !!data.noPlan;
   return `<div style="display:flex;gap:4px;margin-bottom:10px">${np?tabs.replace(/<span[^>]*>.*?<\/span>/g,''):tabs}</div>
     ${np?'':`<div class="lu-pitch"><i class="lu-box t"></i><i class="lu-box b"></i>${bubbles}</div>
@@ -3857,16 +3858,20 @@ function luViewEditHtml(q, used){
   const ids = Object.keys(v.info).map(Number);
   const inQ = ids.filter(id=>used.has(id)), other = ids.filter(id=>!used.has(id));
   const grp = (label,arr)=>arr.length?`<optgroup label="${label}">${arr.map(id=>`<option value="${id}">${luEsc(nm(id).name)}</option>`).join('')}</optgroup>`:'';
-  const goals = r.goals.map((g,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef0f4;font-size:14px"><span>⚽</span><b style="flex:1">${luEsc(g.s!=null?nm(g.s).name:'득점자 미상')}</b>${g.a!=null?`<span style="font-weight:600;font-size:14px">👟 ${luEsc(nm(g.a).name)}</span>`:''}<button class="lu-x" onclick="luViewDelGoal(${q},${i})">✕</button></div>`).join('');
+  const goals = r.goals.map((g,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef0f4;font-size:14px"><span>${g.og?'🔴':'⚽'}</span><b style="${g.og?'color:#e5484d':''}">${g.og?(g.s!=null?luEsc(nm(g.s).name)+' 자책골':'상대 자책골'):luEsc(g.s!=null?nm(g.s).name:'득점자 미상')}</b>${!g.og&&g.a!=null?`<span style="font-weight:600;font-size:14px;margin-left:6px">👟 ${luEsc(nm(g.a).name)}</span>`:''}<span style="flex:1"></span><button class="lu-x" onclick="luViewDelGoal(${q},${i})">✕</button></div>`).join('');
   return `<div style="margin:12px 2px 0;padding:10px;background:#f8f9fb;border:1px solid var(--border);border-radius:10px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><b style="font-size:13px">${q+1}Q</b>
-      <span style="font-size:22px;font-weight:800;color:var(--skyblue)">${r.goals.length}</span><span>:</span>
-      <button onclick="luViewThem(${q},-1)" class="lu-qtab" style="flex:0 0 34px;padding:6px 0">−</button><span style="font-size:22px;font-weight:800;min-width:20px;text-align:center">${r.them||0}</span><button onclick="luViewThem(${q},1)" class="lu-qtab" style="flex:0 0 34px;padding:6px 0">＋</button><span style="font-size:11px;color:var(--muted)">실점</span></div>
+      <span style="font-size:22px;font-weight:800;color:var(--skyblue)">${luQScore(r).us}</span><span>:</span>
+      <button onclick="luViewThem(${q},-1)" class="lu-qtab" style="flex:0 0 34px;padding:6px 0">−</button><span style="font-size:22px;font-weight:800;min-width:20px;text-align:center">${luQScore(r).them}</span><button onclick="luViewThem(${q},1)" class="lu-qtab" style="flex:0 0 34px;padding:6px 0">＋</button><span style="font-size:11px;color:var(--muted)">실점</span></div>
     ${goals}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
       <select id="lv-s" class="lu-sel"><option value="">득점자 미상</option>${grp('이 쿼터 출전',inQ)}${grp('그 외',other)}</select>
       <select id="lv-a" class="lu-sel"><option value="">도움 없음</option>${grp('이 쿼터 출전',inQ)}${grp('그 외',other)}</select></div>
-    <button onclick="luViewAddGoal(${q})" style="width:100%;margin-top:6px;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font:inherit;font-size:14px;font-weight:700;cursor:pointer">⚽ 득점 추가</button></div>`;
+    <button onclick="luViewAddGoal(${q})" style="width:100%;margin-top:6px;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font:inherit;font-size:14px;font-weight:700;cursor:pointer">⚽ 득점 추가</button>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:10px">
+      <select id="lv-og" class="lu-sel"><option value="">상대 자책골 (우리 득점)</option>${grp('이 쿼터 출전',inQ)}${grp('그 외',other)}</select>
+      <button onclick="luViewAddOg(${q})" style="padding:0 14px;background:#e5484d;color:#fff;border:none;border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">🔴 자책골</button></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:4px">선수를 고르면 그 선수의 자책골(상대 득점)이에요</div></div>`;
 }
 async function luRecMutate(q, fn){
   const v = window._lvData; if(!v||v.busy) return; v.busy = true;
@@ -3888,16 +3893,20 @@ function luViewAddGoal(q){
   if(s!=='' && s===a){ alert('득점자와 도움이 같아요.'); return; }
   luRecMutate(q, c=>{ c.goals.push({s:s===''?null:+s, a:a===''?null:+a}); });
 }
+function luViewAddOg(q){
+  const s = document.getElementById('lv-og').value;
+  luRecMutate(q, c=>{ c.goals.push({s:s===''?null:+s, a:null, og:true}); });
+}
 function luViewDelGoal(q,i){
   const v = window._lvData, g = luRecOf(v.rec,q).goals[i]; if(!g) return;
   if(!confirm('이 득점 기록을 삭제할까요?')) return;
-  luRecMutate(q, c=>{ const k = c.goals.findIndex(x=>x.s===g.s && x.a===g.a); if(k>=0) c.goals.splice(k,1); });
+  luRecMutate(q, c=>{ const k = c.goals.findIndex(x=>x.s===g.s && x.a===g.a && !!x.og===!!g.og); if(k>=0) c.goals.splice(k,1); });
 }
 function luViewThem(q,d){ luRecMutate(q, c=>{ c.them = Math.max(0,(c.them||0)+d); }); }
 function luGoalLine(rec,q,nm){
   const r = luRecOf(rec,q); if(!rec || (!r.goals.length && !r.them)) return '';
-  const gl = r.goals.map(g=>`⚽ ${luEsc(g.s!=null?nm(g.s).name:'미상')}${g.a!=null?`&nbsp;&nbsp;👟 ${luEsc(nm(g.a).name)}`:''}`).join('<br>');
-  return `<div style="margin:10px 2px 0;font-size:13px"><b style="color:var(--skyblue)">${q+1}Q ${r.goals.length} : ${r.them||0}</b><div style="margin-top:4px;line-height:1.6">${gl}</div></div>`;
+  const gl = r.goals.map(g=>luEsc(luGoalPlain(g,nm)).replace(' 👟','&nbsp;&nbsp;👟')).join('<br>');
+  return `<div style="margin:10px 2px 0;font-size:13px"><b style="color:var(--skyblue)">${q+1}Q ${luQScore(r).us} : ${luQScore(r).them}</b><div style="margin-top:4px;line-height:1.6">${gl}</div></div>`;
 }
 function luCanRecord(dateStr){
   const d = (dateStr||'').slice(0,10); if(!d) return false;
@@ -3910,15 +3919,15 @@ function luViewQ(i){ window._lvData.q = i; luViewRefresh(); }
 /* ---------- 쿼터별 기록 (득점·도움·스코어) ---------- */
 
 function luBubble(o){
-  const g=o.g||0, a=o.a||0;
+  const g=o.g||0, a=o.a||0, og=o.og||0;
   return `<div class="lu-slot" style="left:${o.x}%;top:${o.y}%;${o.click?'':'cursor:default'}" ${o.click?`onclick="${o.click}"`:''}>
     <div class="lu-av" style="${o.ring?`border-color:${o.ring};`:''}${o.empty?'background:#9aa4b2':''}"><span>${luEsc(o.number??'')}</span>${o.photo?`<img src="${luEsc(o.photo)}" alt="" onerror="this.remove()">`:''}
-      ${o.sub?'<i class="lu-bsub">↻</i>':''}${a?`<span class="lu-bgrp a">${'<i>👟</i>'.repeat(Math.min(a,5))}</span>`:''}${g?`<span class="lu-bgrp g">${'<i>⚽</i>'.repeat(Math.min(g,5))}</span>`:''}</div>
+      ${o.sub?'<i class="lu-bsub">↻</i>':''}${a?`<span class="lu-bgrp a">${'<i>👟</i>'.repeat(Math.min(a,5))}</span>`:''}${(g||og)?`<span class="lu-bgrp g">${'<i>⚽</i>'.repeat(Math.min(g,5))}${'<i class="og">⚽</i>'.repeat(Math.min(og,5))}</span>`:''}</div>
     <div class="lu-nm">${o.empty?'':`<span class="no">${luEsc(o.number??'')}</span>`}${luEsc(o.name)}</div>
     ${o.sub?`<div class="lu-nsub">↻ ${luEsc(o.sub.name)}${o.sub.tag||''}</div>`:''}
     <div class="lu-ps">${luEsc(o.slot||'')}</div></div>`;
 }
-function luBadge(rec,q,pid){ const s=luQStat(rec,q,pid); return (s.g?' '+'⚽'.repeat(s.g):'')+(s.a?' '+'🅰️'.repeat(s.a):''); }
+function luBadge(rec,q,pid){ const s=luQStat(rec,q,pid); return (s.g?' '+'⚽'.repeat(s.g):'')+(s.og?' '+'🔴'.repeat(s.og):'')+(s.a?' '+'👟'.repeat(s.a):''); }
 async function luLoadRec(matchId, fallback){
   const rec = fallback ? JSON.parse(JSON.stringify(fallback)) : luRecBlank();
   const rows = await api(`${LU_STORE}?select=key,data&key=like.rec_${matchId}_*`);
@@ -3933,15 +3942,19 @@ async function luFlushRec(){
 }
 function luRecBlank(){ return [0,1,2,3].map(()=>({them:0,goals:[]})); }
 function luRecOf(rec,q){ return (rec&&rec[q]) || {them:0,goals:[]}; }
-function luQStat(rec,q,pid){ let g=0,a=0; luRecOf(rec,q).goals.forEach(x=>{ if(x.s===pid) g++; if(x.a===pid) a++; }); return {g,a}; }
+function luQStat(rec,q,pid){ let g=0,a=0,og=0; luRecOf(rec,q).goals.forEach(x=>{ if(x.og){ if(x.s===pid) og++; } else { if(x.s===pid) g++; if(x.a===pid) a++; } }); return {g,a,og}; }
+function luQScore(r){ r = r||{goals:[],them:0}; let us=0, them=+r.them||0; (r.goals||[]).forEach(g=>{ if(g.og && g.s!=null) them++; else us++; }); return {us,them}; }
+function luQScoreTxt(r){ const s=luQScore(r); return `${s.us}:${s.them}`; }
+function luGoalPlain(g,nm){ return g.og ? '🔴 '+(g.s!=null?nm(g.s).name+' 자책':'상대 자책') : '⚽ '+(g.s!=null?nm(g.s).name:'미상')+(g.a!=null?` 👟 ${nm(g.a).name}`:''); }
 function luNm(id){ const p = id!=null?luPlayer(id):null; return p?p.name:(id==null?'미상':'?'); }
 async function luSyncStats(){
   const v = window._lvData; if(!v||!v.matchId) return false;
   if(!luAuth()) return false;
   const rec = await luLoadRec(v.matchId, v.data&&v.data.rec);
   const goalsBy = {}, assistsBy = {}; let us = 0, them = 0, unattr = 0;
-  rec.forEach(r=>{ them += (+r.them||0); r.goals.forEach(g=>{
-    us++;
+  let ogOur = 0, ogOpp = 0;
+  rec.forEach(r=>{ const sc = luQScore(r); us += sc.us; them += sc.them; r.goals.forEach(g=>{
+    if(g.og){ if(g.s!=null) ogOur++; else ogOpp++; return; }
     if(g.s!=null && g.s>0) goalsBy[g.s]=(goalsBy[g.s]||0)+1; else unattr++;
     if(g.a!=null && g.a>0) assistsBy[g.a]=(assistsBy[g.a]||0)+1;
   }); });
@@ -3949,7 +3962,7 @@ async function luSyncStats(){
   const result = us>them?'Win':us<them?'Lose':'Draw';
   const attIds = (v.stats||[]).filter(s=>s.attended&&s.players).map(s=>s.players.id||s.player_id);
   const lines = attIds.filter(id=>goalsBy[id]||assistsBy[id]).map(id=>`${(v.info[id]||{}).name||'?'} ${goalsBy[id]?goalsBy[id]+'골':''}${goalsBy[id]&&assistsBy[id]?' ':''}${assistsBy[id]?assistsBy[id]+'도움':''}`);
-  const msg = `경기 기록에 반영할까요?\n\n스코어 ${us} : ${them} (${result==='Win'?'승':result==='Lose'?'패':'무'})\n${lines.join('\n')||'개인 기록 없음'}${unattr?`\n(득점자 미상·용병 ${unattr}골은 스코어에만 반영)`:''}\n\n※ 이 경기의 골/도움 기록과 스코어를 덮어써요.`;
+  const msg = `경기 기록에 반영할까요?\n\n스코어 ${us} : ${them} (${result==='Win'?'승':result==='Lose'?'패':'무'})\n${lines.join('\n')||'개인 기록 없음'}${unattr?`\n(득점자 미상·용병 ${unattr}골은 스코어에만 반영)`:''}${ogOpp?`\n(상대 자책골 ${ogOpp}골 포함)`:''}${ogOur?`\n(우리 자책골 ${ogOur}골은 실점에 포함)`:''}\n\n※ 이 경기의 골/도움 기록과 스코어를 덮어써요.`;
   if(!confirm(msg)) return false;
   let finish = false;
   if(v.status==='upcoming') finish = confirm('경기를 "종료" 처리할까요?\n\n[확인] 종료 처리 + 스코어 반영\n[취소] 종료 처리 없이 기록만 반영 (경기는 예정 상태 유지)');
@@ -4008,13 +4021,13 @@ async function luMakeImage(o){
   ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
   ctx.font = `700 40px ${FONT}`; ctx.fillText('ATTACK F.C. 라인업', PAD, 36);
   ctx.font = `500 26px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillText(o.label||'', PAD, 72);
-  if(o.rec){ let tu=0,tt=0; o.rec.forEach(x=>{ tu+=x.goals.length; tt+=(+x.them||0); }); ctx.textAlign='right'; ctx.font=`800 44px ${FONT}`; ctx.fillStyle='#fff'; ctx.fillText(`${tu} : ${tt}`, W-PAD, 48); ctx.textAlign='left'; }
+  if(o.rec){ let tu=0,tt=0; o.rec.forEach(x=>{ const sc=luQScore(x); tu+=sc.us; tt+=sc.them; }); ctx.textAlign='right'; ctx.font=`800 44px ${FONT}`; ctx.fillStyle='#fff'; ctx.fillText(`${tu} : ${tt}`, W-PAD, 48); ctx.textAlign='left'; }
   for(let q=0;q<4;q++){
     const e = plan[q]; if(!e) continue;
     const x0 = PAD + (q%2)*(CW+GAP), y0 = 116 + Math.floor(q/2)*(PH+36+restH+GAP);
     ctx.fillStyle = '#1a3a6b'; ctx.textAlign='left'; ctx.font = `700 28px ${FONT}`;
     ctx.fillText(`${q+1}Q`, x0, y0+14); ctx.font = `500 22px ${FONT}`; ctx.fillStyle='#5b6b82'; ctx.fillText(e.formation, x0+64, y0+15);
-    if(o.rec){ const r=luRecOf(o.rec,q); ctx.textAlign='right'; ctx.font=`800 30px ${FONT}`; ctx.fillStyle='#1a7abf'; ctx.fillText(`${r.goals.length} : ${r.them||0}`, x0+CW, y0+14); ctx.textAlign='left'; }
+    if(o.rec){ const r=luRecOf(o.rec,q); ctx.textAlign='right'; ctx.font=`800 30px ${FONT}`; ctx.fillStyle='#1a7abf'; ctx.fillText(luQScoreTxt(r).replace(':',' : '), x0+CW, y0+14); ctx.textAlign='left'; }
     const py = y0+34;
     // 필드
     ctx.fillStyle = '#4a9e6e'; ctx.fillRect(x0, py, CW, PH);
@@ -4027,22 +4040,23 @@ async function luMakeImage(o){
       const sl = e.slots[s.id]||{}; const p = sl.p?nm(sl.p):null; const sub = sl.s&&sl.s!==sl.p?nm(sl.s):null;
       if(sl.p) used.add(sl.p); if(sl.s) used.add(sl.s);
       const cx = x0 + CW*s.x/100, cy = py + PH*(s.y*0.88+4)/100;
-      const R = 29, st = sl.p?luQStat(o.rec,q,sl.p):{g:0,a:0};
+      const R = 29, st = sl.p?luQStat(o.rec,q,sl.p):{g:0,a:0,og:0};
       luDrawAvatar(ctx, cx, cy, R, p&&imgs[sl.p], p?String(p.number??''):'-', !p?'#9aa4b2':'#1a7abf', FONT);
       for(let k=0;k<Math.min(st.a,5);k++) luDrawBadge(ctx, cx-R+4+k*15, cy+R-6, '👟', 0, FONT);
       for(let k=0;k<Math.min(st.g,5);k++) luDrawBadge(ctx, cx+R-4-k*15, cy+R-6, '⚽', 0, FONT);
+      for(let k=0;k<Math.min(st.og,5);k++) luDrawBadge(ctx, cx+R-4-(st.g+k)*15, cy+R-6, '⚽', 0, FONT, '#e5484d', '#fff');
       if(sub) luDrawBadge(ctx, cx-R+6, cy-R+6, '↻', 0, FONT, '#e5484d', '#fff');
       ctx.textAlign='center'; ctx.font=`700 22px ${FONT}`; ctx.lineWidth=4; ctx.strokeStyle='rgba(0,0,0,.55)';
       const t = p?`${p.number??''} ${p.name}`:'비어있음'; ctx.strokeText(t,cx,cy+R+22); ctx.fillStyle='#fff'; ctx.fillText(t,cx,cy+R+22);
       let yy = cy+R+46;
-      if(sub){ const ss = sl.s?luQStat(o.rec,q,sl.s):{g:0,a:0}; ctx.font=`700 20px ${FONT}`; const t2='↻ '+sub.name+(ss.g?' ⚽'.repeat(ss.g):'')+(ss.a?' 👟'.repeat(ss.a):''); ctx.strokeText(t2,cx,yy); ctx.fillStyle='#ffe27a'; ctx.fillText(t2,cx,yy); }
+      if(sub){ const ss = sl.s?luQStat(o.rec,q,sl.s):{g:0,a:0,og:0}; ctx.font=`700 20px ${FONT}`; const t2='↻ '+sub.name+(ss.g?' ⚽'.repeat(ss.g):'')+(ss.og?' 🔴'.repeat(ss.og):'')+(ss.a?' 👟'.repeat(ss.a):''); ctx.strokeText(t2,cx,yy); ctx.fillStyle='#ffe27a'; ctx.fillText(t2,cx,yy); }
     });
     // 휴식
     const rest = ids.filter(id=>!used.has(id)).map(id=>nm(id).name).join(', ') || '없음';
     ctx.textAlign='left'; ctx.font=`500 20px ${FONT}`; ctx.fillStyle='#5b6b82';
     const lines = luWrapText(ctx,'휴식: '+rest,CW).slice(0,2);
     lines.forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+i*26));
-    if(o.rec){ const r=luRecOf(o.rec,q); if(r.goals.length){ ctx.fillStyle='#1c2430'; ctx.font=`600 20px ${FONT}`; const gt = '⚽ '+r.goals.map(g=>(g.s!=null?nm(g.s).name:'미상')+(g.a!=null?` 👟 ${nm(g.a).name}`:'')).join(', '); luWrapText(ctx,gt,CW).slice(0,2).forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+2*26+i*26-(lines.length>1?0:26))); } }
+    if(o.rec){ const r=luRecOf(o.rec,q); if(r.goals.length){ ctx.fillStyle='#1c2430'; ctx.font=`600 20px ${FONT}`; const gt = r.goals.map(g=>luGoalPlain(g,nm)).join('  '); luWrapText(ctx,gt,CW).slice(0,2).forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+2*26+i*26-(lines.length>1?0:26))); } }
   }
   // 배정표
   const ty = 116 + 2*(PH+36+restH) + GAP;
@@ -4467,14 +4481,14 @@ function luAppearText(plan,pid,q){
 }
 function luRenderPlan(){
   const plan = LU.plan, q = LU.q;
-  const tabs = [0,1,2,3].map(i=>`<button class="lu-qtab ${i===q?'on':''}" onclick="LU.q=${i};luRender()">${i+1}Q <span style="font-weight:400;font-size:10px">${luEsc(plan[i].formation)}</span><div style="font-size:10px;font-weight:700">${luRecOf(LU.rec,i).goals.length}:${luRecOf(LU.rec,i).them||0}</div></button>`).join('');
+  const tabs = [0,1,2,3].map(i=>`<button class="lu-qtab ${i===q?'on':''}" onclick="LU.q=${i};luRender()">${i+1}Q <span style="font-weight:400;font-size:10px">${luEsc(plan[i].formation)}</span><div style="font-size:10px;font-weight:700">${luQScoreTxt(luRecOf(LU.rec,i))}</div></button>`).join('');
   const slots = luSlots(plan[q].formation);
   const bubbles = slots.map(s=>{
     const e = plan[q].slots[s.id]; const pl = e&&luPlayer(e.p); const sub = e&&e.s&&luPlayer(e.s);
     const pr = pl ? luPrefsOf(pl) : []; const idx = pl ? pr.indexOf(s.pos) : -1;
     const col = !pl ? '#9aa4b2' : idx===0 ? '#1f9d55' : idx>0 ? '#e0a100' : '#d9534f';
-    const st = pl ? luQStat(LU.rec,q,pl.id) : {g:0,a:0};
-    return luBubble({x:s.x,y:s.y,name:pl?pl.name:'비어있음',number:pl?pl.number:'+',photo:pl&&pl.photo_url,ring:col,empty:!pl,g:st.g,a:st.a,
+    const st = pl ? luQStat(LU.rec,q,pl.id) : {g:0,a:0,og:0};
+    return luBubble({x:s.x,y:s.y,name:pl?pl.name:'비어있음',number:pl?pl.number:'+',photo:pl&&pl.photo_url,ring:col,empty:!pl,g:st.g,a:st.a,og:st.og,
       sub:sub?{name:sub.name,tag:luBadge(LU.rec,q,sub.id)}:null,slot:s.id,click:`luEdit('${s.id}')`});
   }).join('');
   const restNow = LU.att.filter(p=>!luWhere(plan,p.id,q));
