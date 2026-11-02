@@ -3965,6 +3965,7 @@ function luRenderMatch(){
     <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)">
       <div style="font-size:13px;font-weight:700;margin-bottom:6px">용병 추가 <span style="font-weight:400;font-size:11px;color:var(--muted)">(이 경기에만 적용, 기록에는 안 들어가요)</span></div>
       ${(c.guests||[]).map(g=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fff7e0;border-radius:8px;margin-bottom:6px;font-size:13px"><b style="flex:1">${luEsc(g.name)} <span style="font-weight:400;font-size:11px;color:var(--muted)">${(g.pref||[]).join(' · ')||'포지션 미정'}</span></b><button class="lu-x" style="font-size:15px" onclick="luRemoveGuest(${g.id})">✕</button></div>`).join('')}
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;cursor:pointer"><input type="checkbox" ${c.guestGk===false?'':'checked'} onchange="LU.cfg.guestGk=this.checked" style="width:16px;height:16px"> 용병도 골키퍼 배정 가능 <span style="color:var(--muted);font-size:11px">(끄면 용병은 골키퍼 제외)</span></label>
       <div style="display:flex;gap:6px;margin-bottom:6px"><input id="lu-gname" class="lu-sel" placeholder="용병 이름" style="flex:1"><button onclick="luAddGuest()" style="padding:0 14px;background:var(--skyblue);color:#fff;border:none;border-radius:6px;font:inherit;font-weight:700;cursor:pointer">추가</button></div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${[1,2,3].map(i=>`<div><div class="lu-lb">${i}순위</div>${luPosSelect('lu-gp'+i,'')}</div>`).join('')}</div>
     </div>
@@ -4108,7 +4109,7 @@ function luTry(att, cfg, prefsOf, limOf){
   if(tot<S) warn.push('최대 쿼터 제한 때문에 빈 자리가 생겨요');
   const rule = cfg.gkRule||'once';
   const gkDone = new Set(); let prevQGk = new Set();
-  const gkBlock = id => rule==='once' ? gkDone.has(id) : rule==='consec' ? prevQGk.has(id) : false;
+  const gkBlock = id => (cfg.guestGk===false && id<0) ? true : rule==='once' ? gkDone.has(id) : rule==='consec' ? prevQGk.has(id) : false;
   const left = quota.slice(), lastRest = att.map(()=>false), lastPlayed = att.map(()=>false);
   let prevQPlayed = att.map(()=>true), curQPlayed = att.map(()=>false);
   const periods = []; let cost = 0, curGk = new Set(), firstGk = null;
@@ -4247,6 +4248,7 @@ function luRenderPlan(){
     if(rl==='once'){ const cnt={}; gks.forEach(st=>st.forEach(id=>cnt[id]=(cnt[id]||0)+1)); Object.entries(cnt).forEach(([id,c])=>{ if(c>1) warns.push(`${luPlayer(+id).name}: 골키퍼 ${c}쿼터 (한 경기 1쿼터만)`); }); }
     if(rl==='consec'){ for(let i=1;i<LU_Q;i++){ gks[i].forEach(id=>{ if(gks[i-1].has(id)) warns.push(`${luPlayer(id).name}: ${i}Q·${i+1}Q 연속 골키퍼`); }); } } }
   if(LU.cfg.noConsecRest!==false) LU.att.forEach(p=>{ for(let i=1;i<4;i++){ if(!luAppear(plan,p.id,i-1).length && !luAppear(plan,p.id,i).length) warns.push(`${p.name}: ${i}Q·${i+1}Q 연속 휴식`); } });
+  if(LU.cfg.guestGk===false) plan.forEach((e,i)=>{ const g=e.slots.GK; [g&&g.p,g&&g.s].forEach(id=>{ if(id&&id<0) warns.push(`${i+1}Q 용병 ${luPlayer(id).name} 골키퍼 (제외 설정)`); }); });
   plan.forEach((e,i)=>{ const g=e.slots.GK; if(g&&g.s&&g.s!==g.p) warns.push(`${i+1}Q 골키퍼 중간 교체 (허용 안 됨)`); });
   // 중복/빈 슬롯 검사
   [0,1,2,3].forEach(i=>{
