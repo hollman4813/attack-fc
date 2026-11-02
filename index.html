@@ -3775,6 +3775,7 @@ async function luPut(key, data){
     headers:{apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
     body: JSON.stringify({key, data, updated_at:new Date().toISOString()})
   });
+  if(!res.ok){ try{ LU.lastErr = res.status+' '+(await res.text()).slice(0,200); }catch(e){ LU.lastErr = String(res.status); } }
   return res.ok;
 }
 
@@ -4193,7 +4194,7 @@ async function luSavePlan(){
   if(!luAuth()) return;
   const attOk = await luSaveAtt();
   const ok = await luPut('match_'+LU.matchId,{cfg:LU.cfg,plan:LU.plan});
-  alert(ok&&attOk?'라인업 저장 완료 ✅':(!attOk?'참석 저장 실패 😢':'라인업 저장 실패 😢 lineup_store 테이블/권한을 확인해주세요.'));
+  alert(ok&&attOk?'라인업 저장 완료 ✅':(!attOk?'참석 저장 실패 😢':'라인업 저장 실패 😢 lineup_store 테이블/권한을 확인해주세요.\n'+(LU.lastErr||'')));
 }
 
 </script>
