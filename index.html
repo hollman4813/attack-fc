@@ -247,11 +247,21 @@
   .lu-n{padding:5px 2px;text-align:center}
   .lu-qtab{flex:1;padding:8px 2px;border:1px solid var(--border);background:#fff;border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;line-height:1.2}
   .lu-qtab.on{background:var(--skyblue);color:#fff;border-color:var(--skyblue)}
-  .lu-pitch{position:relative;width:100%;aspect-ratio:3/4;border-radius:10px;background:repeating-linear-gradient(180deg,#2e8b4f 0 10%,#339657 10% 20%);border:2px solid #fff;box-shadow:0 0 0 1px #cfd6e0;overflow:hidden}
-  .lu-pitch:before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px solid rgba(255,255,255,.5)}
-  .lu-slot{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;width:64px}
-  .lu-dot{width:30px;height:30px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;border:2px solid #fff}
-  .lu-nm{font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7);line-height:1.15;margin-top:2px}
+  .lu-pitch{position:relative;width:100%;aspect-ratio:5/7;border-radius:10px;background:#4a9e6e;border:2px solid #fff;box-shadow:0 0 0 1px #cfd6e0;overflow:hidden}
+  .lu-pitch:before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px solid rgba(255,255,255,.35)}
+  .lu-pitch .lu-box{position:absolute;left:24%;right:24%;height:15%;border:2px solid rgba(255,255,255,.35);pointer-events:none}
+  .lu-pitch .lu-box.b{bottom:-2px;border-bottom:none;border-radius:6px 6px 0 0}
+  .lu-pitch .lu-box.t{top:-2px;border-top:none;border-radius:0 0 6px 6px}
+  .lu-slot{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;width:78px}
+  .lu-av{position:relative;width:46px;height:46px;border-radius:50%;margin:0 auto;background:#1a7abf;border:3px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;box-sizing:border-box}
+  .lu-av img{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:50%;object-fit:cover;background:#dfe6ee}
+  .lu-av i{position:absolute;font-style:normal;min-width:19px;height:19px;border-radius:10px;background:#fff;color:#111;font-size:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.45);padding:0 2px;z-index:2}
+  .lu-av i b{font-size:10px;margin-left:1px}
+  .lu-bg{right:-9px;bottom:-4px}.lu-ba{left:-9px;bottom:-4px}
+  .lu-av i.lu-bsub{left:-7px;top:-4px;background:#e5484d;color:#fff}
+  .lu-nm{font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7);line-height:1.15;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lu-nm .no{opacity:.75;font-weight:500;margin-right:2px}
+  .lu-nsub{font-size:10px;font-weight:700;color:#ffe27a;text-shadow:0 1px 2px rgba(0,0,0,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lu-ps{font-size:9px;color:rgba(255,255,255,.75)}
   .lu-chip{background:#eef1f6;border-radius:12px;padding:3px 9px;font-size:12px}
   .lu-tbl{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px;text-align:center}
@@ -3818,18 +3828,17 @@ function luViewInner(){
   const tabs = plan.map((e,i)=>`<button class="lu-qtab ${i===q?'on':''}" onclick="luViewQ(${i})">${i+1}Q <span style="font-weight:400;font-size:10px">${luEsc(e.formation)}</span>${rec?`<div style="font-size:10px;font-weight:700">${luRecOf(rec,i).goals.length}:${luRecOf(rec,i).them||0}</div>`:''}</button>`).join('');
   const e = plan[q]; const used = new Set();
   const bubbles = luSlots(e.formation).map(s=>{
-    const x = e.slots[s.id]; const pl = x&&x.p ? nm(x.p) : null; const sub = x&&x.s ? nm(x.s) : null;
-    if(x&&x.p) used.add(x.p); if(x&&x.s) used.add(x.s);
-    return `<div class="lu-slot" style="left:${s.x}%;top:${s.y}%;cursor:default">
-      <div class="lu-dot" style="background:${pl?'#1a7abf':'#9aa4b2'}">${pl?luEsc(pl.number??''):'-'}</div>
-      <div class="lu-nm">${pl?luEsc(pl.name):'비어있음'}${pl&&x.p?luBadge(rec,q,x.p):''}${sub?`<br><span style="color:#ffe27a">↻ ${luEsc(sub.name)}${luBadge(rec,q,x.s)}</span>`:''}</div>
-      <div class="lu-ps">${s.id}</div></div>`;
+    const x = e.slots[s.id]||{}; const pl = x.p ? nm(x.p) : null; const sub = x.s ? nm(x.s) : null;
+    if(x.p) used.add(x.p); if(x.s) used.add(x.s);
+    const st = x.p ? luQStat(rec,q,x.p) : {g:0,a:0};
+    return luBubble({x:s.x,y:s.y,name:pl?pl.name:'비어있음',number:pl?pl.number:'-',photo:pl&&pl.photo_url,empty:!pl,g:st.g,a:st.a,
+      sub:sub?{name:sub.name,tag:luBadge(rec,q,x.s)}:null,slot:s.id});
   }).join('');
   const restNames = v.att.filter(s=>!used.has(s.players.id||s.player_id)).map(s=>s.players.name).concat(v.guests.filter(g=>!used.has(g.id)).map(g=>g.name+'(용병)'));
   const rest = restNames.map(n=>`<span class="lu-chip">${luEsc(n)}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">없음</span>';
   let tu=0, tt=0; if(rec) rec.forEach(x=>{ tu+=x.goals.length; tt+=(+x.them||0); });
   return `<div style="display:flex;gap:4px;margin-bottom:10px">${tabs}</div>
-    <div class="lu-pitch">${bubbles}</div>
+    <div class="lu-pitch"><i class="lu-box t"></i><i class="lu-box b"></i>${bubbles}</div>
     <div style="margin:10px 2px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>
     ${v.canEdit ? luViewEditHtml(q, used) : luGoalLine(rec,q,nm)}
     <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 4px 0"><span style="font-size:11px;color:var(--muted)">${rec?`전체 ${tu} : ${tt}  · `:''}↻ 후반 교체</span><button onclick="luDownloadView()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">📥 이미지 저장</button></div>`;
@@ -3891,6 +3900,16 @@ function luCanRecord(dateStr){
 function luViewQ(i){ window._lvData.q = i; luViewRefresh(); }
 
 /* ---------- 쿼터별 기록 (득점·도움·스코어) ---------- */
+
+function luBubble(o){
+  const g=o.g||0, a=o.a||0;
+  return `<div class="lu-slot" style="left:${o.x}%;top:${o.y}%;${o.click?'':'cursor:default'}" ${o.click?`onclick="${o.click}"`:''}>
+    <div class="lu-av" style="${o.ring?`border-color:${o.ring};`:''}${o.empty?'background:#9aa4b2':''}"><span>${luEsc(o.number??'')}</span>${o.photo?`<img src="${luEsc(o.photo)}" alt="" onerror="this.remove()">`:''}
+      ${o.sub?'<i class="lu-bsub">↻</i>':''}${a?`<i class="lu-ba">👟${a>1?`<b>${a}</b>`:''}</i>`:''}${g?`<i class="lu-bg">⚽${g>1?`<b>${g}</b>`:''}</i>`:''}</div>
+    <div class="lu-nm">${o.empty?'':`<span class="no">${luEsc(o.number??'')}</span>`}${luEsc(o.name)}</div>
+    ${o.sub?`<div class="lu-nsub">↻ ${luEsc(o.sub.name)}${o.sub.tag||''}</div>`:''}
+    <div class="lu-ps">${luEsc(o.slot||'')}</div></div>`;
+}
 function luBadge(rec,q,pid){ const s=luQStat(rec,q,pid); return (s.g?' '+'⚽'.repeat(s.g):'')+(s.a?' '+'🅰️'.repeat(s.a):''); }
 async function luLoadRec(matchId, fallback){
   const rec = fallback ? JSON.parse(JSON.stringify(fallback)) : luRecBlank();
@@ -3973,15 +3992,29 @@ function luWrapText(ctx, text, maxW){
   words.forEach(w=>{ const t = cur?cur+' '+w:w; if(ctx.measureText(t).width>maxW && cur){ lines.push(cur); cur=w; } else cur=t; });
   if(cur) lines.push(cur); return lines;
 }
+function luDrawAvatar(ctx,cx,cy,R,img,num,color,FONT){
+  ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fillStyle=color; ctx.fill(); ctx.clip();
+  if(img){ const s = Math.max(2*R/img.width, 2*R/img.height); const w=img.width*s, hh=img.height*s; ctx.drawImage(img,cx-w/2,cy-hh/2,w,hh); }
+  else { ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font=`700 24px ${FONT}`; ctx.fillText(num,cx,cy+1); }
+  ctx.restore(); ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.lineWidth=4; ctx.strokeStyle='#fff'; ctx.stroke();
+}
+function luDrawBadge(ctx,x,y,icon,count,FONT,bg,fg){
+  const w = count>1?36:26;
+  ctx.beginPath(); ctx.arc(x,y,13,0,Math.PI*2); ctx.fillStyle=bg||'#fff'; ctx.fill(); ctx.lineWidth=1.5; ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.stroke();
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle=fg||'#111'; ctx.font=`700 15px ${FONT}`; ctx.fillText(icon,x-(count>1?4:0),y+1);
+  if(count>1){ ctx.font=`800 13px ${FONT}`; ctx.fillText(String(count),x+9,y+1); }
+}
 async function luMakeImage(o){
   // o: {plan, label, people:{id:{name,number}}, order:[ids]}
   try{ await document.fonts.ready; }catch(e){}
   const FONT = "'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
-  const W = 1080, PAD = 30, GAP = 20, CW = (W-PAD*2-GAP)/2, PH = CW*1.18;
+  const W = 1080, PAD = 30, GAP = 20, CW = (W-PAD*2-GAP)/2, PH = CW*1.35;
   const plan = o.plan, ids = o.order, nm = id=>o.people[id]||{name:'?',number:''};
   const ROW = 44, TH = 56 + (ids.length+1)*ROW + 30;
   const restH = 100;
   const H = Math.round(120 + 2*(PH+36+restH) + GAP + TH - 10);
+  const imgs = {};
+  await Promise.all(ids.filter(id=>o.people[id]&&o.people[id].photo).map(id=>new Promise(res=>{ const im = new Image(); im.crossOrigin='anonymous'; im.onload=()=>{ imgs[id]=im; res(); }; im.onerror=()=>res(); setTimeout(res,4000); im.src=o.people[id].photo; })));
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
   ctx.fillStyle = '#f4f6fa'; ctx.fillRect(0,0,W,H);
@@ -3998,7 +4031,8 @@ async function luMakeImage(o){
     if(o.rec){ const r=luRecOf(o.rec,q); ctx.textAlign='right'; ctx.font=`800 30px ${FONT}`; ctx.fillStyle='#1a7abf'; ctx.fillText(`${r.goals.length} : ${r.them||0}`, x0+CW, y0+14); ctx.textAlign='left'; }
     const py = y0+34;
     // 필드
-    for(let s=0;s<10;s++){ ctx.fillStyle = s%2?'#339657':'#2e8b4f'; ctx.fillRect(x0, py+PH*s/10, CW, PH/10+1); }
+    ctx.fillStyle = '#4a9e6e'; ctx.fillRect(x0, py, CW, PH);
+    ctx.strokeStyle='rgba(255,255,255,.4)'; ctx.lineWidth=2; ctx.strokeRect(x0+CW*0.24, py+PH*0.85, CW*0.52, PH*0.15); ctx.strokeRect(x0+CW*0.24, py, CW*0.52, PH*0.15);
     ctx.strokeStyle='rgba(255,255,255,.6)'; ctx.lineWidth=2; ctx.strokeRect(x0+1,py+1,CW-2,PH-2);
     ctx.beginPath(); ctx.moveTo(x0,py+PH/2); ctx.lineTo(x0+CW,py+PH/2); ctx.stroke();
     ctx.beginPath(); ctx.arc(x0+CW/2,py+PH/2,CW*0.12,0,Math.PI*2); ctx.stroke();
@@ -4007,14 +4041,15 @@ async function luMakeImage(o){
       const sl = e.slots[s.id]||{}; const p = sl.p?nm(sl.p):null; const sub = sl.s&&sl.s!==sl.p?nm(sl.s):null;
       if(sl.p) used.add(sl.p); if(sl.s) used.add(sl.s);
       const cx = x0 + CW*s.x/100, cy = py + PH*(s.y*0.88+4)/100;
-      ctx.beginPath(); ctx.arc(cx,cy,24,0,Math.PI*2); ctx.fillStyle = !p?'#9aa4b2':(s.id==='GK'?'#e0a100':'#1a7abf'); ctx.fill();
-      ctx.lineWidth=3; ctx.strokeStyle='#fff'; ctx.stroke();
-      ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.font=`700 20px ${FONT}`; ctx.fillText(p?String(p.number??''):'-', cx, cy+1);
-      ctx.font=`700 22px ${FONT}`; ctx.lineWidth=4; ctx.strokeStyle='rgba(0,0,0,.55)';
-      const t = p?p.name:'비어있음'; ctx.strokeText(t,cx,cy+40); ctx.fillStyle='#fff'; ctx.fillText(t,cx,cy+40);
-      let yy = cy+62;
-      if(sub){ ctx.font=`700 20px ${FONT}`; const t2='↻ '+sub.name; ctx.strokeText(t2,cx,yy); ctx.fillStyle='#ffe27a'; ctx.fillText(t2,cx,yy); yy+=22; }
-      if(!sub){ ctx.font=`500 15px ${FONT}`; ctx.fillStyle='rgba(255,255,255,.75)'; ctx.fillText(s.id,cx,yy-2); }
+      const R = 29, st = sl.p?luQStat(o.rec,q,sl.p):{g:0,a:0};
+      luDrawAvatar(ctx, cx, cy, R, p&&imgs[sl.p], p?String(p.number??''):'-', !p?'#9aa4b2':'#1a7abf', FONT);
+      if(st.a) luDrawBadge(ctx, cx-R+4, cy+R-6, '👟', st.a, FONT);
+      if(st.g) luDrawBadge(ctx, cx+R-4, cy+R-6, '⚽', st.g, FONT);
+      if(sub) luDrawBadge(ctx, cx-R+6, cy-R+6, '↻', 0, FONT, '#e5484d', '#fff');
+      ctx.textAlign='center'; ctx.font=`700 22px ${FONT}`; ctx.lineWidth=4; ctx.strokeStyle='rgba(0,0,0,.55)';
+      const t = p?`${p.number??''} ${p.name}`:'비어있음'; ctx.strokeText(t,cx,cy+R+22); ctx.fillStyle='#fff'; ctx.fillText(t,cx,cy+R+22);
+      let yy = cy+R+46;
+      if(sub){ const ss = sl.s?luQStat(o.rec,q,sl.s):{g:0,a:0}; ctx.font=`700 20px ${FONT}`; const t2='↻ '+sub.name+(ss.g?' ⚽'.repeat(ss.g):'')+(ss.a?' 👟'.repeat(ss.a):''); ctx.strokeText(t2,cx,yy); ctx.fillStyle='#ffe27a'; ctx.fillText(t2,cx,yy); }
     });
     // 휴식
     const rest = ids.filter(id=>!used.has(id)).map(id=>nm(id).name).join(', ') || '없음';
@@ -4056,14 +4091,14 @@ async function luSaveImage(o, fname){
   setTimeout(()=>URL.revokeObjectURL(url), 5000);
 }
 function luImgOptsEdit(){
-  const people = {}; LU.att.forEach(p=>people[p.id]={name:p.name,number:p.number});
+  const people = {}; LU.att.forEach(p=>people[p.id]={name:p.name,number:p.number,photo:p.photo_url||null});
   return {plan:LU.plan, rec:LU.rec, label:(LU.fixedMatch&&LU.fixedMatch.label)||'', people, order:LU.att.map(p=>p.id)};
 }
 function luDownloadEdit(){ luSaveImage(luImgOptsEdit(), `라인업_${(LU.fixedMatch&&LU.fixedMatch.label||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}.png`); }
 function luDownloadView(){
   const v = window._lvData; if(!v) return;
   const people = {}; const order = [];
-  (v.stats||[]).filter(s=>s.attended&&s.players).forEach(s=>{ const id=s.players.id||s.player_id; people[id]={name:s.players.name,number:s.players.number}; order.push(id); });
+  (v.stats||[]).filter(s=>s.attended&&s.players).forEach(s=>{ const id=s.players.id||s.player_id; people[id]={name:s.players.name,number:s.players.number,photo:s.players.photo_url||null}; order.push(id); });
   const gs = (v.data.cfg&&v.data.cfg.guests)||[]; gs.forEach(g=>{ people[g.id]={name:g.name,number:'용'}; order.push(g.id); });
   luSaveImage({plan:v.data.plan,rec:v.rec,label:v.label||'',people,order}, `라인업_${(v.label||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}.png`);
 }
@@ -4452,10 +4487,9 @@ function luRenderPlan(){
     const e = plan[q].slots[s.id]; const pl = e&&luPlayer(e.p); const sub = e&&e.s&&luPlayer(e.s);
     const pr = pl ? luPrefsOf(pl) : []; const idx = pl ? pr.indexOf(s.pos) : -1;
     const col = !pl ? '#9aa4b2' : idx===0 ? '#1f9d55' : idx>0 ? '#e0a100' : '#d9534f';
-    return `<div class="lu-slot" style="left:${s.x}%;top:${s.y}%" onclick="luEdit('${s.id}')">
-      <div class="lu-dot" style="background:${col}">${pl?luEsc(pl.number??''):'+'}</div>
-      <div class="lu-nm">${pl?luEsc(pl.name):'비어있음'}${pl?luBadge(LU.rec,q,pl.id):''}${sub?`<br><span style="color:#8fd3ff">↻ ${luEsc(sub.name)}${luBadge(LU.rec,q,sub.id)}</span>`:''}</div>
-      <div class="lu-ps">${s.id}</div></div>`;
+    const st = pl ? luQStat(LU.rec,q,pl.id) : {g:0,a:0};
+    return luBubble({x:s.x,y:s.y,name:pl?pl.name:'비어있음',number:pl?pl.number:'+',photo:pl&&pl.photo_url,ring:col,empty:!pl,g:st.g,a:st.a,
+      sub:sub?{name:sub.name,tag:luBadge(LU.rec,q,sub.id)}:null,slot:s.id,click:`luEdit('${s.id}')`});
   }).join('');
   const restNow = LU.att.filter(p=>!luWhere(plan,p.id,q));
   const rest = restNow.map(p=>`<span class="lu-chip">${luEsc(p.name)}${(LU.cfg.excl[p.id]||[]).includes(q)?' (제외)':''}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">없음</span>';
@@ -4497,7 +4531,7 @@ function luRenderPlan(){
   const uniq = [...new Set(warns)];
   return `<div id="lu-plan" class="lu-card" style="padding:12px 8px">
     <div style="display:flex;gap:4px;margin-bottom:10px">${tabs}</div>
-    <div class="lu-pitch">${bubbles}</div>
+    <div class="lu-pitch"><i class="lu-box t"></i><i class="lu-box b"></i>${bubbles}</div>
     <div style="font-size:10px;color:var(--muted);margin:6px 4px 0">초록 1순위 · 노랑 2·3순위 · 빨강 선호 외</div>
     <div style="margin:10px 4px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>
     ${luRecHtml(q)}
