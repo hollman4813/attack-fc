@@ -233,9 +233,9 @@
   .spinner { width:26px; height:26px; border:2px solid var(--border); border-top-color:var(--skyblue); border-radius:50%; animation:spin 0.7s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
 
-  #lineup-overlay{display:none;position:fixed;inset:0;z-index:500;background:#f4f6fa;overflow:hidden}
-  #lineup-overlay .lu-top{background:linear-gradient(180deg,#1a3a6b,#1e4d8c);color:#fff;padding:14px 16px 0}
-  #lineup-overlay .lu-body{position:absolute;top:var(--lu-top,104px);bottom:0;left:0;right:0;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
+  #lineup-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;height:100vh;height:100dvh;z-index:500;background:#f4f6fa;flex-direction:column;overflow:hidden}
+  #lineup-overlay .lu-top{flex:0 0 auto;background:linear-gradient(180deg,#1a3a6b,#1e4d8c);color:#fff;padding:14px 16px 0}
+  #lineup-overlay .lu-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px 12px 160px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
   .lu-tab{background:none;border:none;color:rgba(255,255,255,.65);font:inherit;font-size:14px;font-weight:600;padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent}
   .lu-tab.on{color:#fff;border-bottom-color:#fff}
   .lu-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px}
@@ -3794,7 +3794,7 @@ function luPrefsOf(p){
 /* ---------- 오버레이 열기/닫기 ---------- */
 async function openLineup(){
   const ov = document.getElementById('lineup-overlay');
-  ov.style.display = 'block';
+  ov.style.display = 'flex';
   document.body.style.overflow = 'hidden';
   ov.querySelector('.lu-body').innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">불러오는 중...</div>';
   const [players, prefs] = await Promise.all([
@@ -4150,6 +4150,7 @@ async function luSavePlan(){
   }
 
   document.addEventListener('touchstart', (e) => {
+    if (e.target.closest && e.target.closest('#lineup-overlay')) { pulling = false; return; }
     if (getScrollTop() <= 0) {
       startY = e.touches[0].clientY;
       pulling = true;
