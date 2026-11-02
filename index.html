@@ -255,12 +255,12 @@
   .lu-slot{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;width:78px}
   .lu-av{position:relative;width:46px;height:46px;border-radius:50%;margin:0 auto;background:#1a7abf;border:3px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;box-sizing:border-box}
   .lu-av img{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:50%;object-fit:cover;background:#dfe6ee}
-  .lu-av i{position:absolute;font-style:normal;min-width:19px;height:19px;border-radius:10px;background:#fff;color:#111;font-size:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.45);padding:0 2px;z-index:2}
+  .lu-av i{position:absolute;font-style:normal;min-width:22px;height:22px;border-radius:11px;background:#fff;color:#111;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.45);padding:0;z-index:2}
   .lu-av .lu-bgrp{position:absolute;bottom:-4px;display:flex;z-index:2}
   .lu-av .lu-bgrp i{position:relative}
-  .lu-av .lu-bgrp.g{right:-9px;flex-direction:row-reverse}.lu-av .lu-bgrp.g i+i{margin-right:-11px}
+  .lu-av .lu-bgrp.g{right:-9px;flex-direction:row-reverse}.lu-av .lu-bgrp.g i+i{margin-right:-13px}
   .lu-av .lu-bgrp i.og{background:#e5484d}
-  .lu-av .lu-bgrp.a{left:-9px}.lu-av .lu-bgrp.a i+i{margin-left:-11px}
+  .lu-av .lu-bgrp.a{left:-9px}.lu-av .lu-bgrp.a i+i{margin-left:-13px}
   .lu-av i.lu-bsub{left:-7px;top:-4px;background:#e5484d;color:#fff}
   .lu-nm{font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7);line-height:1.15;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lu-nm .no{opacity:.75;font-weight:500;margin-right:2px}
@@ -4005,8 +4005,8 @@ function luDrawAvatar(ctx,cx,cy,R,img,num,color,FONT){
 }
 function luDrawBadge(ctx,x,y,icon,count,FONT,bg,fg){
   const w = count>1?36:26;
-  ctx.beginPath(); ctx.arc(x,y,13,0,Math.PI*2); ctx.fillStyle=bg||'#fff'; ctx.fill(); ctx.lineWidth=1.5; ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.stroke();
-  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle=fg||'#111'; ctx.font=`700 15px ${FONT}`; ctx.fillText(icon,x-(count>1?4:0),y+1);
+  ctx.beginPath(); ctx.arc(x,y,15,0,Math.PI*2); ctx.fillStyle=bg||'#fff'; ctx.fill(); ctx.lineWidth=1.5; ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.stroke();
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle=fg||'#111'; ctx.font=`700 20px ${FONT}`; ctx.fillText(icon,x-(count>1?4:0),y+1);
   if(count>1){ ctx.font=`800 13px ${FONT}`; ctx.fillText(String(count),x+9,y+1); }
 }
 async function luMakeImage(o){
@@ -4048,9 +4048,9 @@ async function luMakeImage(o){
       const cx = x0 + CW*s.x/100, cy = py + PH*(s.y*0.88+4)/100;
       const R = 29, st = sl.p?luQStat(o.rec,q,sl.p):{g:0,a:0,og:0};
       luDrawAvatar(ctx, cx, cy, R, p&&imgs[sl.p], p?String(p.number??''):'-', !p?'#9aa4b2':'#1a7abf', FONT);
-      for(let k=0;k<Math.min(st.a,5);k++) luDrawBadge(ctx, cx-R+4+k*15, cy+R-6, '👟', 0, FONT);
-      for(let k=0;k<Math.min(st.g,5);k++) luDrawBadge(ctx, cx+R-4-k*15, cy+R-6, '⚽', 0, FONT);
-      for(let k=0;k<Math.min(st.og,5);k++) luDrawBadge(ctx, cx+R-4-(st.g+k)*15, cy+R-6, '⚽', 0, FONT, '#e5484d', '#fff');
+      for(let k=0;k<Math.min(st.a,5);k++) luDrawBadge(ctx, cx-R+4+k*17, cy+R-6, '👟', 0, FONT);
+      for(let k=0;k<Math.min(st.g,5);k++) luDrawBadge(ctx, cx+R-4-k*17, cy+R-6, '⚽', 0, FONT);
+      for(let k=0;k<Math.min(st.og,5);k++) luDrawBadge(ctx, cx+R-4-(st.g+k)*17, cy+R-6, '⚽', 0, FONT, '#e5484d', '#fff');
       if(sub) luDrawBadge(ctx, cx-R+6, cy-R+6, '↻', 0, FONT, '#e5484d', '#fff');
       ctx.textAlign='center'; ctx.font=`700 22px ${FONT}`; ctx.lineWidth=4; ctx.strokeStyle='rgba(0,0,0,.55)';
       const t = p?`${p.number??''} ${p.name}`:'비어있음'; ctx.strokeText(t,cx,cy+R+22); ctx.fillStyle='#fff'; ctx.fillText(t,cx,cy+R+22);
