@@ -3848,7 +3848,7 @@ function luViewInner(){
     ${np?'':`<div class="lu-pitch"><i class="lu-box t"></i><i class="lu-box b"></i>${bubbles}</div>
     <div style="margin:10px 2px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>`}
     ${v.canEdit ? luViewEditHtml(q, used) : luGoalLine(rec,q,nm)}
-    ${rec && (tu||tt) ? `<button onclick="luSyncStats()" style="width:100%;margin-top:10px;padding:10px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">📊 경기 종료 후 결과·선수 기록에 반영 (전체 ${tu}:${tt})</button>` : ''}
+    ${rec && (tu||tt) ? `<button onclick="luSyncStats()" style="width:100%;margin-top:10px;padding:10px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">📊 모든 경기 종료 (스코어 합산)</button>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 4px 0"><span style="font-size:11px;color:var(--muted)">${rec?`전체 ${tu} : ${tt}`:''}${np?'':`${rec?' · ':''}↻ 후반 교체`}</span>${np?'':`<button onclick="luDownloadView()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">📥 이미지 저장</button>`}</div>`;
 }
 function luViewEditHtml(q, used){
