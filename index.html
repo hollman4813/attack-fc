@@ -232,6 +232,34 @@
   .loading { display:flex; flex-direction:column; align-items:center; padding:60px 0; color:var(--muted); font-size:13px; gap:12px; }
   .spinner { width:26px; height:26px; border:2px solid var(--border); border-top-color:var(--skyblue); border-radius:50%; animation:spin 0.7s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
+
+  #lineup-overlay{display:none;position:fixed;inset:0;z-index:500;background:#f4f6fa;overflow:hidden}
+  #lineup-overlay .lu-top{background:linear-gradient(180deg,#1a3a6b,#1e4d8c);color:#fff;padding:14px 16px 0}
+  #lineup-overlay .lu-body{position:absolute;top:var(--lu-top,104px);bottom:0;left:0;right:0;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
+  .lu-tab{background:none;border:none;color:rgba(255,255,255,.65);font:inherit;font-size:14px;font-weight:600;padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent}
+  .lu-tab.on{color:#fff;border-bottom-color:#fff}
+  .lu-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px}
+  .lu-lb{font-size:11px;color:var(--muted);margin-bottom:4px}
+  .lu-sel{padding:7px 6px;border:1px solid var(--border);border-radius:6px;font:inherit;font-size:13px;background:#fff;min-width:0;width:100%;box-sizing:border-box}
+  .lu-btn{width:100%;padding:11px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px}
+  .lu-warn{background:#fff7e0;border:1px solid #f0d58a;color:#7a5a00;border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.5}
+  .lu-grid{display:grid;grid-template-columns:1fr 26px 26px 26px 26px 42px 42px;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid #f0f2f6}
+  .lu-n{padding:5px 2px;text-align:center}
+  .lu-qtab{flex:1;padding:8px 2px;border:1px solid var(--border);background:#fff;border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;line-height:1.2}
+  .lu-qtab.on{background:var(--skyblue);color:#fff;border-color:var(--skyblue)}
+  .lu-pitch{position:relative;width:100%;aspect-ratio:3/4;border-radius:10px;background:repeating-linear-gradient(180deg,#2e8b4f 0 10%,#339657 10% 20%);border:2px solid #fff;box-shadow:0 0 0 1px #cfd6e0;overflow:hidden}
+  .lu-pitch:before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px solid rgba(255,255,255,.5)}
+  .lu-slot{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;width:64px}
+  .lu-dot{width:30px;height:30px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;border:2px solid #fff}
+  .lu-nm{font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7);line-height:1.15;margin-top:2px}
+  .lu-ps{font-size:9px;color:rgba(255,255,255,.75)}
+  .lu-chip{background:#eef1f6;border-radius:12px;padding:3px 9px;font-size:12px}
+  .lu-tbl{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px;text-align:center}
+  .lu-tbl th,.lu-tbl td{padding:5px 3px;border-bottom:1px solid #eef0f4}
+  .lu-shade{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:600}
+  .lu-sheetbox{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:14px 14px 0 0;padding:14px;z-index:601;max-width:600px;margin:0 auto}
+  .lu-row{display:flex;align-items:center;padding:10px;border-bottom:1px solid #f0f2f6;cursor:pointer;font-size:14px}
+  .lu-x{background:none;border:none;font-size:18px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -579,6 +607,10 @@
       <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">ATTACK F.C. 데이터 관리</div>
     </div>
     <div style="padding:16px 12px">
+
+      <!-- 포메이션 -->
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">포메이션 · 라인업</div>
+      <button onclick="openLineup()" style="width:100%;padding:14px;background:#fff;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:16px;text-align:left">⚽ 포메이션 · 쿼터별 라인업 만들기 <span style="float:right;color:var(--muted)">›</span></button>
 
       <!-- 참석 관리 -->
       <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">참석 관리</div>
@@ -3689,6 +3721,415 @@ function backToSquad() {
   document.querySelectorAll('.team-tab')[3].classList.add('active');
   document.getElementById('tab-squad').classList.add('active');
 }
+/* ===== 포메이션 · 라인업 ===== */
+const LU_POS = ['GK','CB','LB','RB','DM','CM','CAM','LM','RM','LW','RW','ST'];
+const LU_FAMILY = {GK:'G',CB:'D',LB:'D',RB:'D',DM:'M',CM:'M',CAM:'M',LM:'M',RM:'M',LW:'F',RW:'F',ST:'F'};
+// x: 0(왼쪽)~100, y: 0(공격 쪽)~100(골대 쪽)
+const LU_FORMATIONS = {
+  '4-3-3': [
+    ['GK','GK',50,92],['LB','LB',14,72],['LCB','CB',37,76],['RCB','CB',63,76],['RB','RB',86,72],
+    ['LCM','CM',28,50],['CM','CM',50,54],['RCM','CM',72,50],['LW','LW',16,22],['ST','ST',50,16],['RW','RW',84,22]],
+  '4-1-2-3': [
+    ['GK','GK',50,92],['LB','LB',14,72],['LCB','CB',37,76],['RCB','CB',63,76],['RB','RB',86,72],
+    ['DM','DM',50,58],['LCM','CM',30,42],['RCM','CM',70,42],['LW','LW',16,20],['ST','ST',50,14],['RW','RW',84,20]],
+  '4-2-1-3': [
+    ['GK','GK',50,92],['LB','LB',14,72],['LCB','CB',37,76],['RCB','CB',63,76],['RB','RB',86,72],
+    ['LDM','DM',36,56],['RDM','DM',64,56],['CAM','CAM',50,38],['LW','LW',16,20],['ST','ST',50,14],['RW','RW',84,20]],
+  '4-4-2': [
+    ['GK','GK',50,92],['LB','LB',14,72],['LCB','CB',37,76],['RCB','CB',63,76],['RB','RB',86,72],
+    ['LM','LM',14,46],['LCM','CM',38,50],['RCM','CM',62,50],['RM','RM',86,46],['LST','ST',38,18],['RST','ST',62,18]],
+  '4-2-3-1': [
+    ['GK','GK',50,92],['LB','LB',14,72],['LCB','CB',37,76],['RCB','CB',63,76],['RB','RB',86,72],
+    ['LDM','DM',36,56],['RDM','DM',64,56],['LW','LW',16,34],['CAM','CAM',50,36],['RW','RW',84,34],['ST','ST',50,14]],
+  '3-5-2': [
+    ['GK','GK',50,92],['LCB','CB',26,76],['CB','CB',50,78],['RCB','CB',74,76],
+    ['LM','LM',10,48],['LCM','CM',32,52],['CM','CM',50,40],['RCM','CM',68,52],['RM','RM',90,48],['LST','ST',38,16],['RST','ST',62,16]],
+  '3-4-3': [
+    ['GK','GK',50,92],['LCB','CB',26,76],['CB','CB',50,78],['RCB','CB',74,76],
+    ['LM','LM',12,52],['LCM','CM',38,54],['RCM','CM',62,54],['RM','RM',88,52],['LW','LW',16,22],['ST','ST',50,16],['RW','RW',84,22]],
+  '4-1-4-1': [
+    ['GK','GK',50,92],['LB','LB',14,72],['LCB','CB',37,76],['RCB','CB',63,76],['RB','RB',86,72],
+    ['DM','DM',50,60],['LM','LM',14,40],['LCM','CM',38,42],['RCM','CM',62,42],['RM','RM',86,40],['ST','ST',50,14]],
+};
+const LU_FORM_DEFAULT = ['4-1-2-3','4-2-1-3','4-2-1-3','4-2-1-3'];
+const LU_Q = 4;
+const LU_STORE = 'lineup_store';
+
+const LU = {
+  tab: 'match', prefs: {}, defMin: 1, defMax: 4, loadedPlayers: [],
+  matchId: null, att: [], cfg: null, plan: null, q: 0, editing: null, msg: '',
+};
+
+function luEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function luSlots(f){ return (LU_FORMATIONS[f]||LU_FORMATIONS['4-3-3']).map(a=>({id:a[0],pos:a[1],x:a[2],y:a[3]})); }
+
+/* ---------- 저장소 ---------- */
+async function luGet(key){
+  try{ const r = await api(`${LU_STORE}?select=data&key=eq.${encodeURIComponent(key)}`); return r&&r[0]?r[0].data:null; }
+  catch(e){ return undefined; }
+}
+async function luPut(key, data){
+  const res = await fetch(`${SUPA_URL}/rest/v1/${LU_STORE}?on_conflict=key`, {
+    method:'POST',
+    headers:{apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
+    body: JSON.stringify({key, data, updated_at:new Date().toISOString()})
+  });
+  return res.ok;
+}
+
+/* ---------- 선호 포지션 기본값 (기존 세부 포지션 → 라인업 포지션) ---------- */
+function luDefaultPrefs(p){
+  const map = {GK:['GK'],CB:['CB'],FB:['LB','RB'],CDM:['DM'],CM:['CM'],CAM:['CAM'],CF:['ST'],WF:['LW','RW']};
+  const out = [];
+  [p.sub_position1,p.sub_position2].forEach(s=>(map[s]||[]).forEach(x=>{ if(!out.includes(x)) out.push(x); }));
+  if(!out.length){ const g={GK:['GK'],DF:['CB'],MF:['CM'],FW:['ST']}[p.position]; if(g) out.push(...g); }
+  return out.slice(0,3);
+}
+function luPrefsOf(p){
+  const saved = LU.prefs[p.id];
+  const arr = saved && saved.pref ? saved.pref : luDefaultPrefs(p);
+  return [arr[0]||'',arr[1]||'',arr[2]||''];
+}
+
+/* ---------- 오버레이 열기/닫기 ---------- */
+async function openLineup(){
+  const ov = document.getElementById('lineup-overlay');
+  ov.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  ov.querySelector('.lu-body').innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">불러오는 중...</div>';
+  const [players, prefs] = await Promise.all([
+    api('players?select=*&order=number.asc'),
+    luGet('prefs')
+  ]);
+  LU.loadedPlayers = players;
+  if(prefs===undefined){ LU.msg = '⚠️ lineup_store 테이블이 아직 없어요. 안내된 SQL을 Supabase에서 먼저 실행해주세요. (저장은 안 되지만 화면은 사용할 수 있어요)'; LU.prefs = {}; }
+  else { LU.msg=''; LU.prefs = (prefs&&prefs.players)||{}; LU.defMin = (prefs&&prefs.defMin)||1; LU.defMax = (prefs&&prefs.defMax)||4; }
+  luRender();
+}
+function closeLineup(){
+  document.getElementById('lineup-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function luTab(t){ LU.tab = t; luRender(); }
+
+function luRender(){
+  const ov = document.getElementById('lineup-overlay');
+  ov.querySelectorAll('.lu-tab').forEach(b=>b.classList.toggle('on', b.dataset.t===LU.tab));
+  const body = ov.querySelector('.lu-body');
+  const keep = body.scrollTop;
+  body.innerHTML = (LU.msg?`<div class="lu-warn" style="margin-bottom:10px">${luEsc(LU.msg)}</div>`:'') + (LU.tab==='prefs' ? luRenderPrefs() : luRenderMatch());
+  body.scrollTop = keep;
+}
+
+/* ---------- 탭: 선수 설정 ---------- */
+function luPosSelect(id, val){
+  return `<select id="${id}" class="lu-sel"><option value="">-</option>${LU_POS.map(p=>`<option value="${p}" ${p===val?'selected':''}>${p}</option>`).join('')}</select>`;
+}
+function luRenderPrefs(){
+  const rows = LU.loadedPlayers.map(p=>{
+    const [a,b,c] = luPrefsOf(p);
+    const s = LU.prefs[p.id]||{};
+    return `<div class="lu-card" style="padding:10px 12px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="color:var(--muted);font-size:11px;min-width:24px">#${p.number??''}</span><b style="font-size:14px">${luEsc(p.name)}</b></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr) 56px 56px;gap:6px;align-items:end">
+        <div><div class="lu-lb">1순위</div>${luPosSelect('lp1-'+p.id,a)}</div>
+        <div><div class="lu-lb">2순위</div>${luPosSelect('lp2-'+p.id,b)}</div>
+        <div><div class="lu-lb">3순위</div>${luPosSelect('lp3-'+p.id,c)}</div>
+        <div><div class="lu-lb">최소</div><input id="lmin-${p.id}" class="lu-sel" type="number" min="0" max="4" placeholder="기본" value="${s.min??''}"></div>
+        <div><div class="lu-lb">최대</div><input id="lmax-${p.id}" class="lu-sel" type="number" min="0" max="4" placeholder="기본" value="${s.max??''}"></div>
+      </div></div>`;
+  }).join('');
+  return `<div class="lu-card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px">기본 쿼터 범위 (경기당)</div>
+      <div style="display:flex;gap:10px;align-items:center;font-size:13px">최소 <input id="lu-defmin" class="lu-sel" style="width:60px" type="number" min="0" max="4" value="${LU.defMin}"> 최대 <input id="lu-defmax" class="lu-sel" style="width:60px" type="number" min="0" max="4" value="${LU.defMax}"> 쿼터</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">선수별 최소/최대를 비워두면 이 기본값을 써요. 경기마다 따로 바꿀 수도 있어요.</div>
+    </div>${rows}
+    <button class="lu-btn" onclick="luSavePrefs()">💾 선수 설정 저장</button>`;
+}
+async function luSavePrefs(){
+  const players = {};
+  LU.loadedPlayers.forEach(p=>{
+    const g = id=>document.getElementById(id)?.value||'';
+    const pref = [g('lp1-'+p.id),g('lp2-'+p.id),g('lp3-'+p.id)].filter(Boolean);
+    const mn = g('lmin-'+p.id), mx = g('lmax-'+p.id);
+    players[p.id] = {pref, min: mn===''?null:+mn, max: mx===''?null:+mx};
+  });
+  const defMin = Math.max(0,Math.min(4,+document.getElementById('lu-defmin').value||0));
+  const defMax = Math.max(defMin,Math.min(4,+document.getElementById('lu-defmax').value||4));
+  const ok = await luPut('prefs',{players,defMin,defMax});
+  if(ok){ LU.prefs = players; LU.defMin = defMin; LU.defMax = defMax; alert('저장했어요 ✅'); }
+  else alert('저장 실패 😢 lineup_store 테이블/권한을 확인해주세요.');
+}
+
+/* ---------- 탭: 경기 라인업 ---------- */
+function luRenderMatch(){
+  const matches = (allAdminMatches||[]).slice().sort((a,b)=>(b.match_date||'').localeCompare(a.match_date||'')).slice(0,20);
+  const opts = matches.map(m=>`<option value="${m.id}" ${m.id==LU.matchId?'selected':''}>${(m.match_date||'').slice(0,10)} ${m.status==='upcoming'?'(예정)':''} vs ${luEsc(m.opponent||m.opponent_name||'')}</option>`).join('');
+  let h = `<div class="lu-card"><div class="lu-lb">경기 선택</div>
+    <select class="lu-sel" style="width:100%" onchange="luPickMatch(this.value)"><option value="">경기를 선택하세요</option>${opts}</select></div>`;
+  if(!LU.matchId || !LU.cfg) return h + '<div style="color:var(--muted);font-size:12px;padding:8px">경기를 고르면 참석 인원으로 설정 화면이 열려요.</div>';
+  if(!LU.att.length) return h + '<div class="lu-warn">이 경기에 참석 처리된 선수가 없어요. 관리자 &gt; 참석 관리에서 먼저 저장해주세요.</div>';
+
+  const c = LU.cfg;
+  h += `<div class="lu-card"><div style="font-size:13px;font-weight:700;margin-bottom:8px">쿼터별 포메이션</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${[0,1,2,3].map(q=>`<div><div class="lu-lb">${q+1}Q</div>
+      <select class="lu-sel" style="width:100%" onchange="luSetForm(${q},this.value)">${Object.keys(LU_FORMATIONS).map(f=>`<option ${f===c.formations[q]?'selected':''}>${f}</option>`).join('')}</select></div>`).join('')}</div></div>`;
+
+  h += `<div class="lu-card"><div style="font-size:13px;font-weight:700;margin-bottom:2px">참석 ${LU.att.length}명 · 제외 / 최소·최대 쿼터</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">체크한 쿼터에는 출전하지 않아요 (부상·지각 등). 최소/최대는 빈칸이면 선수 기본값.</div>
+    <div class="lu-grid" style="font-size:11px;color:var(--muted);font-weight:700"><span>선수</span><span>1Q</span><span>2Q</span><span>3Q</span><span>4Q</span><span>최소</span><span>최대</span></div>
+    ${LU.att.map(p=>{
+      const ex = c.excl[p.id]||[]; const lim = c.limits[p.id]||{};
+      return `<div class="lu-grid"><span style="font-size:13px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${luEsc(p.name)}</span>
+        ${[0,1,2,3].map(q=>`<input type="checkbox" ${ex.includes(q)?'checked':''} onchange="luSetExcl(${p.id},${q},this.checked)">`).join('')}
+        <input class="lu-sel lu-n" type="number" min="0" max="4" value="${lim.min??''}" placeholder="${luLimit(p,'min')}" onchange="luSetLim(${p.id},'min',this.value)">
+        <input class="lu-sel lu-n" type="number" min="0" max="4" value="${lim.max??''}" placeholder="${luLimit(p,'max')}" onchange="luSetLim(${p.id},'max',this.value)"></div>`;
+    }).join('')}
+    <button class="lu-btn" onclick="luAuto()">⚡ 자동 배정</button></div>`;
+
+  if(LU.plan) h += luRenderPlan();
+  return h;
+}
+function luLimit(p, k){
+  const s = LU.prefs[p.id]||{};
+  return (s[k]!=null ? s[k] : (k==='min'?LU.defMin:LU.defMax));
+}
+async function luPickMatch(id){
+  LU.matchId = id?+id:null; LU.plan = null; LU.cfg = null; LU.att = []; LU.q = 0;
+  if(!LU.matchId){ luRender(); return; }
+  const stats = await api(`match_stats?select=player_id&match_id=eq.${LU.matchId}&attended=eq.true`);
+  const ids = new Set(stats.map(s=>s.player_id));
+  LU.att = LU.loadedPlayers.filter(p=>ids.has(p.id));
+  const saved = await luGet('match_'+LU.matchId);
+  LU.cfg = (saved&&saved.cfg) || {formations: LU_FORM_DEFAULT.slice(), excl:{}, limits:{}};
+  LU.plan = (saved&&saved.plan) || null;
+  luRender();
+}
+function luSetForm(q,f){ LU.cfg.formations[q]=f; if(LU.plan){ LU.plan[q]={formation:f,slots:{}}; } luRender(); }
+function luSetExcl(pid,q,on){
+  const a = LU.cfg.excl[pid]||(LU.cfg.excl[pid]=[]);
+  const i = a.indexOf(q); if(on&&i<0) a.push(q); if(!on&&i>=0) a.splice(i,1);
+}
+function luSetLim(pid,k,v){
+  const l = LU.cfg.limits[pid]||(LU.cfg.limits[pid]={});
+  l[k] = v===''?null:Math.max(0,Math.min(4,+v));
+}
+function luEffLimits(p){
+  const s = LU.prefs[p.id]||{}, l = (LU.cfg.limits[p.id])||{};
+  const mn = l.min!=null?l.min:(s.min!=null?s.min:LU.defMin);
+  const mx = l.max!=null?l.max:(s.max!=null?s.max:LU.defMax);
+  return {min: Math.min(mn,mx), max: mx};
+}
+
+/* ---------- 자동 배정 ---------- */
+function luCost(prefs, slot){
+  const i = prefs.indexOf(slot.pos);
+  if(i>=0) return [0,2,4][i];
+  if(slot.pos==='GK') return 60;
+  if(prefs.length===1 && prefs[0]==='GK') return 40;
+  const fam = LU_FAMILY[slot.pos];
+  if(prefs.some(x=>LU_FAMILY[x]===fam)){
+    // 좌우 반대(LB↔RB 등)는 같은 계열 중 가까운 편
+    return 8;
+  }
+  if(prefs.some(x=>(LU_FAMILY[x]==='M')!==(fam==='M') && fam!=='D' && LU_FAMILY[x]!=='D')) return 12;
+  return 16;
+}
+// 직사각 행렬(n행 <= m열) 최소비용 매칭: 각 행의 열 번호 반환
+function luHungarian(a){
+  const n=a.length, m=a[0].length, INF=1e9;
+  const u=new Array(n+1).fill(0), v=new Array(m+1).fill(0), p=new Array(m+1).fill(0), way=new Array(m+1).fill(0);
+  for(let i=1;i<=n;i++){
+    p[0]=i; let j0=0; const minv=new Array(m+1).fill(INF), used=new Array(m+1).fill(false);
+    do{
+      used[j0]=true; const i0=p[j0]; let delta=INF, j1=0;
+      for(let j=1;j<=m;j++) if(!used[j]){
+        const cur=a[i0-1][j-1]-u[i0]-v[j];
+        if(cur<minv[j]){ minv[j]=cur; way[j]=j0; }
+        if(minv[j]<delta){ delta=minv[j]; j1=j; }
+      }
+      for(let j=0;j<=m;j++){ if(used[j]){ u[p[j]]+=delta; v[j]-=delta; } else minv[j]-=delta; }
+      j0=j1;
+    }while(p[j0]!==0);
+    do{ const j1=way[j0]; p[j0]=p[j1]; j0=j1; }while(j0);
+  }
+  const res=new Array(n).fill(-1);
+  for(let j=1;j<=m;j++) if(p[j]) res[p[j]-1]=j-1;
+  return res;
+}
+function luTry(att, cfg, prefsOf, limOf){
+  const slotsQ = cfg.formations.map(f=>luSlots(f));
+  const S = slotsQ.reduce((s,a)=>s+a.length,0);
+  const avail = att.map(p=>[0,1,2,3].filter(q=>!(cfg.excl[p.id]||[]).includes(q)));
+  const quota = att.map((p,i)=>Math.min(limOf(p).min, avail[i].length));
+  let tot = quota.reduce((a,b)=>a+b,0);
+  const warn = [];
+  // 최소 합이 슬롯보다 크면 줄임
+  while(tot>S){ let k=-1; quota.forEach((q,i)=>{ if(q>0&&(k<0||q>quota[k]||(q===quota[k]&&Math.random()<.5))) k=i; }); quota[k]--; tot--; warn.push('최소 쿼터 합이 슬롯 수보다 많아 일부를 줄였어요'); }
+  // 남은 슬롯을 최대 한도 안에서 적게 뛴 사람부터 분배
+  while(tot<S){
+    const cand = att.map((p,i)=>i).filter(i=>quota[i]<Math.min(limOf(att[i]).max, avail[i].length));
+    if(!cand.length) break;
+    const mn = Math.min(...cand.map(i=>quota[i]));
+    const pool = cand.filter(i=>quota[i]===mn);
+    quota[pool[Math.floor(Math.random()*pool.length)]]++; tot++;
+  }
+  if(tot<S) warn.push('최대 쿼터 제한 때문에 빈 자리가 생겨요');
+  const left = quota.slice(), lastRest = att.map(()=>false);
+  const plan = []; let cost = 0;
+  for(let q=0;q<LU_Q;q++){
+    const slots = slotsQ[q];
+    const cands = att.map((p,i)=>i).filter(i=>avail[i].includes(q));
+    const remAvail = i=>avail[i].filter(x=>x>=q).length;
+    const forced = cands.filter(i=>left[i]>0 && left[i]>=remAvail(i));
+    const score = i=> left[i]*10 + (lastRest[i]?4:0) + Math.random()*3;
+    const rest = cands.filter(i=>left[i]>0 && !forced.includes(i)).sort((a,b)=>score(b)-score(a));
+    let chosen = forced.concat(rest).slice(0, slots.length);
+    // GK 가능 선수 보장
+    const canGk = i=>prefsOf(att[i]).includes('GK');
+    if(!chosen.some(canGk)){
+      const g = cands.filter(i=>canGk(i)&&left[i]>0&&!chosen.includes(i)).sort((a,b)=>score(b)-score(a))[0];
+      if(g!=null && chosen.length){ chosen[chosen.length-1]=g; }
+    }
+    // 자리가 남으면 한도 초과를 감수하고 채움(경고)
+    if(chosen.length<slots.length){
+      const extra = cands.filter(i=>!chosen.includes(i)).sort((a,b)=>left[b]-left[a]);
+      for(const i of extra){ if(chosen.length>=slots.length) break; chosen.push(i); warn.push(`${q+1}Q 인원이 모자라 최대 쿼터를 넘겨 배정했어요`); }
+    }
+    const n = Math.min(slots.length, chosen.length);
+    const mat = slots.slice(0,n).map(s=>chosen.map(i=>luCost(prefsOf(att[i]), s)));
+    const asg = n? luHungarian(mat) : [];
+    const entry = {formation: cfg.formations[q], slots:{}};
+    slots.forEach((s,k)=>{
+      if(k<n){ const i = chosen[asg[k]]; entry.slots[s.id]={p:att[i].id,s:null}; cost += mat[k][asg[k]]; }
+    });
+    plan.push(entry);
+    att.forEach((p,i)=>{ const played = chosen.includes(i); lastRest[i] = !played && avail[i].includes(q); if(played) left[i]--; });
+  }
+  // 한도 위반 패널티
+  att.forEach((p,i)=>{ const c = luCountPlay(plan,p.id); const l=limOf(p); if(c<l.min) cost += (l.min-c)*30; if(c>l.max) cost += (c-l.max)*30; });
+  return {plan, cost, warn};
+}
+function luCountPlay(plan, pid){
+  let c=0; plan.forEach(e=>{ Object.values(e.slots).forEach(s=>{ if(s.p===pid) c++; }); }); return c;
+}
+function luAuto(){
+  if(LU.plan && !confirm('현재 라인업을 지우고 새로 자동 배정할까요?')) return;
+  const prefsOf = p=>luPrefsOf(p).filter(Boolean);
+  const limOf = p=>luEffLimits(p);
+  let best = null;
+  for(let i=0;i<250;i++){ const r = luTry(LU.att, LU.cfg, prefsOf, limOf); if(!best||r.cost<best.cost) best=r; }
+  LU.plan = best.plan; LU.q = 0;
+  LU.autoWarn = [...new Set(best.warn)];
+  luRender();
+  setTimeout(()=>document.getElementById('lu-plan')?.scrollIntoView({behavior:'smooth'}),50);
+}
+
+/* ---------- 결과 화면 ---------- */
+function luPlayer(id){ return LU.att.find(p=>p.id===id) || LU.loadedPlayers.find(p=>p.id===id); }
+function luWhere(plan, pid, q){
+  const e = plan[q]; if(!e) return null;
+  for(const [sid,s] of Object.entries(e.slots)){ if(s.p===pid) return {slot:sid, role:'main'}; if(s.s===pid) return {slot:sid, role:'sub'}; }
+  return null;
+}
+function luRenderPlan(){
+  const plan = LU.plan, q = LU.q;
+  const tabs = [0,1,2,3].map(i=>`<button class="lu-qtab ${i===q?'on':''}" onclick="LU.q=${i};luRender()">${i+1}Q <span style="font-weight:400;font-size:10px">${luEsc(plan[i].formation)}</span></button>`).join('');
+  const slots = luSlots(plan[q].formation);
+  const bubbles = slots.map(s=>{
+    const e = plan[q].slots[s.id]; const pl = e&&luPlayer(e.p); const sub = e&&e.s&&luPlayer(e.s);
+    const pr = pl ? luPrefsOf(pl) : []; const idx = pl ? pr.indexOf(s.pos) : -1;
+    const col = !pl ? '#9aa4b2' : idx===0 ? '#1f9d55' : idx>0 ? '#e0a100' : '#d9534f';
+    return `<div class="lu-slot" style="left:${s.x}%;top:${s.y}%" onclick="luEdit('${s.id}')">
+      <div class="lu-dot" style="background:${col}">${pl?luEsc(pl.number??''):'+'}</div>
+      <div class="lu-nm">${pl?luEsc(pl.name):'비어있음'}${sub?`<br><span style="color:#8fd3ff">↻ ${luEsc(sub.name)}</span>`:''}</div>
+      <div class="lu-ps">${s.id}</div></div>`;
+  }).join('');
+  const restNow = LU.att.filter(p=>!luWhere(plan,p.id,q));
+  const rest = restNow.map(p=>`<span class="lu-chip">${luEsc(p.name)}${(LU.cfg.excl[p.id]||[]).includes(q)?' (제외)':''}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">없음</span>';
+
+  // 요약 표 + 경고
+  const warns = (LU.autoWarn||[]).slice();
+  const rows = LU.att.map(p=>{
+    const cnt = luCountPlay(plan,p.id), l = luEffLimits(p);
+    if(cnt<l.min) warns.push(`${p.name}: 최소 ${l.min}쿼터인데 ${cnt}쿼터`);
+    if(cnt>l.max) warns.push(`${p.name}: 최대 ${l.max}쿼터인데 ${cnt}쿼터`);
+    const cells = [0,1,2,3].map(i=>{
+      const w = luWhere(plan,p.id,i);
+      const ex = (LU.cfg.excl[p.id]||[]).includes(i);
+      if(!w) return `<td style="color:#b0b8c4">${ex?'✕':'-'}</td>`;
+      return `<td>${w.slot}${w.role==='sub'?'<sup>↻</sup>':''}</td>`;
+    }).join('');
+    const bad = cnt<l.min||cnt>l.max;
+    return `<tr><td style="text-align:left;font-weight:600">${luEsc(p.name)}</td>${cells}<td style="font-weight:700;color:${bad?'#d9534f':'inherit'}">${cnt}</td></tr>`;
+  }).join('');
+  // 중복/빈 슬롯 검사
+  [0,1,2,3].forEach(i=>{
+    const seen = {}; luSlots(plan[i].formation).forEach(s=>{
+      const e = plan[i].slots[s.id]; if(!e||!e.p) warns.push(`${i+1}Q ${s.id} 비어있음`); else { if(seen[e.p]) warns.push(`${i+1}Q ${luPlayer(e.p).name} 중복 배치`); seen[e.p]=1; }
+    });
+  });
+  const uniq = [...new Set(warns)];
+  return `<div id="lu-plan" class="lu-card" style="padding:12px 8px">
+    <div style="display:flex;gap:4px;margin-bottom:10px">${tabs}</div>
+    <div class="lu-pitch">${bubbles}</div>
+    <div style="font-size:10px;color:var(--muted);margin:6px 4px 0">● 초록 1순위 · 노랑 2·3순위 · 빨강 선호 외 · 슬롯을 누르면 수정</div>
+    <div style="margin:10px 4px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>
+    ${uniq.length?`<div class="lu-warn" style="margin:10px 4px 0">${uniq.map(w=>'• '+luEsc(w)).join('<br>')}</div>`:''}
+    <table class="lu-tbl"><thead><tr><th style="text-align:left">선수</th><th>1Q</th><th>2Q</th><th>3Q</th><th>4Q</th><th>합</th></tr></thead><tbody>${rows}</tbody></table>
+    <button class="lu-btn" onclick="luSavePlan()">💾 라인업 저장</button>
+  </div>
+  <div id="lu-sheet"></div>`;
+}
+
+/* ---------- 슬롯 수정 ---------- */
+function luEdit(slotId){
+  LU.editing = slotId;
+  const q = LU.q, plan = LU.plan, slot = luSlots(plan[q].formation).find(s=>s.id===slotId);
+  const cur = plan[q].slots[slotId]||{};
+  const list = LU.att.map(p=>{
+    const w = luWhere(plan,p.id,q); const ex = (LU.cfg.excl[p.id]||[]).includes(q);
+    const pr = luPrefsOf(p); const idx = pr.indexOf(slot.pos);
+    const tag = idx>=0?`${idx+1}순위`:'';
+    const state = cur.p===p.id ? '<b style="color:var(--skyblue)">현재</b>' : w ? `${w.slot}${w.role==='sub'?' 교체':''}` : ex ? '제외' : '휴식';
+    return `<div class="lu-row" onclick="luAssign(${p.id})"><span style="min-width:24px;color:var(--muted);font-size:11px">#${p.number??''}</span><b style="flex:1">${luEsc(p.name)}</b><span style="font-size:11px;color:#1f9d55;margin-right:8px">${tag}</span><span style="font-size:11px;color:var(--muted)">${state}</span></div>`;
+  }).join('');
+  const subOpts = LU.att.filter(p=>!luWhere(plan,p.id,q)).map(p=>`<option value="${p.id}" ${cur.s===p.id?'selected':''}>${luEsc(p.name)}</option>`).join('');
+  document.getElementById('lu-sheet').innerHTML = `<div class="lu-shade" onclick="luCloseSheet()"></div><div class="lu-sheetbox">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>${q+1}Q · ${slotId} (${slot.pos})</b><button class="lu-x" onclick="luCloseSheet()">✕</button></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px">선수를 누르면 배치돼요. 이미 다른 자리에 있으면 서로 자리를 바꿔요.</div>
+    <div style="max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:8px">${list}</div>
+    <div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="lu-lb" style="margin:0">교체 투입</span>
+      <select class="lu-sel" style="flex:1" onchange="luSetSub(this.value)"><option value="">없음</option>${subOpts}</select>
+      <button class="lu-btn" style="margin:0;width:auto;padding:8px 12px;background:#d9534f" onclick="luClear()">비우기</button></div>
+  </div>`;
+}
+function luCloseSheet(){ document.getElementById('lu-sheet').innerHTML=''; LU.editing=null; }
+function luAssign(pid){
+  const q=LU.q, e=LU.plan[q], sid=LU.editing;
+  const target = e.slots[sid]||(e.slots[sid]={p:null,s:null});
+  const w = luWhere(LU.plan,pid,q);
+  if(w && w.slot===sid && w.role==='main'){ luCloseSheet(); return; }
+  const prev = target.p;
+  if(w){
+    const other = e.slots[w.slot];
+    if(w.role==='main') other.p = prev||null; else other.s = null;
+  }
+  target.p = pid; if(target.s===pid) target.s=null;
+  luCloseSheet(); luRender();
+}
+function luSetSub(v){
+  const e = LU.plan[LU.q].slots[LU.editing]; if(!e) return;
+  e.s = v?+v:null; luCloseSheet(); luRender();
+}
+function luClear(){
+  const e = LU.plan[LU.q].slots; delete e[LU.editing]; luCloseSheet(); luRender();
+}
+async function luSavePlan(){
+  const ok = await luPut('match_'+LU.matchId,{cfg:LU.cfg,plan:LU.plan});
+  alert(ok?'라인업 저장 완료 ✅':'저장 실패 😢 lineup_store 테이블/권한을 확인해주세요.');
+}
+
 </script>
 <script>
 // Pull-to-refresh (탭바 아래에서만 동작)
@@ -3760,6 +4201,14 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<div id="lineup-overlay">
+  <div class="lu-top">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><b style="font-size:17px">포메이션 · 라인업</b><button onclick="closeLineup()" style="background:none;border:none;color:#fff;font-size:13px;cursor:pointer;font-family:inherit">닫기 ✕</button></div>
+    <div style="display:flex"><button class="lu-tab on" data-t="match" onclick="luTab('match')">경기 라인업</button><button class="lu-tab" data-t="prefs" onclick="luTab('prefs')">선수 설정</button></div>
+  </div>
+  <div class="lu-body"></div>
+</div>
 </body>
 </html>    <!-- 운동장 정보 -->
     <div class="tab-section" id="tab-grounds">
