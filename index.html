@@ -3759,7 +3759,7 @@ const LU_Q = 4;
 const LU_STORE = 'lineup_store';
 
 const LU = {
-  tab: 'match', prefs: {}, defMin: 1, defMax: 4, loadedPlayers: [],
+  tab: 'match', prefs: {}, defMin: 2, defMax: 4, loadedPlayers: [],
   matchId: null, att: [], cfg: null, plan: null, q: 0, editing: null, msg: '',
 };
 
@@ -3849,7 +3849,7 @@ async function openLineup(fixed){
   ]);
   LU.loadedPlayers = players;
   if(prefs===undefined){ LU.msg = '⚠️ lineup_store 테이블이 아직 없어요. 안내된 SQL을 Supabase에서 먼저 실행해주세요. (저장은 안 되지만 화면은 사용할 수 있어요)'; LU.prefs = {}; }
-  else { LU.msg=''; LU.prefs = (prefs&&prefs.players)||{}; LU.defMin = (prefs&&prefs.defMin)||1; LU.defMax = (prefs&&prefs.defMax)||4; }
+  else { LU.msg=''; LU.prefs = (prefs&&prefs.players)||{}; LU.defMin = (prefs&&prefs.defMin!=null)?prefs.defMin:2; LU.defMax = (prefs&&prefs.defMax)||4; }
   if(LU.fixedMatch) await luPickMatch(LU.fixedMatch.id); else luRender();
 }
 async function openLineupForMatch(id){
@@ -3977,6 +3977,7 @@ function luRenderMatch(){
 
   h += `<div class="lu-card">
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;cursor:pointer"><input type="checkbox" ${c.halfSubs?'checked':''} onchange="LU.cfg.halfSubs=this.checked" style="width:16px;height:16px"> <span><b>쿼터 중간(후반) 교체 허용</b><br><span style="font-size:11px;color:var(--muted)">켜면 쿼터를 반(0.5)씩 나눠 쓸 수 있어요. 최소/최대도 0.5 단위로 적어요. 자동 배정을 다시 눌러야 적용돼요.</span></span></label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;cursor:pointer"><input type="checkbox" ${c.noConsecRest!==false?'checked':''} onchange="LU.cfg.noConsecRest=this.checked" style="width:16px;height:16px"> <span><b>연속 2쿼터 휴식 방지</b><br><span style="font-size:11px;color:var(--muted)">앞 쿼터에 쉰 선수는 다음 쿼터에 꼭 뛰게 해요. 자동 배정을 다시 눌러야 적용돼요.</span></span></label>
     <div class="lu-lb">골키퍼 규칙</div>
     <select class="lu-sel" style="width:100%" onchange="LU.cfg.gkRule=this.value">${[['once','한 번 본 선수는 다시 안 맡김 (1경기 1쿼터)'],['consec','연속 쿼터만 제외'],['none','제한 없음']].map(([v,t])=>`<option value="${v}" ${(c.gkRule||'once')===v?'selected':''}>${t}</option>`).join('')}</select></div>`;
   h += `<div class="lu-card"><div style="font-size:13px;font-weight:700;margin-bottom:2px">참석 ${LU.att.length}명 · 제외 / 최소·최대 쿼터</div>
@@ -4092,7 +4093,8 @@ function luTry(att, cfg, prefsOf, limOf){
   let S = 0; for(let t=0;t<P;t++) S += slotsAt(t).length;
   const availT = att.map(p=>[...Array(P).keys()].filter(t=>!(cfg.excl[p.id]||[]).includes(Math.floor(t/per))));
   const lim = p=>{ const l=limOf(p); return {min:Math.round(l.min*per), max:Math.round(l.max*per)}; };
-  const quota = att.map((p,i)=>Math.min(lim(p).min, availT[i].length));
+  const noCR = cfg.noConsecRest!==false;
+  const quota = att.map((p,i)=>Math.min(Math.max(lim(p).min, noCR && availT[i].length>=4*per-0 ? Math.min(2*per, lim(p).max) : 0), availT[i].length));
   let tot = quota.reduce((a,b)=>a+b,0);
   const warn = [];
   while(tot>S){ let k=-1; quota.forEach((q,i)=>{ if(q>0&&(k<0||q>quota[k]||(q===quota[k]&&Math.random()<.5))) k=i; }); quota[k]--; tot--; warn.push('최소 쿼터 합이 슬롯 수보다 많아 일부를 줄였어요'); }
@@ -4108,16 +4110,18 @@ function luTry(att, cfg, prefsOf, limOf){
   const gkDone = new Set(); let prevQGk = new Set();
   const gkBlock = id => rule==='once' ? gkDone.has(id) : rule==='consec' ? prevQGk.has(id) : false;
   const left = quota.slice(), lastRest = att.map(()=>false), lastPlayed = att.map(()=>false);
+  let prevQPlayed = att.map(()=>true), curQPlayed = att.map(()=>false);
   const periods = []; let cost = 0, curGk = new Set(), firstGk = null;
   let prevSlot = att.map(()=>null);
   for(let t=0;t<P;t++){
     const q = Math.floor(t/per), second = half && t%per===1;
-    if(t%per===0){ curGk = new Set(); firstGk = null; }
+    if(t%per===0){ curGk = new Set(); firstGk = null; curQPlayed = att.map(()=>false); }
     const slots = slotsAt(t);
     const cands = att.map((p,i)=>i).filter(i=>availT[i].includes(t));
     const remAvail = i=>availT[i].filter(x=>x>=t).length;
-    const forced = cands.filter(i=>left[i]>0 && left[i]>=remAvail(i));
-    const score = i=> left[i]*10 + (lastRest[i]?4:0) + (second&&lastPlayed[i]?15:0) + Math.random()*3;
+    const mustPlay = noCR && t%per===0 && q>0 ? cands.filter(i=>!prevQPlayed[i] && left[i]>0) : [];
+    const forced = Array.from(new Set(cands.filter(i=>left[i]>0 && left[i]>=remAvail(i)).concat(mustPlay)));
+    const score = i=> left[i]*10 + (noCR && t%per===0 && !prevQPlayed[i] && left[i]>0 ? 100 : 0) + (lastRest[i]?4:0) + (second&&lastPlayed[i]?15:0) + Math.random()*3;
     const rest = cands.filter(i=>left[i]>0 && !forced.includes(i)).sort((a,b)=>score(b)-score(a));
     let chosen = forced.concat(rest).slice(0, slots.length);
     const first = half && t%per===0;
@@ -4149,9 +4153,9 @@ function luTry(att, cfg, prefsOf, limOf){
     if(map['GK']) curGk.add(map['GK']);
     if(half && t%per===0){ const gi = att.findIndex(p=>p.id===map['GK']); firstGk = gi>=0?gi:null; }
     periods.push(map);
-    att.forEach((p,i)=>{ const played = chosen.includes(i); lastRest[i] = !played && availT[i].includes(t); lastPlayed[i]=played; if(played) left[i]--; });
+    att.forEach((p,i)=>{ const played = chosen.includes(i); lastRest[i] = !played && availT[i].includes(t); lastPlayed[i]=played; if(played){ left[i]--; curQPlayed[i]=true; } });
     prevSlot = newSlot;
-    if(t%per===per-1){ curGk.forEach(id=>gkDone.add(id)); prevQGk = new Set(curGk); }
+    if(t%per===per-1){ curGk.forEach(id=>gkDone.add(id)); prevQGk = new Set(curGk); prevQPlayed = curQPlayed.slice(); }
   }
   const plan = [0,1,2,3].map(q=>{
     const e = {formation: cfg.formations[q], slots:{}};
@@ -4163,6 +4167,7 @@ function luTry(att, cfg, prefsOf, limOf){
     return e;
   });
   att.forEach(p=>{ const c = luCountPlay(plan,p.id), l = limOf(p); if(c<l.min) cost += (l.min-c)*30; if(c>l.max) cost += (c-l.max)*30; });
+  if(noCR) att.forEach(p=>{ for(let q=1;q<4;q++){ if(!luAppear(plan,p.id,q-1).length && !luAppear(plan,p.id,q).length) cost += 40; } });
   return {plan, cost, warn};
 }
 function luCountPlay(plan, pid){
@@ -4241,6 +4246,7 @@ function luRenderPlan(){
     const gks = plan.map(e=>{ const g=e.slots.GK; return new Set(g?[g.p,g.s].filter(Boolean):[]); });
     if(rl==='once'){ const cnt={}; gks.forEach(st=>st.forEach(id=>cnt[id]=(cnt[id]||0)+1)); Object.entries(cnt).forEach(([id,c])=>{ if(c>1) warns.push(`${luPlayer(+id).name}: 골키퍼 ${c}쿼터 (한 경기 1쿼터만)`); }); }
     if(rl==='consec'){ for(let i=1;i<LU_Q;i++){ gks[i].forEach(id=>{ if(gks[i-1].has(id)) warns.push(`${luPlayer(id).name}: ${i}Q·${i+1}Q 연속 골키퍼`); }); } } }
+  if(LU.cfg.noConsecRest!==false) LU.att.forEach(p=>{ for(let i=1;i<4;i++){ if(!luAppear(plan,p.id,i-1).length && !luAppear(plan,p.id,i).length) warns.push(`${p.name}: ${i}Q·${i+1}Q 연속 휴식`); } });
   plan.forEach((e,i)=>{ const g=e.slots.GK; if(g&&g.s&&g.s!==g.p) warns.push(`${i+1}Q 골키퍼 중간 교체 (허용 안 됨)`); });
   // 중복/빈 슬롯 검사
   [0,1,2,3].forEach(i=>{
