@@ -3619,6 +3619,7 @@ async function showMatch(matchId, skipPushState) {
           : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">참석 정보 없음</div>'}
         </div>
       </div>
+      <button onclick="openLineupForMatch(${m.id})" style="width:100%;margin-top:16px;padding:14px;background:#fff;border:1px solid var(--skyblue);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;color:var(--skyblue);cursor:pointer">⚽ 포메이션 · 라인업 ${isUpcoming?'(참석 설정)':'보기'}</button>
       <!-- 역대 전적 (완료 경기) -->
       ${!isUpcoming ? h2hHtml : ''}
 
@@ -3792,7 +3793,8 @@ function luPrefsOf(p){
 }
 
 /* ---------- 오버레이 열기/닫기 ---------- */
-async function openLineup(){
+async function openLineup(fixed){
+  LU.fixedMatch = fixed||null; LU.matchId = null; LU.cfg = null; LU.plan = null; LU.att = []; LU.tab = 'match';
   const ov = document.getElementById('lineup-overlay');
   ov.style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -3804,7 +3806,12 @@ async function openLineup(){
   LU.loadedPlayers = players;
   if(prefs===undefined){ LU.msg = '⚠️ lineup_store 테이블이 아직 없어요. 안내된 SQL을 Supabase에서 먼저 실행해주세요. (저장은 안 되지만 화면은 사용할 수 있어요)'; LU.prefs = {}; }
   else { LU.msg=''; LU.prefs = (prefs&&prefs.players)||{}; LU.defMin = (prefs&&prefs.defMin)||1; LU.defMax = (prefs&&prefs.defMax)||4; }
-  luRender();
+  if(LU.fixedMatch) await luPickMatch(LU.fixedMatch.id); else luRender();
+}
+function openLineupForMatch(id){
+  const m = (window._cachedMatches||[]).find(x=>x.id==id) || (allAdminMatches||[]).find(x=>x.id==id) || {};
+  const label = `${(m.match_date||'').slice(0,10)} vs ${m.opponents?.name||m.opponent||''}`;
+  openLineup({id:+id, label});
 }
 function closeLineup(){
   document.getElementById('lineup-overlay').style.display = 'none';
@@ -3846,7 +3853,39 @@ function luRenderPrefs(){
     </div>${rows}
     <button class="lu-btn" onclick="luSavePrefs()">💾 선수 설정 저장</button>`;
 }
+let luAuthed = false;
+function luAuth(){
+  if(isAdmin || luAuthed) return true;
+  const pw = prompt('저장하려면 관리자 비밀번호를 입력하세요:');
+  if(pw===null) return false;
+  if(pw!==ADMIN_PW){ alert('비밀번호가 틀렸습니다.'); return false; }
+  luAuthed = true; return true;
+}
+async function luSaveAtt(){
+  const mid = LU.matchId;
+  const existing = await api(`match_stats?select=id,player_id&match_id=eq.${mid}`);
+  const em = {}; existing.forEach(s=>em[s.player_id]=s.id);
+  const hd = {apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`,'Content-Type':'application/json',Prefer:'return=minimal'};
+  let ok = true;
+  for(const p of LU.loadedPlayers){
+    const now = LU.attSet.has(p.id), was = LU.attInit.has(p.id);
+    if(now===was) continue;
+    let r;
+    if(em[p.id]) r = await fetch(`${SUPA_URL}/rest/v1/match_stats?id=eq.${em[p.id]}`,{method:'PATCH',headers:hd,body:JSON.stringify({attended:now})});
+    else if(now) r = await fetch(`${SUPA_URL}/rest/v1/match_stats`,{method:'POST',headers:hd,body:JSON.stringify({match_id:mid,player_id:p.id,goals:0,assists:0,is_mom:false,attended:true})});
+    else continue;
+    if(!r.ok) ok = false;
+  }
+  if(ok) LU.attInit = new Set(LU.attSet);
+  return ok;
+}
+async function luSaveAttOnly(){
+  if(!luAuth()) return;
+  const ok = await luSaveAtt();
+  alert(ok?'참석 저장 완료 ✅':'참석 저장 실패 😢');
+}
 async function luSavePrefs(){
+  if(!luAuth()) return;
   const players = {};
   LU.loadedPlayers.forEach(p=>{
     const g = id=>document.getElementById(id)?.value||'';
@@ -3865,10 +3904,16 @@ async function luSavePrefs(){
 function luRenderMatch(){
   const matches = (allAdminMatches||[]).slice().sort((a,b)=>(b.match_date||'').localeCompare(a.match_date||'')).slice(0,20);
   const opts = matches.map(m=>`<option value="${m.id}" ${m.id==LU.matchId?'selected':''}>${(m.match_date||'').slice(0,10)} ${m.status==='upcoming'?'(예정)':''} vs ${luEsc(m.opponent||m.opponent_name||'')}</option>`).join('');
-  let h = `<div class="lu-card"><div class="lu-lb">경기 선택</div>
+  let h = LU.fixedMatch
+    ? `<div class="lu-card" style="font-weight:700;font-size:14px">${luEsc(LU.fixedMatch.label)}</div>`
+    : `<div class="lu-card"><div class="lu-lb">경기 선택</div>
     <select class="lu-sel" style="width:100%" onchange="luPickMatch(this.value)"><option value="">경기를 선택하세요</option>${opts}</select></div>`;
-  if(!LU.matchId || !LU.cfg) return h + '<div style="color:var(--muted);font-size:12px;padding:8px">경기를 고르면 참석 인원으로 설정 화면이 열려요.</div>';
-  if(!LU.att.length) return h + '<div class="lu-warn">이 경기에 참석 처리된 선수가 없어요. 관리자 &gt; 참석 관리에서 먼저 저장해주세요.</div>';
+  if(!LU.matchId || !LU.cfg) return h + '<div style="color:var(--muted);font-size:12px;padding:8px">경기를 고르면 설정 화면이 열려요.</div>';
+  h += `<div class="lu-card"><div style="font-size:13px;font-weight:700;margin-bottom:2px">참석 인원 <span style="color:var(--skyblue)">${LU.att.length}명</span></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">눌러서 참석/불참을 바꿔요. 저장할 때 함께 반영돼요.</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${LU.loadedPlayers.map(p=>{const on=LU.attSet.has(p.id);return `<div onclick="luToggleAtt(${p.id},${!on})" style="padding:7px 4px;text-align:center;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid ${on?'var(--skyblue)':'var(--border)'};background:${on?'#e8f5fb':'#f8f9fb'};font-weight:${on?700:400};color:${on?'var(--text)':'var(--muted)'}">${luEsc(p.name)}</div>`}).join('')}</div></div>
+    <button class="lu-btn" style="margin-top:10px;padding:9px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue)" onclick="luSaveAttOnly()">참석만 저장</button></div>`;
+  if(!LU.att.length) return h + '<div class="lu-warn">참석자를 한 명 이상 선택해주세요.</div>';
 
   const c = LU.cfg;
   h += `<div class="lu-card"><div style="font-size:13px;font-weight:700;margin-bottom:8px">쿼터별 포메이션</div>
@@ -3901,10 +3946,17 @@ async function luPickMatch(id){
   if(!LU.matchId){ luRender(); return; }
   const stats = await api(`match_stats?select=player_id&match_id=eq.${LU.matchId}&attended=eq.true`);
   const ids = new Set(stats.map(s=>s.player_id));
+  LU.attInit = new Set(ids); LU.attSet = new Set(ids);
   LU.att = LU.loadedPlayers.filter(p=>ids.has(p.id));
   const saved = await luGet('match_'+LU.matchId);
   LU.cfg = (saved&&saved.cfg) || {formations: LU_FORM_DEFAULT.slice(), excl:{}, limits:{}};
   LU.plan = (saved&&saved.plan) || null;
+  luRender();
+}
+function luToggleAtt(pid,on){
+  if(on) LU.attSet.add(pid); else LU.attSet.delete(pid);
+  LU.att = LU.loadedPlayers.filter(p=>LU.attSet.has(p.id));
+  if(!on && LU.plan){ LU.plan.forEach(e=>{ Object.keys(e.slots).forEach(k=>{ const s=e.slots[k]; if(s.p===pid) s.p=null; if(s.s===pid) s.s=null; }); }); }
   luRender();
 }
 function luSetForm(q,f){ LU.cfg.formations[q]=f; if(LU.plan){ LU.plan[q]={formation:f,slots:{}}; } luRender(); }
@@ -4133,8 +4185,10 @@ function luClear(){
   const e = LU.plan[LU.q].slots; delete e[LU.editing]; luCloseSheet(); luRender();
 }
 async function luSavePlan(){
+  if(!luAuth()) return;
+  const attOk = await luSaveAtt();
   const ok = await luPut('match_'+LU.matchId,{cfg:LU.cfg,plan:LU.plan});
-  alert(ok?'라인업 저장 완료 ✅':'저장 실패 😢 lineup_store 테이블/권한을 확인해주세요.');
+  alert(ok&&attOk?'라인업 저장 완료 ✅':(!attOk?'참석 저장 실패 😢':'라인업 저장 실패 😢 lineup_store 테이블/권한을 확인해주세요.'));
 }
 
 </script>
