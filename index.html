@@ -3810,9 +3810,12 @@ async function openLineup(fixed){
   else { LU.msg=''; LU.prefs = (prefs&&prefs.players)||{}; LU.defMin = (prefs&&prefs.defMin)||1; LU.defMax = (prefs&&prefs.defMax)||4; }
   if(LU.fixedMatch) await luPickMatch(LU.fixedMatch.id); else luRender();
 }
-function openLineupForMatch(id){
-  const m = (window._cachedMatches||[]).find(x=>x.id==id) || (allAdminMatches||[]).find(x=>x.id==id) || {};
-  const label = `${(m.match_date||'').slice(0,10)} vs ${m.opponents?.name||m.opponent||''}`;
+async function openLineupForMatch(id){
+  let m = (window._cachedMatches||[]).find(x=>x.id==id) || (allAdminMatches||[]).find(x=>x.id==id);
+  if(!m || !m.match_date){ try{ const r = await api(`matches?select=match_date,match_time,opponent,opponents(name)&id=eq.${id}`); if(r[0]) m = r[0]; }catch(e){} }
+  m = m||{};
+  const d = (m.match_date||'').slice(0,10);
+  const label = `${d?d.slice(5,7)+'월 '+d.slice(8,10)+'일':''}${m.match_time?' '+m.match_time:''} vs ${m.opponents?.name||m.opponent||'상대 미정'}`.trim();
   openLineup({id:+id, label});
 }
 function closeLineup(){
