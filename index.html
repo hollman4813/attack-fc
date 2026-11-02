@@ -3860,9 +3860,15 @@ function luViewEditHtml(q, used){
   const grp = (label,arr)=>arr.length?`<optgroup label="${label}">${arr.map(id=>`<option value="${id}">${luEsc(nm(id).name)}</option>`).join('')}</optgroup>`:'';
   const goals = r.goals.map((g,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef0f4;font-size:14px"><span>${g.og?'🔴':'⚽'}</span><b style="${g.og?'color:#e5484d':''}">${g.og?(g.s!=null?luEsc(nm(g.s).name)+' 자책골':'상대 자책골'):luEsc(g.s!=null?nm(g.s).name:'득점자 미상')}</b>${!g.og&&g.a!=null?`<span style="font-weight:600;font-size:14px;margin-left:6px">👟 ${luEsc(nm(g.a).name)}</span>`:''}<span style="flex:1"></span><button class="lu-x" onclick="luViewDelGoal(${q},${i})">✕</button></div>`).join('');
   return `<div style="margin:12px 2px 0;padding:10px;background:#f8f9fb;border:1px solid var(--border);border-radius:10px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><b style="font-size:13px">${q+1}Q</b>
-      <span style="font-size:22px;font-weight:800;color:var(--skyblue)">${luQScore(r).us}</span><span>:</span>
-      <button onclick="luViewThem(${q},-1)" class="lu-qtab" style="flex:0 0 34px;padding:6px 0">−</button><span style="font-size:22px;font-weight:800;min-width:20px;text-align:center">${luQScore(r).them}</span><button onclick="luViewThem(${q},1)" class="lu-qtab" style="flex:0 0 34px;padding:6px 0">＋</button><span style="font-size:11px;color:var(--muted)">실점</span></div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px">${q+1}Q 기록</div>
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 8px;margin-bottom:6px">
+      <div style="text-align:center"><div style="font-size:12px;color:var(--muted);margin-bottom:2px">ATTACK</div><div style="font-size:28px;font-weight:800;line-height:1;color:var(--skyblue)">${luQScore(r).us}</div></div>
+      <div style="font-size:20px;font-weight:700;color:var(--muted)">:</div>
+      <div style="text-align:center"><div style="font-size:12px;color:var(--muted);margin-bottom:2px">상대 (실점)</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+          <button onclick="luViewThem(${q},-1)" style="width:30px;height:30px;border:1px solid var(--border);background:#fff;border-radius:50%;font:inherit;font-size:16px;font-weight:700;line-height:1;cursor:pointer;padding:0">−</button>
+          <span style="font-size:28px;font-weight:800;line-height:1;min-width:24px">${luQScore(r).them}</span>
+          <button onclick="luViewThem(${q},1)" style="width:30px;height:30px;border:1px solid var(--border);background:#fff;border-radius:50%;font:inherit;font-size:16px;font-weight:700;line-height:1;cursor:pointer;padding:0">+</button></div></div></div>
     ${goals}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
       <select id="lv-s" class="lu-sel"><option value="">득점자 미상</option>${grp('이 쿼터 출전',inQ)}${grp('그 외',other)}</select>
