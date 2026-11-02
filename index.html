@@ -3857,7 +3857,7 @@ function luViewEditHtml(q, used){
   const ids = Object.keys(v.info).map(Number);
   const inQ = ids.filter(id=>used.has(id)), other = ids.filter(id=>!used.has(id));
   const grp = (label,arr)=>arr.length?`<optgroup label="${label}">${arr.map(id=>`<option value="${id}">${luEsc(nm(id).name)}</option>`).join('')}</optgroup>`:'';
-  const goals = r.goals.map((g,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef0f4;font-size:14px"><span>⚽</span><b style="flex:1">${luEsc(g.s!=null?nm(g.s).name:'득점자 미상')}${g.a!=null?` <span style="font-weight:400;color:var(--muted);font-size:12px">(도움 ${luEsc(nm(g.a).name)})</span>`:''}</b><button class="lu-x" onclick="luViewDelGoal(${q},${i})">✕</button></div>`).join('');
+  const goals = r.goals.map((g,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef0f4;font-size:14px"><span>⚽</span><b style="flex:1">${luEsc(g.s!=null?nm(g.s).name:'득점자 미상')}</b>${g.a!=null?`<span style="font-weight:600;font-size:14px">👟 ${luEsc(nm(g.a).name)}</span>`:''}<button class="lu-x" onclick="luViewDelGoal(${q},${i})">✕</button></div>`).join('');
   return `<div style="margin:12px 2px 0;padding:10px;background:#f8f9fb;border:1px solid var(--border);border-radius:10px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><b style="font-size:13px">${q+1}Q</b>
       <span style="font-size:22px;font-weight:800;color:var(--skyblue)">${r.goals.length}</span><span>:</span>
@@ -3896,7 +3896,7 @@ function luViewDelGoal(q,i){
 function luViewThem(q,d){ luRecMutate(q, c=>{ c.them = Math.max(0,(c.them||0)+d); }); }
 function luGoalLine(rec,q,nm){
   const r = luRecOf(rec,q); if(!rec || (!r.goals.length && !r.them)) return '';
-  const gl = r.goals.map(g=>`⚽ ${luEsc(g.s!=null?nm(g.s).name:'미상')}${g.a!=null?` <span style="color:var(--muted)">(도움 ${luEsc(nm(g.a).name)})</span>`:''}`).join('<br>');
+  const gl = r.goals.map(g=>`⚽ ${luEsc(g.s!=null?nm(g.s).name:'미상')}${g.a!=null?`&nbsp;&nbsp;👟 ${luEsc(nm(g.a).name)}`:''}`).join('<br>');
   return `<div style="margin:10px 2px 0;font-size:13px"><b style="color:var(--skyblue)">${q+1}Q ${r.goals.length} : ${r.them||0}</b><div style="margin-top:4px;line-height:1.6">${gl}</div></div>`;
 }
 function luCanRecord(dateStr){
@@ -4042,7 +4042,7 @@ async function luMakeImage(o){
     ctx.textAlign='left'; ctx.font=`500 20px ${FONT}`; ctx.fillStyle='#5b6b82';
     const lines = luWrapText(ctx,'휴식: '+rest,CW).slice(0,2);
     lines.forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+i*26));
-    if(o.rec){ const r=luRecOf(o.rec,q); if(r.goals.length){ ctx.fillStyle='#1c2430'; ctx.font=`600 20px ${FONT}`; const gt = '⚽ '+r.goals.map(g=>(g.s!=null?nm(g.s).name:'미상')+(g.a!=null?`(${nm(g.a).name})`:'')).join(', '); luWrapText(ctx,gt,CW).slice(0,2).forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+2*26+i*26-(lines.length>1?0:26))); } }
+    if(o.rec){ const r=luRecOf(o.rec,q); if(r.goals.length){ ctx.fillStyle='#1c2430'; ctx.font=`600 20px ${FONT}`; const gt = '⚽ '+r.goals.map(g=>(g.s!=null?nm(g.s).name:'미상')+(g.a!=null?` 👟 ${nm(g.a).name}`:'')).join(', '); luWrapText(ctx,gt,CW).slice(0,2).forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+2*26+i*26-(lines.length>1?0:26))); } }
   }
   // 배정표
   const ty = 116 + 2*(PH+36+restH) + GAP;
