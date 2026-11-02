@@ -256,8 +256,10 @@
   .lu-av{position:relative;width:46px;height:46px;border-radius:50%;margin:0 auto;background:#1a7abf;border:3px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;box-sizing:border-box}
   .lu-av img{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:50%;object-fit:cover;background:#dfe6ee}
   .lu-av i{position:absolute;font-style:normal;min-width:19px;height:19px;border-radius:10px;background:#fff;color:#111;font-size:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.45);padding:0 2px;z-index:2}
-  .lu-av i b{font-size:10px;margin-left:1px}
-  .lu-bg{right:-9px;bottom:-4px}.lu-ba{left:-9px;bottom:-4px}
+  .lu-av .lu-bgrp{position:absolute;bottom:-4px;display:flex;z-index:2}
+  .lu-av .lu-bgrp i{position:relative}
+  .lu-av .lu-bgrp.g{right:-9px;flex-direction:row-reverse}.lu-av .lu-bgrp.g i+i{margin-right:-11px}
+  .lu-av .lu-bgrp.a{left:-9px}.lu-av .lu-bgrp.a i+i{margin-left:-11px}
   .lu-av i.lu-bsub{left:-7px;top:-4px;background:#e5484d;color:#fff}
   .lu-nm{font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7);line-height:1.15;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lu-nm .no{opacity:.75;font-weight:500;margin-right:2px}
@@ -3906,7 +3908,7 @@ function luBubble(o){
   const g=o.g||0, a=o.a||0;
   return `<div class="lu-slot" style="left:${o.x}%;top:${o.y}%;${o.click?'':'cursor:default'}" ${o.click?`onclick="${o.click}"`:''}>
     <div class="lu-av" style="${o.ring?`border-color:${o.ring};`:''}${o.empty?'background:#9aa4b2':''}"><span>${luEsc(o.number??'')}</span>${o.photo?`<img src="${luEsc(o.photo)}" alt="" onerror="this.remove()">`:''}
-      ${o.sub?'<i class="lu-bsub">↻</i>':''}${a?`<i class="lu-ba">👟${a>1?`<b>${a}</b>`:''}</i>`:''}${g?`<i class="lu-bg">⚽${g>1?`<b>${g}</b>`:''}</i>`:''}</div>
+      ${o.sub?'<i class="lu-bsub">↻</i>':''}${a?`<span class="lu-bgrp a">${'<i>👟</i>'.repeat(Math.min(a,5))}</span>`:''}${g?`<span class="lu-bgrp g">${'<i>⚽</i>'.repeat(Math.min(g,5))}</span>`:''}</div>
     <div class="lu-nm">${o.empty?'':`<span class="no">${luEsc(o.number??'')}</span>`}${luEsc(o.name)}</div>
     ${o.sub?`<div class="lu-nsub">↻ ${luEsc(o.sub.name)}${o.sub.tag||''}</div>`:''}
     <div class="lu-ps">${luEsc(o.slot||'')}</div></div>`;
@@ -4020,8 +4022,8 @@ async function luMakeImage(o){
       const cx = x0 + CW*s.x/100, cy = py + PH*(s.y*0.88+4)/100;
       const R = 29, st = sl.p?luQStat(o.rec,q,sl.p):{g:0,a:0};
       luDrawAvatar(ctx, cx, cy, R, p&&imgs[sl.p], p?String(p.number??''):'-', !p?'#9aa4b2':'#1a7abf', FONT);
-      if(st.a) luDrawBadge(ctx, cx-R+4, cy+R-6, '👟', st.a, FONT);
-      if(st.g) luDrawBadge(ctx, cx+R-4, cy+R-6, '⚽', st.g, FONT);
+      for(let k=0;k<Math.min(st.a,5);k++) luDrawBadge(ctx, cx-R+4+k*15, cy+R-6, '👟', 0, FONT);
+      for(let k=0;k<Math.min(st.g,5);k++) luDrawBadge(ctx, cx+R-4-k*15, cy+R-6, '⚽', 0, FONT);
       if(sub) luDrawBadge(ctx, cx-R+6, cy-R+6, '↻', 0, FONT, '#e5484d', '#fff');
       ctx.textAlign='center'; ctx.font=`700 22px ${FONT}`; ctx.lineWidth=4; ctx.strokeStyle='rgba(0,0,0,.55)';
       const t = p?`${p.number??''} ${p.name}`:'비어있음'; ctx.strokeText(t,cx,cy+R+22); ctx.fillStyle='#fff'; ctx.fillText(t,cx,cy+R+22);
