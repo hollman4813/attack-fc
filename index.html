@@ -3865,12 +3865,47 @@ function luRecHtml(q){
       <input class="lu-sel" type="number" min="0" style="width:56px" value="${r.them||0}" onchange="luSetThem(${q},this.value)"><span style="font-size:11px;color:var(--muted)">실점</span>
       <span style="margin-left:auto;font-size:11px;color:var(--muted)">전체 ${tu}:${tt}</span></div>
     ${goals}
-    <button onclick="luAddGoal(${q})" style="width:100%;padding:8px;background:#fff;border:1px dashed var(--skyblue);color:var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">+ 득점 추가</button></div>`;
+    <button onclick="luAddGoal(${q})" style="width:100%;padding:8px;background:#fff;border:1px dashed var(--skyblue);color:var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">+ 득점 추가</button>
+    <button onclick="luSyncStats()" style="width:100%;margin-top:8px;padding:9px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">📊 경기 기록에 반영 (전체 ${tu}:${tt})</button></div>`;
 }
 function luAddGoal(q){ if(!LU.rec) LU.rec=luRecBlank(); LU.rec[q].goals.push({s:null,a:null}); luRender(); }
 function luDelGoal(q,i){ LU.rec[q].goals.splice(i,1); luRender(); }
 function luSetGoal(q,i,k,v){ LU.rec[q].goals[i][k] = v===''?null:+v; luRender(); }
 function luSetThem(q,v){ if(!LU.rec) LU.rec=luRecBlank(); LU.rec[q].them = Math.max(0,parseInt(v)||0); luRender(); }
+
+
+async function luSyncStats(){
+  if(!LU.matchId || !LU.rec) return false;
+  if(!luAuth()) return false;
+  const goalsBy = {}, assistsBy = {}; let us = 0, them = 0, unattr = 0;
+  LU.rec.forEach(r=>{ them += (+r.them||0); r.goals.forEach(g=>{
+    us++;
+    if(g.s!=null && g.s>0) goalsBy[g.s]=(goalsBy[g.s]||0)+1; else unattr++;
+    if(g.a!=null && g.a>0) assistsBy[g.a]=(assistsBy[g.a]||0)+1;
+  }); });
+  if(!us && !them){ alert('반영할 스코어·득점 기록이 없어요.'); return false; }
+  const result = us>them?'Win':us<them?'Lose':'Draw';
+  const lines = LU.loadedPlayers.filter(p=>goalsBy[p.id]||assistsBy[p.id]).map(p=>`${p.name} ${goalsBy[p.id]?goalsBy[p.id]+'골':''}${goalsBy[p.id]&&assistsBy[p.id]?' ':''}${assistsBy[p.id]?assistsBy[p.id]+'도움':''}`);
+  const msg = `경기 기록에 반영할까요?\n\n스코어 ${us} : ${them} (${result==='Win'?'승':result==='Lose'?'패':'무'})\n${lines.join('\n')||'개인 기록 없음'}${unattr?`\n(득점자 미상·용병 ${unattr}골은 스코어에만 반영)`:''}\n\n※ 이 경기의 골/도움 기록과 경기 결과(종료 처리)를 덮어써요.`;
+  if(!confirm(msg)) return false;
+  const hd = {apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`,'Content-Type':'application/json',Prefer:'return=minimal'};
+  const existing = await api(`match_stats?select=id,player_id&match_id=eq.${LU.matchId}`);
+  const em = {}; existing.forEach(s=>em[s.player_id]=s.id);
+  let ok = true;
+  for(const p of LU.loadedPlayers){
+    if(!LU.attSet.has(p.id)) continue;
+    const body = {goals:goalsBy[p.id]||0, assists:assistsBy[p.id]||0};
+    let r;
+    if(em[p.id]) r = await fetch(`${SUPA_URL}/rest/v1/match_stats?id=eq.${em[p.id]}`,{method:'PATCH',headers:hd,body:JSON.stringify(body)});
+    else r = await fetch(`${SUPA_URL}/rest/v1/match_stats`,{method:'POST',headers:hd,body:JSON.stringify({match_id:LU.matchId,player_id:p.id,is_mom:false,attended:true,...body})});
+    if(!r.ok) ok = false;
+  }
+  const mr = await fetch(`${SUPA_URL}/rest/v1/matches?id=eq.${LU.matchId}`,{method:'PATCH',headers:hd,body:JSON.stringify({our_score:us,opponent_score:them,result,status:'finished'})});
+  if(!mr.ok) ok = false;
+  try{ if(typeof loaded!=='undefined'){ loaded['matches']=false; loaded['overview']=false; } }catch(e){}
+  alert(ok?`반영 완료 ✅ ${us}:${them}`:'일부 반영에 실패했어요 😢 다시 시도해주세요.');
+  return ok;
+}
 
 /* ---------- 이미지 저장 (4분할 + 배정표) ---------- */
 function luWrapText(ctx, text, maxW){
@@ -4461,7 +4496,9 @@ async function luSavePlan(){
   if(!luAuth()) return;
   const attOk = await luSaveAtt();
   const ok = await luPut('match_'+LU.matchId,{cfg:LU.cfg,plan:LU.plan,rec:LU.rec});
+  const hasRec = LU.rec && LU.rec.some(r=>r.goals.length||+r.them);
   alert(ok&&attOk?'라인업 저장 완료 ✅':(!attOk?'참석 저장 실패 😢':'라인업 저장 실패 😢 lineup_store 테이블/권한을 확인해주세요.\n'+(LU.lastErr||'')));
+  if(ok&&attOk&&hasRec) await luSyncStats();
 }
 
 </script>
