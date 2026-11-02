@@ -3773,6 +3773,20 @@ const LU_FORMATIONS = {
 };
 const LU_FORM_DEFAULT = ['4-1-2-3','4-2-1-3','4-2-1-3','4-2-1-3'];
 const LU_Q = 4;
+const LU_BOOT_PATH = 'M2 18V7h4l1 4 5 1 2-3 2 2c3 1 6 3 6 7z';
+const LU_BOOT = '<svg class="lu-boot" viewBox="0 0 24 24" width="1.15em" height="1.15em" style="vertical-align:-.22em"><path d="'+LU_BOOT_PATH+'" fill="#111"/></svg>';
+function luFillTextBoot(ctx, text, x, y, align){
+  const parts = text.split('👟'), fs = parseInt(ctx.font.match(/(\d+)px/)[1]), bw = fs*1.15;
+  let total = 0; parts.forEach((s,i)=>{ total += ctx.measureText(s).width + (i<parts.length-1?bw:0); });
+  let cx = align==='center' ? x-total/2 : x; const keep = ctx.textAlign; ctx.textAlign='left';
+  const fill = ctx.fillStyle;
+  parts.forEach((s,i)=>{
+    ctx.fillText(s,cx,y); cx += ctx.measureText(s).width;
+    if(i<parts.length-1){ ctx.save(); ctx.translate(cx, y-bw*.5); ctx.scale(bw/24,bw/24); ctx.fillStyle='#111'; ctx.fill(new Path2D(LU_BOOT_PATH)); ctx.restore(); ctx.fillStyle=fill; cx += bw; }
+  });
+  ctx.textAlign = keep;
+}
+
 const LU_STORE = 'lineup_store';
 
 const LU = {
@@ -3859,7 +3873,7 @@ function luViewEditHtml(q, used){
   const ids = Object.keys(v.info).map(Number);
   const inQ = ids.filter(id=>used.has(id)), other = ids.filter(id=>!used.has(id));
   const grp = (label,arr)=>arr.length?`<optgroup label="${label}">${arr.map(id=>`<option value="${id}">${luEsc(nm(id).name)}</option>`).join('')}</optgroup>`:'';
-  const goals = r.goals.map((g,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef0f4;font-size:14px"><span>${g.og?'🔴':'⚽'}</span><b style="${g.og?'color:#e5484d':''}">${g.og?(g.s!=null?luEsc(nm(g.s).name)+' 자책골':'상대 자책골'):luEsc(g.s!=null?nm(g.s).name:'득점자 미상')}</b>${!g.og&&g.a!=null?`<span style="font-weight:600;font-size:14px;margin-left:6px"><span class="lu-boot">👟</span> ${luEsc(nm(g.a).name)}</span>`:''}<span style="flex:1"></span><button class="lu-x" onclick="luViewDelGoal(${q},${i})">✕</button></div>`).join('');
+  const goals = r.goals.map((g,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef0f4;font-size:14px"><span>${g.og?'🔴':'⚽'}</span><b style="${g.og?'color:#e5484d':''}">${g.og?(g.s!=null?luEsc(nm(g.s).name)+' 자책골':'상대 자책골'):luEsc(g.s!=null?nm(g.s).name:'득점자 미상')}</b>${!g.og&&g.a!=null?`<span style="font-weight:600;font-size:14px;margin-left:6px">${LU_BOOT} ${luEsc(nm(g.a).name)}</span>`:''}<span style="flex:1"></span><button class="lu-x" onclick="luViewDelGoal(${q},${i})">✕</button></div>`).join('');
   return `<div style="margin:12px 2px 0;padding:10px;background:#f8f9fb;border:1px solid var(--border);border-radius:10px">
     <div style="font-size:13px;font-weight:700;margin-bottom:8px">${q+1}Q 기록</div>
     <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 8px;margin-bottom:6px">
@@ -3912,7 +3926,7 @@ function luViewDelGoal(q,i){
 function luViewThem(q,d){ luRecMutate(q, c=>{ c.them = Math.max(0,(c.them||0)+d); }); }
 function luGoalLine(rec,q,nm){
   const r = luRecOf(rec,q); if(!rec || (!r.goals.length && !r.them)) return '';
-  const gl = r.goals.map(g=>luEsc(luGoalPlain(g,nm)).replace(' 👟','&nbsp;&nbsp;<span class="lu-boot">👟</span>')).join('<br>');
+  const gl = r.goals.map(g=>luEsc(luGoalPlain(g,nm)).replace(' 👟','&nbsp;&nbsp;'+LU_BOOT)).join('<br>');
   return `<div style="margin:10px 2px 0;font-size:13px"><b style="color:var(--skyblue)">${q+1}Q ${luQScore(r).us} : ${luQScore(r).them}</b><div style="margin-top:4px;line-height:1.6">${gl}</div></div>`;
 }
 function luCanRecord(dateStr){
@@ -3929,12 +3943,12 @@ function luBubble(o){
   const g=o.g||0, a=o.a||0, og=o.og||0;
   return `<div class="lu-slot" style="left:${o.x}%;top:${o.y}%;${o.click?'':'cursor:default'}" ${o.click?`onclick="${o.click}"`:''}>
     <div class="lu-av" style="${o.ring?`border-color:${o.ring};`:''}${o.empty?'background:#9aa4b2':''}"><span>${luEsc(o.number??'')}</span>${o.photo?`<img src="${luEsc(o.photo)}" alt="" onerror="this.remove()">`:''}
-      ${o.sub?'<i class="lu-bsub">↻</i>':''}${a?`<span class="lu-bgrp a">${'<i><span class="lu-boot">👟</span></i>'.repeat(Math.min(a,5))}</span>`:''}${(g||og)?`<span class="lu-bgrp g">${'<i>⚽</i>'.repeat(Math.min(g,5))}${'<i class="og">⚽</i>'.repeat(Math.min(og,5))}</span>`:''}</div>
+      ${o.sub?'<i class="lu-bsub">↻</i>':''}${a?`<span class="lu-bgrp a">${('<i>'+LU_BOOT+'</i>').repeat(Math.min(a,5))}</span>`:''}${(g||og)?`<span class="lu-bgrp g">${'<i>⚽</i>'.repeat(Math.min(g,5))}${'<i class="og">⚽</i>'.repeat(Math.min(og,5))}</span>`:''}</div>
     <div class="lu-nm">${o.empty?'':`<span class="no">${luEsc(o.number??'')}</span>`}${luEsc(o.name)}</div>
     ${o.sub?`<div class="lu-nsub">↻ ${luEsc(o.sub.name)}${o.sub.tag||''}</div>`:''}
     <div class="lu-ps">${luEsc(o.slot||'')}</div></div>`;
 }
-function luBadge(rec,q,pid){ const s=luQStat(rec,q,pid); return (s.g?' '+'⚽'.repeat(s.g):'')+(s.og?' '+'🔴'.repeat(s.og):'')+(s.a?' '+'👟'.repeat(s.a):''); }
+function luBadge(rec,q,pid){ const s=luQStat(rec,q,pid); return (s.g?' '+'⚽'.repeat(s.g):'')+(s.og?' '+'🔴'.repeat(s.og):'')+(s.a?' '+LU_BOOT.repeat(s.a):''); }
 async function luLoadRec(matchId, fallback){
   const rec = fallback ? JSON.parse(JSON.stringify(fallback)) : luRecBlank();
   const rows = await api(`${LU_STORE}?select=key,data&key=like.rec_${matchId}_*`);
@@ -4008,7 +4022,7 @@ function luDrawBadge(ctx,x,y,icon,count,FONT,bg,fg){
   const w = count>1?36:26;
   ctx.beginPath(); ctx.arc(x,y,15,0,Math.PI*2); ctx.fillStyle=bg||'#fff'; ctx.fill(); ctx.lineWidth=1.5; ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.stroke();
   ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle=fg||'#111'; ctx.font=`700 20px ${FONT}`;
-  if(icon==='👟'){ const t=document.createElement('canvas'); t.width=t.height=40; const c=t.getContext('2d'); c.textAlign='center'; c.textBaseline='middle'; c.font=ctx.font; c.fillText(icon,20,19); c.globalCompositeOperation='source-in'; c.fillStyle='#000'; c.fillRect(0,0,40,40); ctx.drawImage(t,x-20,y-20); }
+  if(icon==='👟'){ ctx.save(); ctx.translate(x-10,y-10); ctx.scale(20/24,20/24); ctx.fillStyle='#111'; ctx.fill(new Path2D(LU_BOOT_PATH)); ctx.restore(); }
   else ctx.fillText(icon,x-(count>1?4:0),y-1);
   if(count>1){ ctx.font=`800 13px ${FONT}`; ctx.fillText(String(count),x+9,y+1); }
 }
@@ -4058,14 +4072,14 @@ async function luMakeImage(o){
       ctx.textAlign='center'; ctx.font=`700 22px ${FONT}`; ctx.lineWidth=4; ctx.strokeStyle='rgba(0,0,0,.55)';
       const t = p?`${p.number??''} ${p.name}`:'비어있음'; ctx.strokeText(t,cx,cy+R+22); ctx.fillStyle='#fff'; ctx.fillText(t,cx,cy+R+22);
       let yy = cy+R+46;
-      if(sub){ const ss = sl.s?luQStat(o.rec,q,sl.s):{g:0,a:0,og:0}; ctx.font=`700 20px ${FONT}`; const t2='↻ '+sub.name+(ss.g?' ⚽'.repeat(ss.g):'')+(ss.og?' 🔴'.repeat(ss.og):'')+(ss.a?' 👟'.repeat(ss.a):''); ctx.strokeText(t2,cx,yy); ctx.fillStyle='#ffe27a'; ctx.fillText(t2,cx,yy); }
+      if(sub){ const ss = sl.s?luQStat(o.rec,q,sl.s):{g:0,a:0,og:0}; ctx.font=`700 20px ${FONT}`; const t2='↻ '+sub.name+(ss.g?' ⚽'.repeat(ss.g):'')+(ss.og?' 🔴'.repeat(ss.og):'')+(ss.a?' 👟'.repeat(ss.a):''); ctx.strokeText(t2.replace(/👟/g,'\u3000'),cx,yy); ctx.fillStyle='#ffe27a'; luFillTextBoot(ctx,t2,cx,yy,'center'); }
     });
     // 휴식
     const rest = ids.filter(id=>!used.has(id)).map(id=>nm(id).name).join(', ') || '없음';
     ctx.textAlign='left'; ctx.font=`500 20px ${FONT}`; ctx.fillStyle='#5b6b82';
     const lines = luWrapText(ctx,'휴식: '+rest,CW).slice(0,2);
     lines.forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+i*26));
-    if(o.rec){ const r=luRecOf(o.rec,q); if(r.goals.length){ ctx.fillStyle='#1c2430'; ctx.font=`600 20px ${FONT}`; const gt = r.goals.map(g=>luGoalPlain(g,nm)).join('  '); luWrapText(ctx,gt,CW).slice(0,2).forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+2*26+i*26-(lines.length>1?0:26))); } }
+    if(o.rec){ const r=luRecOf(o.rec,q); if(r.goals.length){ ctx.fillStyle='#1c2430'; ctx.font=`600 20px ${FONT}`; const gt = r.goals.map(g=>luGoalPlain(g,nm)).join('  '); luWrapText(ctx,gt,CW).slice(0,2).forEach((ln,i)=>luFillTextBoot(ctx,ln,x0,py+PH+22+2*26+i*26-(lines.length>1?0:26))); } }
   }
   // 배정표
   const ty = 116 + 2*(PH+36+restH) + GAP;
