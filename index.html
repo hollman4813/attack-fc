@@ -3362,13 +3362,14 @@ async function showMatch(matchId, skipPushState) {
   document.getElementById('team-tab-bar').style.display = 'none';
   document.getElementById('match-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
 
-  let matches = [], stats = [], allMatches = [], matchVotes = [];
+  let matches = [], stats = [], allMatches = [], matchVotes = [], lineupData = null;
   try {
-    [matches, stats, allMatches, matchVotes] = await Promise.all([
+    [matches, stats, allMatches, matchVotes, lineupData] = await Promise.all([
       api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&id=eq.${matchId}`),
       api(`match_stats?select=*,players(id,name,number,photo_url,position,sub_position1,sub_position2)&match_id=eq.${matchId}&order=players(name).asc`),
       api(`matches?select=*,grounds(name),opponents(name)&status=eq.finished&order=match_date.desc`),
-      api(`match_votes?select=*&match_id=eq.${matchId}`)
+      api(`match_votes?select=*&match_id=eq.${matchId}`),
+      luGet('match_'+matchId).catch(()=>null)
     ]);
   } catch(e) {
     console.error('경기 상세 로드 실패:', e);
@@ -3587,6 +3588,7 @@ async function showMatch(matchId, skipPushState) {
         </div>
       </div>
 
+      ${luViewHtml(lineupData, stats)}
       <!-- 참석 인원 -->
       <div style="margin-top:16px">
         <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">
@@ -3619,7 +3621,7 @@ async function showMatch(matchId, skipPushState) {
           : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">참석 정보 없음</div>'}
         </div>
       </div>
-      <button onclick="openLineupForMatch(${m.id})" style="width:100%;margin-top:16px;padding:14px;background:#fff;border:1px solid var(--skyblue);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;color:var(--skyblue);cursor:pointer">⚽ 포메이션 · 라인업 ${isUpcoming?'(참석 설정)':'보기'}</button>
+      <button onclick="openLineupForMatch(${m.id})" style="width:100%;margin-top:16px;padding:14px;background:#fff;border:1px solid var(--skyblue);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;color:var(--skyblue);cursor:pointer">⚽ ${lineupData&&lineupData.plan?'라인업 수정':'포메이션 · 라인업 만들기'} ${isUpcoming?'· 참석 설정':''}</button>
       <!-- 역대 전적 (완료 경기) -->
       ${!isUpcoming ? h2hHtml : ''}
 
@@ -3791,6 +3793,43 @@ function luPrefsOf(p){
   const saved = LU.prefs[p.id];
   const arr = saved && saved.pref ? saved.pref : luDefaultPrefs(p);
   return [arr[0]||'',arr[1]||'',arr[2]||''];
+}
+
+
+/* ---------- 경기 상세: 저장된 라인업 읽기 전용 ---------- */
+function luViewHtml(data, stats){
+  if(!data || !data.plan || !data.plan.length) return '';
+  const plan = data.plan;
+  const att = (stats||[]).filter(s=>s.attended && s.players);
+  const info = {}; att.forEach(s=>{ info[s.players.id||s.player_id] = s.players; });
+  const nm = id => info[id] || {name:'?',number:''};
+  const tabs = plan.map((e,i)=>`<button class="lu-qtab ${i===0?'on':''}" onclick="luViewQ(${i},this)">${i+1}Q <span style="font-weight:400;font-size:10px">${luEsc(e.formation)}</span></button>`).join('');
+  const pitches = plan.map((e,q)=>{
+    const slots = luSlots(e.formation);
+    const used = new Set();
+    const bubbles = slots.map(s=>{
+      const x = e.slots[s.id]; const pl = x&&x.p ? nm(x.p) : null; const sub = x&&x.s ? nm(x.s) : null;
+      if(x&&x.p) used.add(x.p); if(x&&x.s) used.add(x.s);
+      return `<div class="lu-slot" style="left:${s.x}%;top:${s.y}%;cursor:default">
+        <div class="lu-dot" style="background:${pl?'#1a7abf':'#9aa4b2'}">${pl?luEsc(pl.number??''):'-'}</div>
+        <div class="lu-nm">${pl?luEsc(pl.name):'비어있음'}${sub?`<br><span style="color:#ffe27a">↻ ${luEsc(sub.name)}</span>`:''}</div>
+        <div class="lu-ps">${s.id}</div></div>`;
+    }).join('');
+    const rest = att.filter(s=>!used.has(s.players.id||s.player_id)).map(s=>`<span class="lu-chip">${luEsc(s.players.name)}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">없음</span>';
+    return `<div class="lv-q" id="lv-q${q}" style="display:${q===0?'block':'none'}">
+      <div class="lu-pitch">${bubbles}</div>
+      <div style="margin:10px 2px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div></div>`;
+  }).join('');
+  return `<div style="margin-top:16px">
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">라인업</div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 8px">
+      <div style="display:flex;gap:4px;margin-bottom:10px">${tabs}</div>${pitches}
+      <div style="font-size:10px;color:var(--muted);margin:8px 4px 0">↻ 후반 교체 투입</div>
+    </div></div>`;
+}
+function luViewQ(i,btn){
+  document.querySelectorAll('.lv-q').forEach((el,k)=>{ el.style.display = k===i?'block':'none'; });
+  btn.parentNode.querySelectorAll('.lu-qtab').forEach(b=>b.classList.toggle('on', b===btn));
 }
 
 /* ---------- 오버레이 열기/닫기 ---------- */
