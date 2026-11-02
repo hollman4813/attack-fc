@@ -3975,7 +3975,7 @@ function luTry(att, cfg, prefsOf, limOf){
     quota[pool[Math.floor(Math.random()*pool.length)]]++; tot++;
   }
   if(tot<S) warn.push('최대 쿼터 제한 때문에 빈 자리가 생겨요');
-  const left = quota.slice(), lastRest = att.map(()=>false);
+  const left = quota.slice(), lastRest = att.map(()=>false); let prevGk = null;
   const plan = []; let cost = 0;
   for(let q=0;q<LU_Q;q++){
     const slots = slotsQ[q];
@@ -3986,7 +3986,7 @@ function luTry(att, cfg, prefsOf, limOf){
     const rest = cands.filter(i=>left[i]>0 && !forced.includes(i)).sort((a,b)=>score(b)-score(a));
     let chosen = forced.concat(rest).slice(0, slots.length);
     // GK 가능 선수 보장
-    const canGk = i=>prefsOf(att[i]).includes('GK');
+    const canGk = i=>prefsOf(att[i]).includes('GK') && att[i].id!==prevGk;
     if(!chosen.some(canGk)){
       const g = cands.filter(i=>canGk(i)&&left[i]>0&&!chosen.includes(i)).sort((a,b)=>score(b)-score(a))[0];
       if(g!=null && chosen.length){ chosen[chosen.length-1]=g; }
@@ -3997,13 +3997,14 @@ function luTry(att, cfg, prefsOf, limOf){
       for(const i of extra){ if(chosen.length>=slots.length) break; chosen.push(i); warn.push(`${q+1}Q 인원이 모자라 최대 쿼터를 넘겨 배정했어요`); }
     }
     const n = Math.min(slots.length, chosen.length);
-    const mat = slots.slice(0,n).map(s=>chosen.map(i=>luCost(prefsOf(att[i]), s)));
+    const mat = slots.slice(0,n).map(s=>chosen.map(i=>luCost(prefsOf(att[i]), s) + (s.pos==='GK' && att[i].id===prevGk ? 200 : 0)));
     const asg = n? luHungarian(mat) : [];
     const entry = {formation: cfg.formations[q], slots:{}};
     slots.forEach((s,k)=>{
       if(k<n){ const i = chosen[asg[k]]; entry.slots[s.id]={p:att[i].id,s:null}; cost += mat[k][asg[k]]; }
     });
     plan.push(entry);
+    prevGk = entry.slots['GK'] ? entry.slots['GK'].p : null;
     att.forEach((p,i)=>{ const played = chosen.includes(i); lastRest[i] = !played && avail[i].includes(q); if(played) left[i]--; });
   }
   // 한도 위반 패널티
@@ -4063,6 +4064,7 @@ function luRenderPlan(){
     const bad = cnt<l.min||cnt>l.max;
     return `<tr><td style="text-align:left;font-weight:600">${luEsc(p.name)}</td>${cells}<td style="font-weight:700;color:${bad?'#d9534f':'inherit'}">${cnt}</td></tr>`;
   }).join('');
+  for(let i=1;i<LU_Q;i++){ const a=plan[i-1].slots.GK, b=plan[i].slots.GK; if(a&&b&&a.p&&a.p===b.p) warns.push(`${luPlayer(a.p).name}: ${i}Q·${i+1}Q 연속 골키퍼`); }
   // 중복/빈 슬롯 검사
   [0,1,2,3].forEach(i=>{
     const seen = {}; luSlots(plan[i].formation).forEach(s=>{
