@@ -4393,7 +4393,8 @@ function luTry(att, cfg, prefsOf, limOf){
     const rest = cands.filter(i=>left[i]>0 && !forced.includes(i)).sort((a,b)=>score(b)-score(a));
     let chosen = forced.concat(rest).slice(0, slots.length);
     const first = half && t%per===0;
-    const canGk = i=>prefsOf(att[i]).includes('GK') && !gkBlock(att[i].id) && (!first || left[i]>=2);
+    const restedPrev = i=> q>0 && !prevQPlayed[i];
+    const canGk = i=>prefsOf(att[i]).includes('GK') && !gkBlock(att[i].id) && !restedPrev(i) && (!first || left[i]>=2);
     if(!chosen.some(canGk)){
       const g = cands.filter(i=>canGk(i)&&left[i]>0&&!chosen.includes(i)).sort((a,b)=>score(b)-score(a))[0];
       if(g!=null && chosen.length){ chosen[chosen.length-1]=g; }
@@ -4410,6 +4411,7 @@ function luTry(att, cfg, prefsOf, limOf){
     const mat = slots.slice(0,n).map(s=>chosen.map(i=>{
       let c = luCost(prefsOf(att[i]), s);
       if(s.pos==='GK' && gkBlock(att[i].id)) c += 200;
+      if(s.pos==='GK' && restedPrev(i)) c += 400;
       if(s.pos==='GK' && first && left[i]<2) c += 300;
       if(s.pos==='GK' && second && firstGk!=null && i!==firstGk) c += 500;
       if(second && prevSlot[i] && prevSlot[i]!==s.id) c += 6;
@@ -4517,6 +4519,7 @@ function luRenderPlan(){
     if(rl==='consec'){ for(let i=1;i<LU_Q;i++){ gks[i].forEach(id=>{ if(gks[i-1].has(id)) warns.push(`${luPlayer(id).name}: ${i}Q·${i+1}Q 연속 골키퍼`); }); } } }
   if(LU.cfg.noConsecRest!==false) LU.att.forEach(p=>{ for(let i=1;i<4;i++){ if(!luAppear(plan,p.id,i-1).length && !luAppear(plan,p.id,i).length) warns.push(`${p.name}: ${i}Q·${i+1}Q 연속 휴식`); } });
   if(LU.cfg.guestGk===false) plan.forEach((e,i)=>{ const g=e.slots.GK; [g&&g.p,g&&g.s].forEach(id=>{ if(id&&id<0) warns.push(`${i+1}Q 용병 ${luPlayer(id).name} 골키퍼 (제외 설정)`); }); });
+  for(let i=1;i<LU_Q;i++){ const g=plan[i].slots.GK; [g&&g.p].forEach(id=>{ if(id && !luAppear(plan,id,i-1).length) warns.push(`${luPlayer(id).name}: ${i}Q 휴식 직후 ${i+1}Q 골키퍼`); }); }
   plan.forEach((e,i)=>{ const g=e.slots.GK; if(g&&g.s&&g.s!==g.p) warns.push(`${i+1}Q 골키퍼 중간 교체 (허용 안 됨)`); });
   // 중복/빈 슬롯 검사
   [0,1,2,3].forEach(i=>{
