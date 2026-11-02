@@ -3390,7 +3390,8 @@ async function showMatch(matchId, skipPushState) {
   const m = matches[0];
   if (!m) return;
   let lineupRec = null;
-  if (lineupData && lineupData.plan) { try { lineupRec = await luLoadRec(matchId, lineupData.rec); } catch(e) {} }
+  const canRec = m.status==='upcoming' || luCanRecord(m.match_date) || isAdmin;
+  if ((lineupData && lineupData.plan) || canRec) { try { lineupRec = await luLoadRec(matchId, lineupData&&lineupData.rec); } catch(e) {} }
 
   const isUpcoming = m.status === 'upcoming';
   const oppName = m.opponents?.name || m.opponent || '';
@@ -3602,7 +3603,7 @@ async function showMatch(matchId, skipPushState) {
         </div>
       </div>
 
-      ${luViewHtml(lineupData, stats, `${(m.match_date||'').slice(0,10)} vs ${oppName}`, {matchId:m.id, status:m.status, rec:lineupRec, canEdit:luCanRecord(m.match_date)})}
+      ${luViewHtml(lineupData, stats, `${(m.match_date||'').slice(0,10)} vs ${oppName}`, {matchId:m.id, status:m.status, rec:lineupRec, canEdit:canRec})}
       <!-- 참석 인원 -->
       <div style="margin-top:16px">
         <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">
@@ -3813,8 +3814,11 @@ function luPrefsOf(p){
 
 /* ---------- 경기 상세: 저장된 라인업 읽기 전용 ---------- */
 function luViewHtml(data, stats, label, meta){
-  if(!data || !data.plan || !data.plan.length) return '';
   meta = meta||{};
+  if(!data || !data.plan || !data.plan.length){
+    if(!meta.canEdit) return '';
+    data = {plan: LU_FORM_DEFAULT.map(f=>({formation:f,slots:{}})), cfg:{}, noPlan:true};
+  }
   const att = (stats||[]).filter(s=>s.attended && s.players);
   const info = {}; att.forEach(s=>{ info[s.players.id||s.player_id] = s.players; });
   const guests = (data.cfg&&data.cfg.guests)||[]; guests.forEach(g=>{ info[g.id]={name:g.name,number:'용'}; });
@@ -3839,12 +3843,13 @@ function luViewInner(){
   const restNames = v.att.filter(s=>!used.has(s.players.id||s.player_id)).map(s=>s.players.name).concat(v.guests.filter(g=>!used.has(g.id)).map(g=>g.name+'(용병)'));
   const rest = restNames.map(n=>`<span class="lu-chip">${luEsc(n)}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">없음</span>';
   let tu=0, tt=0; if(rec) rec.forEach(x=>{ tu+=x.goals.length; tt+=(+x.them||0); });
-  return `<div style="display:flex;gap:4px;margin-bottom:10px">${tabs}</div>
-    <div class="lu-pitch"><i class="lu-box t"></i><i class="lu-box b"></i>${bubbles}</div>
-    <div style="margin:10px 2px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>
+  const np = !!data.noPlan;
+  return `<div style="display:flex;gap:4px;margin-bottom:10px">${np?tabs.replace(/<span[^>]*>.*?<\/span>/g,''):tabs}</div>
+    ${np?'':`<div class="lu-pitch"><i class="lu-box t"></i><i class="lu-box b"></i>${bubbles}</div>
+    <div style="margin:10px 2px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>`}
     ${v.canEdit ? luViewEditHtml(q, used) : luGoalLine(rec,q,nm)}
-    ${rec && (tu||tt) ? `<button onclick="luSyncStats()" style="width:100%;margin-top:10px;padding:10px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">📊 경기 결과·선수 기록에 반영 (전체 ${tu}:${tt})</button>` : ''}
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 4px 0"><span style="font-size:11px;color:var(--muted)">${rec?`전체 ${tu} : ${tt}  · `:''}↻ 후반 교체</span><button onclick="luDownloadView()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">📥 이미지 저장</button></div>`;
+    ${rec && (tu||tt) ? `<button onclick="luSyncStats()" style="width:100%;margin-top:10px;padding:10px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">📊 경기 종료 후 결과·선수 기록에 반영 (전체 ${tu}:${tt})</button>` : ''}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 4px 0"><span style="font-size:11px;color:var(--muted)">${rec?`전체 ${tu} : ${tt}`:''}${np?'':`${rec?' · ':''}↻ 후반 교체`}</span>${np?'':`<button onclick="luDownloadView()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">📥 이미지 저장</button>`}</div>`;
 }
 function luViewEditHtml(q, used){
   const v = window._lvData, nm = id => v.info[id] || {name:'?'};
