@@ -3796,6 +3796,8 @@ function luPrefsOf(p){
 async function openLineup(fixed){
   LU.fixedMatch = fixed||null; LU.matchId = null; LU.cfg = null; LU.plan = null; LU.att = []; LU.tab = 'match';
   const ov = document.getElementById('lineup-overlay');
+  if(ov.parentNode!==document.documentElement) document.documentElement.appendChild(ov); // body transform 영향 방지
+  document.body.style.transform = '';
   ov.style.display = 'flex';
   document.body.style.overflow = 'hidden';
   ov.querySelector('.lu-body').innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">불러오는 중...</div>';
@@ -4251,7 +4253,7 @@ async function luSavePlan(){
     } else {
       indicator.style.opacity = 0;
       indicator.style.transform = 'translateX(-50%) translateY(-11px)';
-      pageBody.style.transform = 'translateY(0)';
+      pageBody.style.transform = '';
     }
     pullDist = 0;
   }, { passive: true });
