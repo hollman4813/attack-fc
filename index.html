@@ -3588,7 +3588,7 @@ async function showMatch(matchId, skipPushState) {
         </div>
       </div>
 
-      ${luViewHtml(lineupData, stats)}
+      ${luViewHtml(lineupData, stats, `${(m.match_date||'').slice(0,10)} vs ${oppName}`)}
       <!-- 참석 인원 -->
       <div style="margin-top:16px">
         <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">
@@ -3798,8 +3798,9 @@ function luPrefsOf(p){
 
 
 /* ---------- 경기 상세: 저장된 라인업 읽기 전용 ---------- */
-function luViewHtml(data, stats){
+function luViewHtml(data, stats, label){
   if(!data || !data.plan || !data.plan.length) return '';
+  window._lvData = {data, stats, label};
   const plan = data.plan;
   const att = (stats||[]).filter(s=>s.attended && s.players);
   const info = {}; att.forEach(s=>{ info[s.players.id||s.player_id] = s.players; });
@@ -3826,12 +3827,111 @@ function luViewHtml(data, stats){
     <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">라인업</div>
     <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 8px">
       <div style="display:flex;gap:4px;margin-bottom:10px">${tabs}</div>${pitches}
-      <div style="font-size:10px;color:var(--muted);margin:8px 4px 0">↻ 후반 교체 투입</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 4px 0"><span style="font-size:10px;color:var(--muted)">↻ 후반 교체 투입</span><button onclick="luDownloadView()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">📥 이미지 저장</button></div>
     </div></div>`;
 }
 function luViewQ(i,btn){
   document.querySelectorAll('.lv-q').forEach((el,k)=>{ el.style.display = k===i?'block':'none'; });
   btn.parentNode.querySelectorAll('.lu-qtab').forEach(b=>b.classList.toggle('on', b===btn));
+}
+
+
+/* ---------- 이미지 저장 (4분할 + 배정표) ---------- */
+function luWrapText(ctx, text, maxW){
+  const words = text.split(' '); const lines = []; let cur = '';
+  words.forEach(w=>{ const t = cur?cur+' '+w:w; if(ctx.measureText(t).width>maxW && cur){ lines.push(cur); cur=w; } else cur=t; });
+  if(cur) lines.push(cur); return lines;
+}
+async function luMakeImage(o){
+  // o: {plan, label, people:{id:{name,number}}, order:[ids]}
+  try{ await document.fonts.ready; }catch(e){}
+  const FONT = "'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
+  const W = 1080, PAD = 30, GAP = 20, CW = (W-PAD*2-GAP)/2, PH = CW*1.18;
+  const plan = o.plan, ids = o.order, nm = id=>o.people[id]||{name:'?',number:''};
+  const ROW = 44, TH = 56 + (ids.length+1)*ROW + 30;
+  const restH = 64;
+  const H = Math.round(120 + 2*(PH+36+restH) + GAP + TH - 10);
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#f4f6fa'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = '#1a3a6b'; ctx.fillRect(0,0,W,96);
+  ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  ctx.font = `700 40px ${FONT}`; ctx.fillText('ATTACK F.C. 라인업', PAD, 36);
+  ctx.font = `500 26px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillText(o.label||'', PAD, 72);
+  for(let q=0;q<4;q++){
+    const e = plan[q]; if(!e) continue;
+    const x0 = PAD + (q%2)*(CW+GAP), y0 = 116 + Math.floor(q/2)*(PH+36+restH+GAP);
+    ctx.fillStyle = '#1a3a6b'; ctx.textAlign='left'; ctx.font = `700 28px ${FONT}`;
+    ctx.fillText(`${q+1}Q`, x0, y0+14); ctx.font = `500 22px ${FONT}`; ctx.fillStyle='#5b6b82'; ctx.fillText(e.formation, x0+64, y0+15);
+    const py = y0+34;
+    // 필드
+    for(let s=0;s<10;s++){ ctx.fillStyle = s%2?'#339657':'#2e8b4f'; ctx.fillRect(x0, py+PH*s/10, CW, PH/10+1); }
+    ctx.strokeStyle='rgba(255,255,255,.6)'; ctx.lineWidth=2; ctx.strokeRect(x0+1,py+1,CW-2,PH-2);
+    ctx.beginPath(); ctx.moveTo(x0,py+PH/2); ctx.lineTo(x0+CW,py+PH/2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x0+CW/2,py+PH/2,CW*0.12,0,Math.PI*2); ctx.stroke();
+    const used = new Set();
+    luSlots(e.formation).forEach(s=>{
+      const sl = e.slots[s.id]||{}; const p = sl.p?nm(sl.p):null; const sub = sl.s&&sl.s!==sl.p?nm(sl.s):null;
+      if(sl.p) used.add(sl.p); if(sl.s) used.add(sl.s);
+      const cx = x0 + CW*s.x/100, cy = py + PH*(s.y*0.88+4)/100;
+      ctx.beginPath(); ctx.arc(cx,cy,24,0,Math.PI*2); ctx.fillStyle = !p?'#9aa4b2':(s.id==='GK'?'#e0a100':'#1a7abf'); ctx.fill();
+      ctx.lineWidth=3; ctx.strokeStyle='#fff'; ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.font=`700 20px ${FONT}`; ctx.fillText(p?String(p.number??''):'-', cx, cy+1);
+      ctx.font=`700 22px ${FONT}`; ctx.lineWidth=4; ctx.strokeStyle='rgba(0,0,0,.55)';
+      const t = p?p.name:'비어있음'; ctx.strokeText(t,cx,cy+40); ctx.fillStyle='#fff'; ctx.fillText(t,cx,cy+40);
+      let yy = cy+62;
+      if(sub){ ctx.font=`700 20px ${FONT}`; const t2='↻ '+sub.name; ctx.strokeText(t2,cx,yy); ctx.fillStyle='#ffe27a'; ctx.fillText(t2,cx,yy); yy+=22; }
+      if(!sub){ ctx.font=`500 15px ${FONT}`; ctx.fillStyle='rgba(255,255,255,.75)'; ctx.fillText(s.id,cx,yy-2); }
+    });
+    // 휴식
+    const rest = ids.filter(id=>!used.has(id)).map(id=>nm(id).name).join(', ') || '없음';
+    ctx.textAlign='left'; ctx.font=`500 20px ${FONT}`; ctx.fillStyle='#5b6b82';
+    const lines = luWrapText(ctx,'휴식: '+rest,CW).slice(0,2);
+    lines.forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+i*26));
+  }
+  // 배정표
+  const ty = 116 + 2*(PH+36+restH) + GAP;
+  ctx.fillStyle='#1a3a6b'; ctx.font=`700 28px ${FONT}`; ctx.textAlign='left'; ctx.fillText('배정표', PAD, ty+14);
+  const cols = [PAD, PAD+250, PAD+250+150, PAD+250+300, PAD+250+450, PAD+250+600], cw = [250,150,150,150,150,W-PAD*2-250-600];
+  let y = ty+40;
+  ctx.fillStyle='#e8eef7'; ctx.fillRect(PAD,y,W-PAD*2,ROW);
+  ctx.fillStyle='#1a3a6b'; ctx.font=`700 22px ${FONT}`;
+  ['선수','1Q','2Q','3Q','4Q','합(GK 제외)'].forEach((t,i)=>{ ctx.textAlign=i?'center':'left'; ctx.fillText(t, i?cols[i]+cw[i]/2:cols[i]+14, y+ROW/2); });
+  y += ROW;
+  ids.forEach((id,r)=>{
+    if(r%2){ ctx.fillStyle='#fff'; ctx.fillRect(PAD,y,W-PAD*2,ROW); }
+    ctx.fillStyle='#1c2430'; ctx.textAlign='left'; ctx.font=`700 22px ${FONT}`; ctx.fillText(nm(id).name, cols[0]+14, y+ROW/2);
+    ctx.font=`500 21px ${FONT}`; ctx.textAlign='center';
+    for(let q=0;q<4;q++){ const tx = luAppearText(plan,id,q); ctx.fillStyle = tx?'#1c2430':'#b0b8c4'; ctx.fillText(tx||'-', cols[q+1]+cw[q+1]/2, y+ROW/2); }
+    let gk = 0; plan.forEach(e=>{ const g=e.slots.GK; if(!g) return; if(g.p===id) gk += (g.s&&g.s!==g.p)?.5:1; if(g.s===id&&g.s!==g.p) gk += .5; });
+    const field = luCountPlay(plan,id)-gk;
+    ctx.fillStyle='#1c2430'; ctx.font=`700 22px ${FONT}`; ctx.fillText(field+(gk?`  (GK ${gk})`:''), cols[5]+cw[5]/2, y+ROW/2);
+    y += ROW;
+  });
+  ctx.strokeStyle='#d5dbe6'; ctx.lineWidth=1; ctx.strokeRect(PAD,ty+40,W-PAD*2,y-ty-40);
+  return new Promise(res=>cv.toBlob(res,'image/png'));
+}
+async function luSaveImage(o, fname){
+  const blob = await luMakeImage(o);
+  const file = new File([blob], fname, {type:'image/png'});
+  try{
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file]}); return; }
+  }catch(e){ if(e&&e.name==='AbortError') return; }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+}
+function luImgOptsEdit(){
+  const people = {}; LU.att.forEach(p=>people[p.id]={name:p.name,number:p.number});
+  return {plan:LU.plan, label:(LU.fixedMatch&&LU.fixedMatch.label)||'', people, order:LU.att.map(p=>p.id)};
+}
+function luDownloadEdit(){ luSaveImage(luImgOptsEdit(), `라인업_${(LU.fixedMatch&&LU.fixedMatch.label||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}.png`); }
+function luDownloadView(){
+  const v = window._lvData; if(!v) return;
+  const people = {}; const order = [];
+  (v.stats||[]).filter(s=>s.attended&&s.players).forEach(s=>{ const id=s.players.id||s.player_id; people[id]={name:s.players.name,number:s.players.number}; order.push(id); });
+  const gs = (v.data.cfg&&v.data.cfg.guests)||[]; gs.forEach(g=>{ people[g.id]={name:g.name,number:'용'}; order.push(g.id); });
+  luSaveImage({plan:v.data.plan,label:v.label||'',people,order}, `라인업_${(v.label||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}.png`);
 }
 
 /* ---------- 오버레이 열기/닫기 ---------- */
@@ -4268,6 +4368,7 @@ function luRenderPlan(){
     ${uniq.length?`<div class="lu-warn" style="margin:10px 4px 0">${uniq.map(w=>'• '+luEsc(w)).join('<br>')}</div>`:''}
     <table class="lu-tbl"><thead><tr><th style="text-align:left">선수</th><th>1Q</th><th>2Q</th><th>3Q</th><th>4Q</th><th>합<div style="font-size:9px;font-weight:400">(GK 제외)</div></th></tr></thead><tbody>${rows}</tbody></table>
     <button class="lu-btn" onclick="luSavePlan()">💾 라인업 저장</button>
+    <button class="lu-btn" style="background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);margin-top:8px" onclick="luDownloadEdit()">📥 4분할 + 배정표 이미지 저장</button>
   </div>
   <div id="lu-sheet"></div>`;
 }
