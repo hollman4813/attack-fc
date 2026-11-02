@@ -3790,6 +3790,7 @@ function luDefaultPrefs(p){
   return out.slice(0,3);
 }
 function luPrefsOf(p){
+  if(p.guest){ const g=p.pref||[]; return [g[0]||'',g[1]||'',g[2]||'']; }
   const saved = LU.prefs[p.id];
   const arr = saved && saved.pref ? saved.pref : luDefaultPrefs(p);
   return [arr[0]||'',arr[1]||'',arr[2]||''];
@@ -3802,6 +3803,7 @@ function luViewHtml(data, stats){
   const plan = data.plan;
   const att = (stats||[]).filter(s=>s.attended && s.players);
   const info = {}; att.forEach(s=>{ info[s.players.id||s.player_id] = s.players; });
+  const guests = (data.cfg&&data.cfg.guests)||[]; guests.forEach(g=>{ info[g.id]={name:g.name,number:'용'}; });
   const nm = id => info[id] || {name:'?',number:''};
   const tabs = plan.map((e,i)=>`<button class="lu-qtab ${i===0?'on':''}" onclick="luViewQ(${i},this)">${i+1}Q <span style="font-weight:400;font-size:10px">${luEsc(e.formation)}</span></button>`).join('');
   const pitches = plan.map((e,q)=>{
@@ -3815,7 +3817,7 @@ function luViewHtml(data, stats){
         <div class="lu-nm">${pl?luEsc(pl.name):'비어있음'}${sub?`<br><span style="color:#ffe27a">↻ ${luEsc(sub.name)}</span>`:''}</div>
         <div class="lu-ps">${s.id}</div></div>`;
     }).join('');
-    const rest = att.filter(s=>!used.has(s.players.id||s.player_id)).map(s=>`<span class="lu-chip">${luEsc(s.players.name)}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">없음</span>';
+    const rest = att.filter(s=>!used.has(s.players.id||s.player_id)).map(s=>s.players.name).concat(guests.filter(g=>!used.has(g.id)).map(g=>g.name+'(용병)')).map(n=>`<span class="lu-chip">${luEsc(n)}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">없음</span>';
     return `<div class="lv-q" id="lv-q${q}" style="display:${q===0?'block':'none'}">
       <div class="lu-pitch">${bubbles}</div>
       <div style="margin:10px 2px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div></div>`;
@@ -3927,6 +3929,7 @@ async function luSaveAtt(){
 async function luSaveAttOnly(){
   if(!luAuth()) return;
   const ok = await luSaveAtt();
+  if(ok && LU.cfg.guests.length && !LU.plan){ await luPut('match_'+LU.matchId,{cfg:LU.cfg,plan:null}); }
   alert(ok?'참석 저장 완료 ✅':'참석 저장 실패 😢');
 }
 async function luSavePrefs(){
@@ -3954,14 +3957,20 @@ function luRenderMatch(){
     : `<div class="lu-card"><div class="lu-lb">경기 선택</div>
     <select class="lu-sel" style="width:100%" onchange="luPickMatch(this.value)"><option value="">경기를 선택하세요</option>${opts}</select></div>`;
   if(!LU.matchId || !LU.cfg) return h + '<div style="color:var(--muted);font-size:12px;padding:8px">경기를 고르면 설정 화면이 열려요.</div>';
+  const c = LU.cfg;
   if(LU.plan && LU.att.length) h += luRenderPlan();
   h += `<div class="lu-card"><div style="font-size:13px;font-weight:700;margin-bottom:2px">참석 인원 <span style="color:var(--skyblue)">${LU.att.length}명</span></div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:8px">눌러서 참석/불참을 바꿔요. 저장할 때 함께 반영돼요.</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${LU.loadedPlayers.map(p=>{const on=LU.attSet.has(p.id);return `<div onclick="luToggleAtt(${p.id},${!on})" style="padding:7px 4px;text-align:center;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid ${on?'var(--skyblue)':'var(--border)'};background:${on?'#e8f5fb':'#f8f9fb'};font-weight:${on?700:400};color:${on?'var(--text)':'var(--muted)'}">${luEsc(p.name)}</div>`}).join('')}</div></div>
+    <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)">
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px">용병 추가 <span style="font-weight:400;font-size:11px;color:var(--muted)">(이 경기에만 적용, 기록에는 안 들어가요)</span></div>
+      ${(c.guests||[]).map(g=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fff7e0;border-radius:8px;margin-bottom:6px;font-size:13px"><b style="flex:1">${luEsc(g.name)} <span style="font-weight:400;font-size:11px;color:var(--muted)">${(g.pref||[]).join(' · ')||'포지션 미정'}</span></b><button class="lu-x" style="font-size:15px" onclick="luRemoveGuest(${g.id})">✕</button></div>`).join('')}
+      <div style="display:flex;gap:6px;margin-bottom:6px"><input id="lu-gname" class="lu-sel" placeholder="용병 이름" style="flex:1"><button onclick="luAddGuest()" style="padding:0 14px;background:var(--skyblue);color:#fff;border:none;border-radius:6px;font:inherit;font-weight:700;cursor:pointer">추가</button></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${[1,2,3].map(i=>`<div><div class="lu-lb">${i}순위</div>${luPosSelect('lu-gp'+i,'')}</div>`).join('')}</div>
+    </div>
     <button class="lu-btn" style="margin-top:10px;padding:9px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue)" onclick="luSaveAttOnly()">참석만 저장</button></div>`;
   if(!LU.att.length) return h + '<div class="lu-warn">참석자를 한 명 이상 선택해주세요.</div>';
 
-  const c = LU.cfg;
   h += `<div class="lu-card"><div style="font-size:13px;font-weight:700;margin-bottom:8px">쿼터별 포메이션</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${[0,1,2,3].map(q=>`<div><div class="lu-lb">${q+1}Q</div>
       <select class="lu-sel" style="width:100%" onchange="luSetForm(${q},this.value)">${Object.keys(LU_FORMATIONS).map(f=>`<option ${f===c.formations[q]?'selected':''}>${f}</option>`).join('')}</select></div>`).join('')}</div></div>`;
@@ -3994,15 +4003,33 @@ async function luPickMatch(id){
   const stats = await api(`match_stats?select=player_id&match_id=eq.${LU.matchId}&attended=eq.true`);
   const ids = new Set(stats.map(s=>s.player_id));
   LU.attInit = new Set(ids); LU.attSet = new Set(ids);
-  LU.att = LU.loadedPlayers.filter(p=>ids.has(p.id));
   const saved = await luGet('match_'+LU.matchId);
   LU.cfg = (saved&&saved.cfg) || {formations: LU_FORM_DEFAULT.slice(), excl:{}, limits:{}};
+  LU.cfg.guests = LU.cfg.guests||[]; LU.cfg.excl = LU.cfg.excl||{}; LU.cfg.limits = LU.cfg.limits||{};
   LU.plan = (saved&&saved.plan) || null;
+  luRecompAtt();
   luRender();
+}
+function luRecompAtt(){
+  const guests = ((LU.cfg&&LU.cfg.guests)||[]).map(g=>({id:g.id,name:g.name,number:'용',guest:true,pref:g.pref||[]}));
+  LU.att = LU.loadedPlayers.filter(p=>LU.attSet.has(p.id)).concat(guests);
+}
+function luAddGuest(){
+  const nm = (document.getElementById('lu-gname').value||'').trim();
+  if(!nm){ alert('용병 이름을 입력해주세요'); return; }
+  const pref = [1,2,3].map(i=>document.getElementById('lu-gp'+i).value).filter(Boolean);
+  const gs = LU.cfg.guests; const id = Math.min(0,...gs.map(g=>g.id)) - 1;
+  gs.push({id,name:nm,pref}); luRecompAtt(); luRender();
+}
+function luRemoveGuest(id){
+  LU.cfg.guests = LU.cfg.guests.filter(g=>g.id!==id);
+  delete LU.cfg.excl[id]; delete LU.cfg.limits[id];
+  if(LU.plan){ LU.plan.forEach(e=>Object.values(e.slots).forEach(s=>{ if(s.p===id) s.p=null; if(s.s===id) s.s=null; })); }
+  luRecompAtt(); luRender();
 }
 function luToggleAtt(pid,on){
   if(on) LU.attSet.add(pid); else LU.attSet.delete(pid);
-  LU.att = LU.loadedPlayers.filter(p=>LU.attSet.has(p.id));
+  luRecompAtt();
   if(!on && LU.plan){ LU.plan.forEach(e=>{ Object.keys(e.slots).forEach(k=>{ const s=e.slots[k]; if(s.p===pid) s.p=null; if(s.s===pid) s.s=null; }); }); }
   luRender();
 }
@@ -4081,11 +4108,11 @@ function luTry(att, cfg, prefsOf, limOf){
   const gkDone = new Set(); let prevQGk = new Set();
   const gkBlock = id => rule==='once' ? gkDone.has(id) : rule==='consec' ? prevQGk.has(id) : false;
   const left = quota.slice(), lastRest = att.map(()=>false), lastPlayed = att.map(()=>false);
-  const periods = []; let cost = 0, curGk = new Set();
+  const periods = []; let cost = 0, curGk = new Set(), firstGk = null;
   let prevSlot = att.map(()=>null);
   for(let t=0;t<P;t++){
     const q = Math.floor(t/per), second = half && t%per===1;
-    if(t%per===0){ curGk = new Set(); }
+    if(t%per===0){ curGk = new Set(); firstGk = null; }
     const slots = slotsAt(t);
     const cands = att.map((p,i)=>i).filter(i=>availT[i].includes(t));
     const remAvail = i=>availT[i].filter(x=>x>=t).length;
@@ -4093,7 +4120,8 @@ function luTry(att, cfg, prefsOf, limOf){
     const score = i=> left[i]*10 + (lastRest[i]?4:0) + (second&&lastPlayed[i]?15:0) + Math.random()*3;
     const rest = cands.filter(i=>left[i]>0 && !forced.includes(i)).sort((a,b)=>score(b)-score(a));
     let chosen = forced.concat(rest).slice(0, slots.length);
-    const canGk = i=>prefsOf(att[i]).includes('GK') && !gkBlock(att[i].id);
+    const first = half && t%per===0;
+    const canGk = i=>prefsOf(att[i]).includes('GK') && !gkBlock(att[i].id) && (!first || left[i]>=2);
     if(!chosen.some(canGk)){
       const g = cands.filter(i=>canGk(i)&&left[i]>0&&!chosen.includes(i)).sort((a,b)=>score(b)-score(a))[0];
       if(g!=null && chosen.length){ chosen[chosen.length-1]=g; }
@@ -4102,10 +4130,16 @@ function luTry(att, cfg, prefsOf, limOf){
       const extra = cands.filter(i=>!chosen.includes(i)).sort((a,b)=>left[b]-left[a]);
       for(const i of extra){ if(chosen.length>=slots.length) break; chosen.push(i); warn.push(`${q+1}Q 인원이 모자라 최대 쿼터를 넘겨 배정했어요`); }
     }
+    if(second && firstGk!=null && cands.includes(firstGk) && !chosen.includes(firstGk)){
+      const drop = chosen.filter(i=>!forced.includes(i)).sort((a,b)=>score(a)-score(b))[0];
+      if(drop!=null) chosen[chosen.indexOf(drop)] = firstGk; else chosen.push(firstGk);
+    }
     const n = Math.min(slots.length, chosen.length);
     const mat = slots.slice(0,n).map(s=>chosen.map(i=>{
       let c = luCost(prefsOf(att[i]), s);
       if(s.pos==='GK' && gkBlock(att[i].id)) c += 200;
+      if(s.pos==='GK' && first && left[i]<2) c += 300;
+      if(s.pos==='GK' && second && firstGk!=null && i!==firstGk) c += 500;
       if(second && prevSlot[i] && prevSlot[i]!==s.id) c += 6;
       return c;
     }));
@@ -4113,6 +4147,7 @@ function luTry(att, cfg, prefsOf, limOf){
     const map = {}; const newSlot = att.map(()=>null);
     slots.forEach((s,k)=>{ if(k<n){ const i = chosen[asg[k]]; map[s.id]=att[i].id; newSlot[i]=s.id; cost += mat[k][asg[k]]; } });
     if(map['GK']) curGk.add(map['GK']);
+    if(half && t%per===0){ const gi = att.findIndex(p=>p.id===map['GK']); firstGk = gi>=0?gi:null; }
     periods.push(map);
     att.forEach((p,i)=>{ const played = chosen.includes(i); lastRest[i] = !played && availT[i].includes(t); lastPlayed[i]=played; if(played) left[i]--; });
     prevSlot = newSlot;
@@ -4122,7 +4157,7 @@ function luTry(att, cfg, prefsOf, limOf){
     const e = {formation: cfg.formations[q], slots:{}};
     const a = periods[q*per], b = half? periods[q*per+1] : a;
     luSlots(e.formation).forEach(s=>{
-      const p1 = a[s.id]||null, p2 = b[s.id]||null;
+      const p1 = a[s.id]||null; let p2 = b[s.id]||null; if(s.id==='GK' && p1) p2 = p1;
       if(p1||p2) e.slots[s.id] = (half && p1 && p2 && p1!==p2) ? {p:p1,s:p2} : (half && !p1) ? {p:null,s:p2} : {p:p1,s:null};
     });
     return e;
@@ -4206,6 +4241,7 @@ function luRenderPlan(){
     const gks = plan.map(e=>{ const g=e.slots.GK; return new Set(g?[g.p,g.s].filter(Boolean):[]); });
     if(rl==='once'){ const cnt={}; gks.forEach(st=>st.forEach(id=>cnt[id]=(cnt[id]||0)+1)); Object.entries(cnt).forEach(([id,c])=>{ if(c>1) warns.push(`${luPlayer(+id).name}: 골키퍼 ${c}쿼터 (한 경기 1쿼터만)`); }); }
     if(rl==='consec'){ for(let i=1;i<LU_Q;i++){ gks[i].forEach(id=>{ if(gks[i-1].has(id)) warns.push(`${luPlayer(id).name}: ${i}Q·${i+1}Q 연속 골키퍼`); }); } } }
+  plan.forEach((e,i)=>{ const g=e.slots.GK; if(g&&g.s&&g.s!==g.p) warns.push(`${i+1}Q 골키퍼 중간 교체 (허용 안 됨)`); });
   // 중복/빈 슬롯 검사
   [0,1,2,3].forEach(i=>{
     const seen1 = {}, seen2 = {}; luSlots(plan[i].formation).forEach(s=>{
@@ -4246,8 +4282,8 @@ function luEdit(slotId){
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>${q+1}Q · ${slotId} (${slot.pos})</b><button class="lu-x" onclick="luCloseSheet()">✕</button></div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:6px">선수를 누르면 배치돼요. 이미 다른 자리에 있으면 서로 자리를 바꿔요.</div>
     <div style="max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:8px">${list}</div>
-    <div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="lu-lb" style="margin:0">교체 투입</span>
-      <select class="lu-sel" style="flex:1" onchange="luSetSub(this.value)"><option value="">없음</option>${subOpts}</select>
+    <div style="display:flex;gap:8px;margin-top:10px;align-items:center">${slotId==='GK'?'<span style="flex:1;font-size:11px;color:var(--muted)">골키퍼는 쿼터 중간 교체가 안 돼요</span>':`<span class="lu-lb" style="margin:0">교체 투입</span>
+      <select class="lu-sel" style="flex:1" onchange="luSetSub(this.value)"><option value="">없음</option>${subOpts}</select>`}
       <button class="lu-btn" style="margin:0;width:auto;padding:8px 12px;background:#d9534f" onclick="luClear()">비우기</button></div>
   </div>`;
 }
@@ -4266,6 +4302,7 @@ function luAssign(pid){
   luCloseSheet(); luRender();
 }
 function luSetSub(v){
+  if(LU.editing==='GK') return;
   const e = LU.plan[LU.q].slots[LU.editing]; if(!e) return;
   e.s = v?+v:null; luCloseSheet(); luRender();
 }
