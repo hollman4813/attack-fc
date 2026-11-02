@@ -3377,6 +3377,8 @@ async function showMatch(matchId, skipPushState) {
 
   const m = matches[0];
   if (!m) return;
+  let lineupRec = null;
+  if (lineupData && lineupData.plan) { try { lineupRec = await luLoadRec(matchId, lineupData.rec); } catch(e) {} }
 
   const isUpcoming = m.status === 'upcoming';
   const oppName = m.opponents?.name || m.opponent || '';
@@ -3588,7 +3590,7 @@ async function showMatch(matchId, skipPushState) {
         </div>
       </div>
 
-      ${luViewHtml(lineupData, stats, `${(m.match_date||'').slice(0,10)} vs ${oppName}`)}
+      ${luViewHtml(lineupData, stats, `${(m.match_date||'').slice(0,10)} vs ${oppName}`, {matchId:m.id, rec:lineupRec, canEdit:luCanRecord(m.match_date)})}
       <!-- 참석 인원 -->
       <div style="margin-top:16px">
         <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">
@@ -3798,53 +3800,110 @@ function luPrefsOf(p){
 
 
 /* ---------- 경기 상세: 저장된 라인업 읽기 전용 ---------- */
-function luViewHtml(data, stats, label){
+function luViewHtml(data, stats, label, meta){
   if(!data || !data.plan || !data.plan.length) return '';
-  const rec = data.rec;
-  window._lvData = {data, stats, label};
-  const plan = data.plan;
+  meta = meta||{};
   const att = (stats||[]).filter(s=>s.attended && s.players);
   const info = {}; att.forEach(s=>{ info[s.players.id||s.player_id] = s.players; });
   const guests = (data.cfg&&data.cfg.guests)||[]; guests.forEach(g=>{ info[g.id]={name:g.name,number:'용'}; });
-  const nm = id => info[id] || {name:'?',number:''};
-  const tabs = plan.map((e,i)=>`<button class="lu-qtab ${i===0?'on':''}" onclick="luViewQ(${i},this)">${i+1}Q <span style="font-weight:400;font-size:10px">${luEsc(e.formation)}</span>${rec?`<div style="font-size:10px;font-weight:700">${luRecOf(rec,i).goals.length}:${luRecOf(rec,i).them||0}</div>`:''}</button>`).join('');
-  const pitches = plan.map((e,q)=>{
-    const slots = luSlots(e.formation);
-    const used = new Set();
-    const bubbles = slots.map(s=>{
-      const x = e.slots[s.id]; const pl = x&&x.p ? nm(x.p) : null; const sub = x&&x.s ? nm(x.s) : null;
-      if(x&&x.p) used.add(x.p); if(x&&x.s) used.add(x.s);
-      return `<div class="lu-slot" style="left:${s.x}%;top:${s.y}%;cursor:default">
-        <div class="lu-dot" style="background:${pl?'#1a7abf':'#9aa4b2'}">${pl?luEsc(pl.number??''):'-'}</div>
-        <div class="lu-nm">${pl?luEsc(pl.name):'비어있음'}${pl&&x.p?luBadge(rec,q,x.p):''}${sub?`<br><span style="color:#ffe27a">↻ ${luEsc(sub.name)}${luBadge(rec,q,x.s)}</span>`:''}</div>
-        <div class="lu-ps">${s.id}</div></div>`;
-    }).join('');
-    const rest = att.filter(s=>!used.has(s.players.id||s.player_id)).map(s=>s.players.name).concat(guests.filter(g=>!used.has(g.id)).map(g=>g.name+'(용병)')).map(n=>`<span class="lu-chip">${luEsc(n)}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">없음</span>';
-    return `<div class="lv-q" id="lv-q${q}" style="display:${q===0?'block':'none'}">
-      <div class="lu-pitch">${bubbles}</div>
-      <div style="margin:10px 2px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>${luGoalLine(rec,q,nm)}</div>`;
-  }).join('');
+  window._lvData = {data, stats, label, rec: meta.rec||data.rec||null, matchId: meta.matchId, canEdit: !!meta.canEdit, info, att, guests, q:0, busy:false};
   return `<div style="margin-top:16px">
-    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">라인업</div>
-    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 8px">
-      <div style="display:flex;gap:4px;margin-bottom:10px">${tabs}</div>${pitches}
-      <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 4px 0"><span style="font-size:10px;color:var(--muted)">↻ 후반 교체 투입</span><button onclick="luDownloadView()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">📥 이미지 저장</button></div>
-    </div></div>`;
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">라인업${meta.canEdit?' · 기록 입력':''}</div>
+    <div id="lv-wrap" style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 8px">${luViewInner()}</div></div>`;
 }
+function luViewRefresh(){ const el=document.getElementById('lv-wrap'); if(el) el.innerHTML = luViewInner(); }
+function luViewInner(){
+  const v = window._lvData, data = v.data, rec = v.rec, plan = data.plan, q = v.q;
+  const nm = id => v.info[id] || {name:'?',number:''};
+  const tabs = plan.map((e,i)=>`<button class="lu-qtab ${i===q?'on':''}" onclick="luViewQ(${i})">${i+1}Q <span style="font-weight:400;font-size:10px">${luEsc(e.formation)}</span>${rec?`<div style="font-size:10px;font-weight:700">${luRecOf(rec,i).goals.length}:${luRecOf(rec,i).them||0}</div>`:''}</button>`).join('');
+  const e = plan[q]; const used = new Set();
+  const bubbles = luSlots(e.formation).map(s=>{
+    const x = e.slots[s.id]; const pl = x&&x.p ? nm(x.p) : null; const sub = x&&x.s ? nm(x.s) : null;
+    if(x&&x.p) used.add(x.p); if(x&&x.s) used.add(x.s);
+    return `<div class="lu-slot" style="left:${s.x}%;top:${s.y}%;cursor:default">
+      <div class="lu-dot" style="background:${pl?'#1a7abf':'#9aa4b2'}">${pl?luEsc(pl.number??''):'-'}</div>
+      <div class="lu-nm">${pl?luEsc(pl.name):'비어있음'}${pl&&x.p?luBadge(rec,q,x.p):''}${sub?`<br><span style="color:#ffe27a">↻ ${luEsc(sub.name)}${luBadge(rec,q,x.s)}</span>`:''}</div>
+      <div class="lu-ps">${s.id}</div></div>`;
+  }).join('');
+  const restNames = v.att.filter(s=>!used.has(s.players.id||s.player_id)).map(s=>s.players.name).concat(v.guests.filter(g=>!used.has(g.id)).map(g=>g.name+'(용병)'));
+  const rest = restNames.map(n=>`<span class="lu-chip">${luEsc(n)}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">없음</span>';
+  let tu=0, tt=0; if(rec) rec.forEach(x=>{ tu+=x.goals.length; tt+=(+x.them||0); });
+  return `<div style="display:flex;gap:4px;margin-bottom:10px">${tabs}</div>
+    <div class="lu-pitch">${bubbles}</div>
+    <div style="margin:10px 2px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>
+    ${v.canEdit ? luViewEditHtml(q, used) : luGoalLine(rec,q,nm)}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 4px 0"><span style="font-size:11px;color:var(--muted)">${rec?`전체 ${tu} : ${tt}  · `:''}↻ 후반 교체</span><button onclick="luDownloadView()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">📥 이미지 저장</button></div>`;
+}
+function luViewEditHtml(q, used){
+  const v = window._lvData, nm = id => v.info[id] || {name:'?'};
+  const r = luRecOf(v.rec,q);
+  const ids = Object.keys(v.info).map(Number);
+  const inQ = ids.filter(id=>used.has(id)), other = ids.filter(id=>!used.has(id));
+  const grp = (label,arr)=>arr.length?`<optgroup label="${label}">${arr.map(id=>`<option value="${id}">${luEsc(nm(id).name)}</option>`).join('')}</optgroup>`:'';
+  const goals = r.goals.map((g,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef0f4;font-size:14px"><span>⚽</span><b style="flex:1">${luEsc(g.s!=null?nm(g.s).name:'득점자 미상')}${g.a!=null?` <span style="font-weight:400;color:var(--muted);font-size:12px">(도움 ${luEsc(nm(g.a).name)})</span>`:''}</b><button class="lu-x" onclick="luViewDelGoal(${q},${i})">✕</button></div>`).join('');
+  return `<div style="margin:12px 2px 0;padding:10px;background:#f8f9fb;border:1px solid var(--border);border-radius:10px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><b style="font-size:13px">${q+1}Q</b>
+      <span style="font-size:22px;font-weight:800;color:var(--skyblue)">${r.goals.length}</span><span>:</span>
+      <button onclick="luViewThem(${q},-1)" class="lu-qtab" style="flex:0 0 34px;padding:6px 0">−</button><span style="font-size:22px;font-weight:800;min-width:20px;text-align:center">${r.them||0}</span><button onclick="luViewThem(${q},1)" class="lu-qtab" style="flex:0 0 34px;padding:6px 0">＋</button><span style="font-size:11px;color:var(--muted)">실점</span></div>
+    ${goals}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
+      <select id="lv-s" class="lu-sel"><option value="">득점자 미상</option>${grp('이 쿼터 출전',inQ)}${grp('그 외',other)}</select>
+      <select id="lv-a" class="lu-sel"><option value="">도움 없음</option>${grp('이 쿼터 출전',inQ)}${grp('그 외',other)}</select></div>
+    <button onclick="luViewAddGoal(${q})" style="width:100%;margin-top:6px;padding:10px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font:inherit;font-size:14px;font-weight:700;cursor:pointer">⚽ 득점 추가</button></div>`;
+}
+async function luRecMutate(q, fn){
+  const v = window._lvData; if(!v||v.busy) return; v.busy = true;
+  try{
+    const key = `rec_${v.matchId}_${q}`;
+    let cur = await luGet(key);
+    if(cur===undefined){ alert('기록 저장소(lineup_store)에 연결할 수 없어요.'); return; }
+    if(!cur) cur = JSON.parse(JSON.stringify(luRecOf(v.rec,q)));
+    cur.goals = cur.goals||[]; cur.them = cur.them||0;
+    fn(cur);
+    const ok = await luPut(key, cur);
+    if(!ok){ alert('저장 실패 😢 다시 시도해주세요.'); return; }
+    if(!v.rec) v.rec = luRecBlank(); v.rec[q] = cur;
+    luViewRefresh();
+  } finally { v.busy = false; }
+}
+function luViewAddGoal(q){
+  const s = document.getElementById('lv-s').value, a = document.getElementById('lv-a').value;
+  if(s!=='' && s===a){ alert('득점자와 도움이 같아요.'); return; }
+  luRecMutate(q, c=>{ c.goals.push({s:s===''?null:+s, a:a===''?null:+a}); });
+}
+function luViewDelGoal(q,i){
+  const v = window._lvData, g = luRecOf(v.rec,q).goals[i]; if(!g) return;
+  if(!confirm('이 득점 기록을 삭제할까요?')) return;
+  luRecMutate(q, c=>{ const k = c.goals.findIndex(x=>x.s===g.s && x.a===g.a); if(k>=0) c.goals.splice(k,1); });
+}
+function luViewThem(q,d){ luRecMutate(q, c=>{ c.them = Math.max(0,(c.them||0)+d); }); }
 function luGoalLine(rec,q,nm){
   const r = luRecOf(rec,q); if(!rec || (!r.goals.length && !r.them)) return '';
   const gl = r.goals.map(g=>`⚽ ${luEsc(g.s!=null?nm(g.s).name:'미상')}${g.a!=null?` <span style="color:var(--muted)">(도움 ${luEsc(nm(g.a).name)})</span>`:''}`).join('<br>');
   return `<div style="margin:10px 2px 0;font-size:13px"><b style="color:var(--skyblue)">${q+1}Q ${r.goals.length} : ${r.them||0}</b><div style="margin-top:4px;line-height:1.6">${gl}</div></div>`;
 }
-function luViewQ(i,btn){
-  document.querySelectorAll('.lv-q').forEach((el,k)=>{ el.style.display = k===i?'block':'none'; });
-  btn.parentNode.querySelectorAll('.lu-qtab').forEach(b=>b.classList.toggle('on', b===btn));
+function luCanRecord(dateStr){
+  const d = (dateStr||'').slice(0,10); if(!d) return false;
+  const kst = new Date(Date.now()+9*3600*1000); const today = kst.toISOString().slice(0,10);
+  const y = new Date(kst.getTime()-24*3600*1000).toISOString().slice(0,10);
+  return d===today || d===y;
 }
-
-
+function luViewQ(i){ window._lvData.q = i; luViewRefresh(); }
 
 /* ---------- 쿼터별 기록 (득점·도움·스코어) ---------- */
 function luBadge(rec,q,pid){ const s=luQStat(rec,q,pid); return (s.g?' '+'⚽'.repeat(s.g):'')+(s.a?' '+'🅰️'.repeat(s.a):''); }
+async function luLoadRec(matchId, fallback){
+  const rec = fallback ? JSON.parse(JSON.stringify(fallback)) : luRecBlank();
+  const rows = await api(`${LU_STORE}?select=key,data&key=like.rec_${matchId}_*`);
+  rows.forEach(r=>{ const m = /^rec_(\d+)_(\d)$/.exec(r.key); if(m && +m[1]===+matchId){ rec[+m[2]] = {them:(r.data&&r.data.them)||0, goals:(r.data&&r.data.goals)||[]}; } });
+  return rec;
+}
+async function luFlushRec(){
+  let ok = true;
+  for(const q of Object.keys(LU.recDirty||{})){ if(!(await luPut(`rec_${LU.matchId}_${q}`, LU.rec[q]))) ok = false; }
+  if(ok) LU.recDirty = {};
+  return ok;
+}
 function luRecBlank(){ return [0,1,2,3].map(()=>({them:0,goals:[]})); }
 function luRecOf(rec,q){ return (rec&&rec[q]) || {them:0,goals:[]}; }
 function luQStat(rec,q,pid){ let g=0,a=0; luRecOf(rec,q).goals.forEach(x=>{ if(x.s===pid) g++; if(x.a===pid) a++; }); return {g,a}; }
@@ -3868,15 +3927,16 @@ function luRecHtml(q){
     <button onclick="luAddGoal(${q})" style="width:100%;padding:8px;background:#fff;border:1px dashed var(--skyblue);color:var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">+ 득점 추가</button>
     <button onclick="luSyncStats()" style="width:100%;margin-top:8px;padding:9px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">📊 경기 기록에 반영 (전체 ${tu}:${tt})</button></div>`;
 }
-function luAddGoal(q){ if(!LU.rec) LU.rec=luRecBlank(); LU.rec[q].goals.push({s:null,a:null}); luRender(); }
-function luDelGoal(q,i){ LU.rec[q].goals.splice(i,1); luRender(); }
-function luSetGoal(q,i,k,v){ LU.rec[q].goals[i][k] = v===''?null:+v; luRender(); }
-function luSetThem(q,v){ if(!LU.rec) LU.rec=luRecBlank(); LU.rec[q].them = Math.max(0,parseInt(v)||0); luRender(); }
+function luAddGoal(q){ if(!LU.rec) LU.rec=luRecBlank(); LU.rec[q].goals.push({s:null,a:null}); (LU.recDirty=LU.recDirty||{})[q]=true; luRender(); }
+function luDelGoal(q,i){ LU.rec[q].goals.splice(i,1); (LU.recDirty=LU.recDirty||{})[q]=true; luRender(); }
+function luSetGoal(q,i,k,v){ LU.rec[q].goals[i][k] = v===''?null:+v; (LU.recDirty=LU.recDirty||{})[q]=true; luRender(); }
+function luSetThem(q,v){ if(!LU.rec) LU.rec=luRecBlank(); LU.rec[q].them = Math.max(0,parseInt(v)||0); (LU.recDirty=LU.recDirty||{})[q]=true; luRender(); }
 
 
 async function luSyncStats(){
   if(!LU.matchId || !LU.rec) return false;
   if(!luAuth()) return false;
+  await luFlushRec(); LU.rec = await luLoadRec(LU.matchId, null);
   const goalsBy = {}, assistsBy = {}; let us = 0, them = 0, unattr = 0;
   LU.rec.forEach(r=>{ them += (+r.them||0); r.goals.forEach(g=>{
     us++;
@@ -4005,7 +4065,7 @@ function luDownloadView(){
   const people = {}; const order = [];
   (v.stats||[]).filter(s=>s.attended&&s.players).forEach(s=>{ const id=s.players.id||s.player_id; people[id]={name:s.players.name,number:s.players.number}; order.push(id); });
   const gs = (v.data.cfg&&v.data.cfg.guests)||[]; gs.forEach(g=>{ people[g.id]={name:g.name,number:'용'}; order.push(g.id); });
-  luSaveImage({plan:v.data.plan,rec:v.data.rec,label:v.label||'',people,order}, `라인업_${(v.label||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}.png`);
+  luSaveImage({plan:v.data.plan,rec:v.rec,label:v.label||'',people,order}, `라인업_${(v.label||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}.png`);
 }
 
 /* ---------- 오버레이 열기/닫기 ---------- */
@@ -4102,7 +4162,7 @@ async function luSaveAtt(){
 async function luSaveAttOnly(){
   if(!luAuth()) return;
   const ok = await luSaveAtt();
-  if(ok && LU.cfg.guests.length && !LU.plan){ await luPut('match_'+LU.matchId,{cfg:LU.cfg,plan:null,rec:LU.rec}); }
+  if(ok && LU.cfg.guests.length && !LU.plan){ await luPut('match_'+LU.matchId,{cfg:LU.cfg,plan:null}); }
   alert(ok?'참석 저장 완료 ✅':'참석 저장 실패 😢');
 }
 async function luSavePrefs(){
@@ -4180,7 +4240,7 @@ async function luPickMatch(id){
   LU.cfg = (saved&&saved.cfg) || {formations: LU_FORM_DEFAULT.slice(), excl:{}, limits:{}};
   LU.cfg.guests = LU.cfg.guests||[]; LU.cfg.excl = LU.cfg.excl||{}; LU.cfg.limits = LU.cfg.limits||{};
   LU.plan = (saved&&saved.plan) || null;
-  LU.rec = (saved&&saved.rec) || luRecBlank();
+  LU.rec = await luLoadRec(LU.matchId, saved&&saved.rec); LU.recDirty = {};
   luRecompAtt();
   luRender();
 }
@@ -4495,7 +4555,7 @@ function luClear(){
 async function luSavePlan(){
   if(!luAuth()) return;
   const attOk = await luSaveAtt();
-  const ok = await luPut('match_'+LU.matchId,{cfg:LU.cfg,plan:LU.plan,rec:LU.rec});
+  const ok = await luPut('match_'+LU.matchId,{cfg:LU.cfg,plan:LU.plan}) && await luFlushRec();
   const hasRec = LU.rec && LU.rec.some(r=>r.goals.length||+r.them);
   alert(ok&&attOk?'라인업 저장 완료 ✅':(!attOk?'참석 저장 실패 😢':'라인업 저장 실패 😢 lineup_store 테이블/권한을 확인해주세요.\n'+(LU.lastErr||'')));
   if(ok&&attOk&&hasRec) await luSyncStats();
