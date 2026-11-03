@@ -4255,6 +4255,7 @@ function luRenderMatch(){
     <div class="lu-lb">골키퍼 규칙</div>
     <select class="lu-sel" style="width:100%" onchange="LU.cfg.gkRule=this.value">${[['once','한 번 본 선수는 다시 안 맡김 (1경기 1쿼터)'],['consec','연속 쿼터만 제외'],['none','제한 없음']].map(([v,t])=>`<option value="${v}" ${(c.gkRule||'once')===v?'selected':''}>${t}</option>`).join('')}</select></div>`;
   h += `<div class="lu-card"><div style="font-size:13px;font-weight:700;margin-bottom:2px">참석 ${LU.att.length}명 · 제외 / 최소·최대 쿼터</div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:12px;margin:6px 0 8px;cursor:pointer"><input type="checkbox" ${c.limitExclGk?'checked':''} onchange="LU.cfg.limitExclGk=this.checked" style="width:16px;height:16px"> 최소·최대 쿼터에 GK 쿼터 제외</label>
     <div class="lu-grid" style="font-size:11px;color:var(--muted);font-weight:700"><span>선수</span><span>1Q</span><span>2Q</span><span>3Q</span><span>4Q</span><span>최소</span><span>최대</span></div>
     ${LU.att.map(p=>{
       const ex = c.excl[p.id]||[]; const lim = c.limits[p.id]||{};
@@ -4366,7 +4367,10 @@ function luTry(att, cfg, prefsOf, limOf){
   const slotsAt = t=>slotsQ[Math.floor(t/per)];
   let S = 0; for(let t=0;t<P;t++) S += slotsAt(t).length;
   const availT = att.map(p=>[...Array(P).keys()].filter(t=>!(cfg.excl[p.id]||[]).includes(Math.floor(t/per))));
-  const lim = p=>{ const l=limOf(p); return {min:Math.round(l.min*per), max:Math.round(l.max*per)}; };
+  const exGk = !!cfg.limitExclGk;
+  const gkIds = new Set();
+  if(exGk){ att.map((p,i)=>i).filter(i=>prefsOf(att[i]).includes('GK') && !(cfg.guestGk===false && att[i].id<0)).sort(()=>Math.random()-.5).slice(0,4).forEach(i=>gkIds.add(att[i].id)); }
+  const lim = p=>{ const l=limOf(p), x = gkIds.has(p.id)?1:0; return {min:Math.round((l.min+x)*per), max:Math.round((l.max+x)*per)}; };
   const noCR = cfg.noConsecRest!==false;
   const quota = att.map((p,i)=>Math.min(Math.max(lim(p).min, noCR && availT[i].length>=4*per-0 ? Math.min(2*per, lim(p).max) : 0), availT[i].length));
   let tot = quota.reduce((a,b)=>a+b,0);
@@ -4429,6 +4433,7 @@ function luTry(att, cfg, prefsOf, limOf){
       let c = luCost(prefsOf(att[i]), s);
       if(s.pos==='GK' && gkBlock(att[i].id)) c += 200;
       if(s.pos==='GK' && restedPrev(i)) c += 400;
+      if(s.pos==='GK' && exGk && !gkIds.has(att[i].id)) c += 40;
       if(s.pos==='GK' && first && left[i]<2) c += 300;
       if(s.pos==='GK' && second && firstGk!=null && i!==firstGk) c += 500;
       if(second && prevSlot[i] && prevSlot[i]!==s.id) c += 6;
@@ -4454,13 +4459,13 @@ function luTry(att, cfg, prefsOf, limOf){
     return e;
   });
   if(half){ const sc = plan.map(e=>Object.values(e.slots).filter(s=>s.s&&s.s!==s.p).length), av = sc.reduce((x,y)=>x+y,0)/4; sc.forEach(x=>{ cost += (x-av)*(x-av)*8; }); }
-  att.forEach(p=>{ const c = luCountPlay(plan,p.id), l = limOf(p); if(c<l.min) cost += (l.min-c)*30; if(c>l.max) cost += (c-l.max)*30; });
+  att.forEach(p=>{ const c = luCountPlay(plan,p.id,exGk), l = limOf(p); if(c<l.min) cost += (l.min-c)*30; if(c>l.max) cost += (c-l.max)*30; });
   if(noCR) att.forEach(p=>{ for(let q=1;q<4;q++){ if(!luAppear(plan,p.id,q-1).length && !luAppear(plan,p.id,q).length) cost += 40; } });
   return {plan, cost, warn};
 }
-function luCountPlay(plan, pid){
+function luCountPlay(plan, pid, skipGk){
   let c=0;
-  plan.forEach(e=>{ Object.values(e.slots).forEach(s=>{
+  plan.forEach(e=>{ Object.entries(e.slots).forEach(([k,s])=>{ if(skipGk&&k==='GK') return;
     if(s.s && s.s!==s.p){ if(s.p===pid) c+=.5; if(s.s===pid) c+=.5; }
     else if(s.p===pid) c+=1;
   }); });
@@ -4517,7 +4522,7 @@ function luRenderPlan(){
   // 요약 표 + 경고
   const warns = (LU.autoWarn||[]).slice();
   const rows = LU.att.map(p=>{
-    const cnt = luCountPlay(plan,p.id), l = luEffLimits(p);
+    const cnt = luCountPlay(plan,p.id,!!LU.cfg.limitExclGk), l = luEffLimits(p);
     if(cnt<l.min) warns.push(`${p.name}: 최소 ${l.min}쿼터인데 ${cnt}쿼터`);
     if(cnt>l.max) warns.push(`${p.name}: 최대 ${l.max}쿼터인데 ${cnt}쿼터`);
     const cells = [0,1,2,3].map(i=>{
