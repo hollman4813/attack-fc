@@ -4385,6 +4385,17 @@ function luTry(att, cfg, prefsOf, limOf){
   const gkBlock = id => (cfg.guestGk===false && id<0) ? true : rule==='once' ? gkDone.has(id) : rule==='consec' ? prevQGk.has(id) : false;
   const left = quota.slice(), lastRest = att.map(()=>false), lastPlayed = att.map(()=>false);
   let prevQPlayed = att.map(()=>true), curQPlayed = att.map(()=>false);
+  // 교체(반쪽 출전)가 한 쿼터에 몰리지 않게, 홀수 쿼터 선수들을 짝지어 쿼터를 미리 분산
+  const des = att.map(()=>null);
+  if(half){
+    const odd = att.map((p,i)=>i).filter(i=>quota[i]%2===1).sort(()=>Math.random()-.5);
+    const qo = [0,1,2,3].sort(()=>Math.random()-.5);
+    for(let k=0;k*2<odd.length;k++){
+      const dq = qo[k%4];
+      des[odd[k*2]] = {q:dq, mode:'out'};
+      if(odd[k*2+1]!=null) des[odd[k*2+1]] = {q:dq, mode:'in'};
+    }
+  }
   const periods = []; let cost = 0, curGk = new Set(), firstGk = null;
   let prevSlot = att.map(()=>null);
   for(let t=0;t<P;t++){
@@ -4395,7 +4406,7 @@ function luTry(att, cfg, prefsOf, limOf){
     const remAvail = i=>availT[i].filter(x=>x>=t).length;
     const mustPlay = noCR && t%per===0 && q>0 ? cands.filter(i=>!prevQPlayed[i] && left[i]>0) : [];
     const forced = Array.from(new Set(cands.filter(i=>left[i]>0 && left[i]>=remAvail(i)).concat(mustPlay)));
-    const score = i=> left[i]*10 + (noCR && t%per===0 && !prevQPlayed[i] && left[i]>0 ? 100 : 0) + (lastRest[i]?4:0) + (second&&lastPlayed[i]?15:0) + Math.random()*3;
+    const score = i=> left[i]*10 + (noCR && t%per===0 && !prevQPlayed[i] && left[i]>0 ? 100 : 0) + (lastRest[i]?4:0) + (second&&lastPlayed[i]&&!(des[i]&&des[i].q===q)?15:0) + (des[i]&&des[i].q===q ? (!second ? (des[i].mode==='in'?-50:0) : (des[i].mode==='out'?-50:50)) : 0) + Math.random()*3;
     const rest = cands.filter(i=>left[i]>0 && !forced.includes(i)).sort((a,b)=>score(b)-score(a));
     let chosen = forced.concat(rest).slice(0, slots.length);
     const first = half && t%per===0;
@@ -4442,6 +4453,7 @@ function luTry(att, cfg, prefsOf, limOf){
     });
     return e;
   });
+  if(half){ const sc = plan.map(e=>Object.values(e.slots).filter(s=>s.s&&s.s!==s.p).length), av = sc.reduce((x,y)=>x+y,0)/4; sc.forEach(x=>{ cost += (x-av)*(x-av)*8; }); }
   att.forEach(p=>{ const c = luCountPlay(plan,p.id), l = limOf(p); if(c<l.min) cost += (l.min-c)*30; if(c>l.max) cost += (c-l.max)*30; });
   if(noCR) att.forEach(p=>{ for(let q=1;q<4;q++){ if(!luAppear(plan,p.id,q-1).length && !luAppear(plan,p.id,q).length) cost += 40; } });
   return {plan, cost, warn};
