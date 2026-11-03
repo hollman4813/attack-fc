@@ -243,6 +243,8 @@
   .lu-sel{padding:7px 6px;border:1px solid var(--border);border-radius:6px;font:inherit;font-size:13px;background:#fff;min-width:0;width:100%;box-sizing:border-box}
   .lu-btn{width:100%;padding:11px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px}
   .lu-warn{background:#fff7e0;border:1px solid #f0d58a;color:#7a5a00;border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.5}
+  .live-badge{display:inline-block;background:#e5484d;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:.5px;animation:livepulse 1.2s ease-in-out infinite}
+  @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.45}}
   .lu-grid{display:grid;grid-template-columns:1fr 38px 26px 26px 26px 26px 42px 42px;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid #f0f2f6}
   .lu-n{padding:5px 2px;text-align:center}
   .lu-qtab{flex:1;padding:8px 2px;border:1px solid var(--border);background:#fff;border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;line-height:1.2}
@@ -1140,7 +1142,7 @@ async function loadOverview() {
     }
 
     document.getElementById('next-match-card').innerHTML = `
-      <div class="next-match-league" style="cursor:pointer" onclick="showMatch(${u.id})">📅 예정 경기 · 탭하여 상세보기 ›</div>
+      <div class="next-match-league" style="cursor:pointer" onclick="showMatch(${u.id})">${luIsLive(u)?'<span class="live-badge">● LIVE</span> 진행 중':'📅 예정 경기'} · 탭하여 상세보기 ›</div>
       <div class="next-match-body" onclick="showMatch(${u.id})">
         <div class="next-team">
           <div class="next-team-emblem"><img src="emblem_v4.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover"></div>
@@ -1247,7 +1249,7 @@ async function loadMatches() {
       const d = new Date(m.match_date);
       html += `<div style="display:flex;align-items:center;background:#f0f7ff;border-top:1px solid var(--border)">
         <div class="fixture-upcoming" onclick="showMatch(${m.id})" style="cursor:pointer;flex:1;border-top:none">
-          <div style="width:32px;text-align:center;font-size:11px;font-weight:700;color:var(--skyblue)">VS</div>
+          <div style="width:44px;text-align:center;font-size:11px;font-weight:700;color:var(--skyblue)">${luIsLive(m)?'<span class="live-badge" style="padding:2px 6px;font-size:10px">LIVE</span>':'VS'}</div>
           <div class="fixture-info">
             <div class="fixture-teams"><span class="fixture-team-name" style="font-weight:700;color:var(--text)">${m.opponents?.name||m.opponent}</span></div>
             <div class="fixture-ground">📅 ${d.getMonth()+1}월 ${d.getDate()}일${m.match_time?' · '+m.match_time:''} · 📍 ${m.grounds?.name||m.ground||'미정'}</div>
@@ -3492,7 +3494,7 @@ async function showMatch(matchId, skipPushState) {
     <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:20px 16px">
       <button onclick="backToMatches()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>
       <div style="text-align:center">
-        <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:4px">예정 경기</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:4px">${luIsLive(m)?'<span class="live-badge">● LIVE</span>':'예정 경기'}</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:12px">${dateStr}${m.match_time ? ' · ' + m.match_time : ''}</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:16px">
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center">
@@ -3918,6 +3920,12 @@ function luGoalLine(rec,q,nm){
   const r = luRecOf(rec,q); if(!rec || (!r.goals.length && !r.them)) return '';
   const gl = r.goals.map(g=>luEsc(luGoalPlain(g,nm)).replace(' 👟','&nbsp;&nbsp;👟')).join('<br>');
   return `<div style="margin:10px 2px 0;font-size:13px"><b style="color:var(--skyblue)">${q+1}Q ${luQScore(r).us} : ${luQScore(r).them}</b><div style="margin-top:4px;line-height:1.6">${gl}</div></div>`;
+}
+function luIsLive(m){
+  if(!m || m.status!=='upcoming' || !m.match_date || !m.match_time) return false;
+  const t = String(m.match_time).slice(0,5); if(!/^\d\d:\d\d$/.test(t)) return false;
+  const st = new Date(`${String(m.match_date).slice(0,10)}T${t}:00+09:00`).getTime(); if(isNaN(st)) return false;
+  const now = Date.now(); return now >= st && now < st + 2*3600*1000;
 }
 function luCanRecord(dateStr){
   const d = (dateStr||'').slice(0,10); if(!d) return false;
