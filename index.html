@@ -243,7 +243,7 @@
   .lu-sel{padding:7px 6px;border:1px solid var(--border);border-radius:6px;font:inherit;font-size:13px;background:#fff;min-width:0;width:100%;box-sizing:border-box}
   .lu-btn{width:100%;padding:11px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px}
   .lu-warn{background:#fff7e0;border:1px solid #f0d58a;color:#7a5a00;border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.5}
-  .lu-grid{display:grid;grid-template-columns:1fr 26px 26px 26px 26px 42px 42px;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid #f0f2f6}
+  .lu-grid{display:grid;grid-template-columns:1fr 38px 26px 26px 26px 26px 42px 42px;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid #f0f2f6}
   .lu-n{padding:5px 2px;text-align:center}
   .lu-qtab{flex:1;padding:8px 2px;border:1px solid var(--border);background:#fff;border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;line-height:1.2}
   .lu-qtab.on{background:var(--skyblue);color:#fff;border-color:var(--skyblue)}
@@ -4262,11 +4262,11 @@ function luRenderMatch(){
     <div class="lu-lb">골키퍼 규칙</div>
     <select class="lu-sel" style="width:100%" onchange="LU.cfg.gkRule=this.value">${[['once','한 번 본 선수는 다시 안 맡김 (1경기 1쿼터)'],['consec','연속 쿼터만 제외'],['none','제한 없음']].map(([v,t])=>`<option value="${v}" ${(c.gkRule||'once')===v?'selected':''}>${t}</option>`).join('')}</select></div>`;
   h += `<div class="lu-card"><div style="font-size:13px;font-weight:700;margin-bottom:2px">참석 ${LU.att.length}명 · 제외 / 최소·최대 쿼터</div>
-    <label style="display:flex;align-items:center;gap:8px;font-size:12px;margin:6px 0 8px;cursor:pointer"><input type="checkbox" ${c.limitExclGk?'checked':''} onchange="LU.cfg.limitExclGk=this.checked" style="width:16px;height:16px"> 최소·최대 쿼터에 GK 쿼터 제외</label>
-    <div class="lu-grid" style="font-size:11px;color:var(--muted);font-weight:700"><span>선수</span><span>1Q</span><span>2Q</span><span>3Q</span><span>4Q</span><span>최소</span><span>최대</span></div>
+    <div class="lu-grid" style="font-size:11px;color:var(--muted);font-weight:700"><span>선수</span><span style="font-size:10px;white-space:nowrap">GK제외</span><span>1Q</span><span>2Q</span><span>3Q</span><span>4Q</span><span>최소</span><span>최대</span></div>
     ${LU.att.map(p=>{
       const ex = c.excl[p.id]||[]; const lim = c.limits[p.id]||{};
       return `<div class="lu-grid"><span style="font-size:13px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${luEsc(p.name)}</span>
+        <input type="checkbox" ${(c.noGk||{})[p.id]?'checked':''} onchange="luSetNoGk(${p.id},this.checked)">
         ${[0,1,2,3].map(q=>`<input type="checkbox" ${ex.includes(q)?'checked':''} onchange="luSetExcl(${p.id},${q},this.checked)">`).join('')}
         <input class="lu-sel lu-n" type="number" min="0" max="4" step="0.5" value="${lim.min??''}" placeholder="${luLimit(p,'min')}" onfocus="luFillDef(this)" onchange="luSetLim(${p.id},'min',this.value)">
         <input class="lu-sel lu-n" type="number" min="0" max="4" step="0.5" value="${lim.max??''}" placeholder="${luLimit(p,'max')}" onfocus="luFillDef(this)" onchange="luSetLim(${p.id},'max',this.value)"></div>`;
@@ -4318,6 +4318,7 @@ function luToggleAtt(pid,on){
   luRender();
 }
 function luSetForm(q,f){ LU.cfg.formations[q]=f; if(LU.plan){ LU.plan[q]={formation:f,slots:{}}; } luRender(); }
+function luSetNoGk(pid,on){ const m = LU.cfg.noGk||(LU.cfg.noGk={}); if(on) m[pid]=true; else delete m[pid]; }
 function luSetExcl(pid,q,on){
   const a = LU.cfg.excl[pid]||(LU.cfg.excl[pid]=[]);
   const i = a.indexOf(q); if(on&&i<0) a.push(q); if(!on&&i>=0) a.splice(i,1);
@@ -4375,10 +4376,7 @@ function luTry(att, cfg, prefsOf, limOf){
   const slotsAt = t=>slotsQ[Math.floor(t/per)];
   let S = 0; for(let t=0;t<P;t++) S += slotsAt(t).length;
   const availT = att.map(p=>[...Array(P).keys()].filter(t=>!(cfg.excl[p.id]||[]).includes(Math.floor(t/per))));
-  const exGk = !!cfg.limitExclGk;
-  const gkIds = new Set();
-  if(exGk){ att.map((p,i)=>i).filter(i=>prefsOf(att[i]).includes('GK') && !(cfg.guestGk===false && att[i].id<0)).sort(()=>Math.random()-.5).slice(0,4).forEach(i=>gkIds.add(att[i].id)); }
-  const lim = p=>{ const l=limOf(p), x = gkIds.has(p.id)?1:0; return {min:Math.round((l.min+x)*per), max:Math.round((l.max+x)*per)}; };
+  const lim = p=>{ const l=limOf(p); return {min:Math.round(l.min*per), max:Math.round(l.max*per)}; };
   const noCR = cfg.noConsecRest!==false;
   const quota = att.map((p,i)=>Math.min(Math.max(lim(p).min, noCR && availT[i].length>=4*per-0 ? Math.min(2*per, lim(p).max) : 0), availT[i].length));
   let tot = quota.reduce((a,b)=>a+b,0);
@@ -4394,7 +4392,7 @@ function luTry(att, cfg, prefsOf, limOf){
   if(tot<S) warn.push('최대 쿼터 제한 때문에 빈 자리가 생겨요');
   const rule = cfg.gkRule||'once';
   const gkDone = new Set(); let prevQGk = new Set();
-  const gkBlock = id => (cfg.guestGk===false && id<0) ? true : rule==='once' ? gkDone.has(id) : rule==='consec' ? prevQGk.has(id) : false;
+  const gkBlock = id => (cfg.guestGk===false && id<0) || (cfg.noGk&&cfg.noGk[id]) ? true : rule==='once' ? gkDone.has(id) : rule==='consec' ? prevQGk.has(id) : false;
   const left = quota.slice(), lastRest = att.map(()=>false), lastPlayed = att.map(()=>false);
   let prevQPlayed = att.map(()=>true), curQPlayed = att.map(()=>false);
   // 교체(반쪽 출전)가 한 쿼터에 몰리지 않게, 홀수 쿼터 선수들을 짝지어 쿼터를 미리 분산
@@ -4441,7 +4439,6 @@ function luTry(att, cfg, prefsOf, limOf){
       let c = luCost(prefsOf(att[i]), s);
       if(s.pos==='GK' && gkBlock(att[i].id)) c += 200;
       if(s.pos==='GK' && restedPrev(i)) c += 400;
-      if(s.pos==='GK' && exGk && !gkIds.has(att[i].id)) c += 40;
       if(s.pos==='GK' && first && left[i]<2) c += 300;
       if(s.pos==='GK' && second && firstGk!=null && i!==firstGk) c += 500;
       if(second && prevSlot[i] && prevSlot[i]!==s.id) c += 6;
@@ -4467,7 +4464,7 @@ function luTry(att, cfg, prefsOf, limOf){
     return e;
   });
   if(half){ const sc = plan.map(e=>Object.values(e.slots).filter(s=>s.s&&s.s!==s.p).length), av = sc.reduce((x,y)=>x+y,0)/4; sc.forEach(x=>{ cost += (x-av)*(x-av)*8; }); }
-  att.forEach(p=>{ const c = luCountPlay(plan,p.id,exGk), l = limOf(p); if(c<l.min) cost += (l.min-c)*30; if(c>l.max) cost += (c-l.max)*30; });
+  att.forEach(p=>{ const c = luCountPlay(plan,p.id), l = limOf(p); if(c<l.min) cost += (l.min-c)*30; if(c>l.max) cost += (c-l.max)*30; });
   if(noCR) att.forEach(p=>{ for(let q=1;q<4;q++){ if(!luAppear(plan,p.id,q-1).length && !luAppear(plan,p.id,q).length) cost += 40; } });
   return {plan, cost, warn};
 }
@@ -4530,7 +4527,7 @@ function luRenderPlan(){
   // 요약 표 + 경고
   const warns = (LU.autoWarn||[]).slice();
   const rows = LU.att.map(p=>{
-    const cnt = luCountPlay(plan,p.id,!!LU.cfg.limitExclGk), l = luEffLimits(p);
+    const cnt = luCountPlay(plan,p.id), l = luEffLimits(p);
     if(cnt<l.min) warns.push(`${p.name}: 최소 ${l.min}쿼터인데 ${cnt}쿼터`);
     if(cnt>l.max) warns.push(`${p.name}: 최대 ${l.max}쿼터인데 ${cnt}쿼터`);
     const cells = [0,1,2,3].map(i=>{
@@ -4550,6 +4547,7 @@ function luRenderPlan(){
     if(rl==='consec'){ for(let i=1;i<LU_Q;i++){ gks[i].forEach(id=>{ if(gks[i-1].has(id)) warns.push(`${luPlayer(id).name}: ${i}Q·${i+1}Q 연속 골키퍼`); }); } } }
   if(LU.cfg.noConsecRest!==false) LU.att.forEach(p=>{ for(let i=1;i<4;i++){ if(!luAppear(plan,p.id,i-1).length && !luAppear(plan,p.id,i).length) warns.push(`${p.name}: ${i}Q·${i+1}Q 연속 휴식`); } });
   if(LU.cfg.guestGk===false) plan.forEach((e,i)=>{ const g=e.slots.GK; [g&&g.p,g&&g.s].forEach(id=>{ if(id&&id<0) warns.push(`${i+1}Q 용병 ${luPlayer(id).name} 골키퍼 (제외 설정)`); }); });
+  plan.forEach((e,i)=>{ const g=e.slots.GK; [g&&g.p,g&&g.s].forEach(id=>{ if(id && LU.cfg.noGk && LU.cfg.noGk[id]) warns.push(`${i+1}Q ${luPlayer(id).name} 골키퍼 (GK 제외 설정)`); }); });
   for(let i=1;i<LU_Q;i++){ const g=plan[i].slots.GK; [g&&g.p].forEach(id=>{ if(id && !luAppear(plan,id,i-1).length) warns.push(`${luPlayer(id).name}: ${i}Q 휴식 직후 ${i+1}Q 골키퍼`); }); }
   plan.forEach((e,i)=>{ const g=e.slots.GK; if(g&&g.s&&g.s!==g.p) warns.push(`${i+1}Q 골키퍼 중간 교체 (허용 안 됨)`); });
   // 중복/빈 슬롯 검사
