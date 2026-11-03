@@ -4162,11 +4162,12 @@ function luPosSelect(id, val){
   return `<select id="${id}" class="lu-sel"><option value="">-</option>${LU_POS.map(p=>`<option value="${p}" ${p===val?'selected':''}>${p}</option>`).join('')}</select>`;
 }
 function luRenderPrefs(){
-  const rows = LU.loadedPlayers.map(p=>{
+  const list = (LU.matchId && LU.att) ? LU.att : [];
+  const rows = (list.length ? '' : '<div class="lu-warn">경기 라인업 탭에서 경기를 고르고 참석 인원을 선택하면 여기에 참여 선수만 나와요.</div>') + list.map(p=>{
     const [a,b,c] = luPrefsOf(p);
-    const s = LU.prefs[p.id]||{};
+    const s = p.guest ? ((LU.cfg&&LU.cfg.limits&&LU.cfg.limits[p.id])||{}) : (LU.prefs[p.id]||{});
     return `<div class="lu-card" style="padding:10px 12px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="color:var(--muted);font-size:11px;min-width:24px">#${p.number??''}</span><b style="font-size:14px">${luEsc(p.name)}</b></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="color:var(--muted);font-size:11px;min-width:24px">#${p.number??''}</span><b style="font-size:14px">${luEsc(p.name)}</b>${p.guest?'<span style="font-size:10px;font-weight:700;background:#fff7e0;color:#b07a00;padding:1px 6px;border-radius:8px">용병</span>':''}</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr) 56px 56px;gap:6px;align-items:end">
         <div><div class="lu-lb">1순위</div>${luPosSelect('lp1-'+p.id,a)}</div>
         <div><div class="lu-lb">2순위</div>${luPosSelect('lp2-'+p.id,b)}</div>
@@ -4215,17 +4216,20 @@ async function luSaveAttOnly(){
 }
 async function luSavePrefs(){
   if(!luAuth()) return;
-  const players = {};
-  LU.loadedPlayers.forEach(p=>{
+  const players = Object.assign({}, LU.prefs);
+  const list = (LU.matchId && LU.att) ? LU.att : [];
+  list.forEach(p=>{
     const g = id=>document.getElementById(id)?.value||'';
     const pref = [g('lp1-'+p.id),g('lp2-'+p.id),g('lp3-'+p.id)].filter(Boolean);
     const mn = g('lmin-'+p.id), mx = g('lmax-'+p.id);
-    players[p.id] = {pref, min: mn===''?null:Math.round(+mn*2)/2, max: mx===''?null:Math.round(+mx*2)/2};
+    const lim = {min: mn===''?null:Math.round(+mn*2)/2, max: mx===''?null:Math.round(+mx*2)/2};
+    if(p.guest){ const gg=(LU.cfg.guests||[]).find(x=>x.id===p.id); if(gg) gg.pref=pref; p.pref=pref; if(lim.min==null&&lim.max==null) delete LU.cfg.limits[p.id]; else LU.cfg.limits[p.id]=lim; }
+    else players[p.id] = {pref, min: lim.min, max: lim.max};
   });
   const defMin = Math.max(0,Math.min(4,+document.getElementById('lu-defmin').value||0));
   const defMax = Math.max(defMin,Math.min(4,+document.getElementById('lu-defmax').value||3));
   const ok = await luPut('prefs',{players,defMin,defMax});
-  if(ok){ LU.prefs = players; LU.defMin = defMin; LU.defMax = defMax; alert('저장했어요 ✅'); }
+  if(ok){ LU.prefs = players; LU.defMin = defMin; LU.defMax = defMax; alert('저장했어요 ✅'+(((LU.matchId&&LU.att)||[]).some(p=>p.guest)?'\n(용병 설정은 라인업 저장 시 함께 저장돼요)':'')); }
   else alert('저장 실패 😢 lineup_store 테이블/권한을 확인해주세요.');
 }
 
