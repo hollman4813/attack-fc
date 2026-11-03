@@ -1142,7 +1142,7 @@ async function loadOverview() {
     }
 
     document.getElementById('next-match-card').innerHTML = `
-      <div class="next-match-league" style="cursor:pointer" onclick="showMatch(${u.id})">${luIsLive(u)?'<span class="live-badge">● LIVE</span> 진행 중':'📅 예정 경기'} · 탭하여 상세보기 ›</div>
+      <div class="next-match-league" style="cursor:pointer" onclick="showMatch(${u.id})">${luIsLive(u)?'<span class="live-badge">● LIVE</span>':'📅 예정 경기'} · 탭하여 상세보기 ›</div>
       <div class="next-match-body" onclick="showMatch(${u.id})">
         <div class="next-team">
           <div class="next-team-emblem"><img src="emblem_v4.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover"></div>
@@ -1244,7 +1244,7 @@ async function loadMatches() {
   let html = '';
 
   if (upcoming.length > 0) {
-    html += '<div class="match-group-date" style="padding-top:16px">예정 경기</div>';
+    html += `<div class="match-group-date" style="padding-top:16px">${upcoming.some(luIsLive)?'<span class="live-badge">● LIVE</span>':'예정 경기'}</div>`;
     upcoming.forEach(m => {
       const d = new Date(m.match_date);
       html += `<div style="display:flex;align-items:center;background:#f0f7ff;border-top:1px solid var(--border)">
