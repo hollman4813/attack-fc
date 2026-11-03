@@ -3775,7 +3775,7 @@ const LU_Q = 4;
 const LU_STORE = 'lineup_store';
 
 const LU = {
-  tab: 'match', prefs: {}, defMin: 2, defMax: 4, loadedPlayers: [],
+  tab: 'match', prefs: {}, defMin: 2, defMax: 3, loadedPlayers: [],
   matchId: null, att: [], cfg: null, plan: null, q: 0, editing: null, msg: '',
 };
 
@@ -4124,7 +4124,7 @@ async function openLineup(fixed){
   ]);
   LU.loadedPlayers = players;
   if(prefs===undefined){ LU.msg = '⚠️ lineup_store 테이블이 아직 없어요. 안내된 SQL을 Supabase에서 먼저 실행해주세요. (저장은 안 되지만 화면은 사용할 수 있어요)'; LU.prefs = {}; }
-  else { LU.msg=''; LU.prefs = (prefs&&prefs.players)||{}; LU.defMin = (prefs&&prefs.defMin!=null)?prefs.defMin:2; LU.defMax = (prefs&&prefs.defMax)||4; }
+  else { LU.msg=''; LU.prefs = (prefs&&prefs.players)||{}; LU.defMin = (prefs&&prefs.defMin!=null)?prefs.defMin:2; LU.defMax = (prefs&&prefs.defMax)||3; }
   if(LU.fixedMatch) await luPickMatch(LU.fixedMatch.id); else luRender();
 }
 async function openLineupForMatch(id){
@@ -4164,8 +4164,8 @@ function luRenderPrefs(){
         <div><div class="lu-lb">1순위</div>${luPosSelect('lp1-'+p.id,a)}</div>
         <div><div class="lu-lb">2순위</div>${luPosSelect('lp2-'+p.id,b)}</div>
         <div><div class="lu-lb">3순위</div>${luPosSelect('lp3-'+p.id,c)}</div>
-        <div><div class="lu-lb">최소</div><input id="lmin-${p.id}" class="lu-sel" type="number" min="0" max="4" step="0.5" placeholder="기본" value="${s.min??''}"></div>
-        <div><div class="lu-lb">최대</div><input id="lmax-${p.id}" class="lu-sel" type="number" min="0" max="4" step="0.5" placeholder="기본" value="${s.max??''}"></div>
+        <div><div class="lu-lb">최소</div><input id="lmin-${p.id}" class="lu-sel" type="number" min="0" max="4" step="0.5" placeholder="${LU.defMin}" onfocus="luFillDef(this)" value="${s.min??''}"></div>
+        <div><div class="lu-lb">최대</div><input id="lmax-${p.id}" class="lu-sel" type="number" min="0" max="4" step="0.5" placeholder="${LU.defMax}" onfocus="luFillDef(this)" value="${s.max??''}"></div>
       </div></div>`;
   }).join('');
   return `<div class="lu-card">
@@ -4216,7 +4216,7 @@ async function luSavePrefs(){
     players[p.id] = {pref, min: mn===''?null:Math.round(+mn*2)/2, max: mx===''?null:Math.round(+mx*2)/2};
   });
   const defMin = Math.max(0,Math.min(4,+document.getElementById('lu-defmin').value||0));
-  const defMax = Math.max(defMin,Math.min(4,+document.getElementById('lu-defmax').value||4));
+  const defMax = Math.max(defMin,Math.min(4,+document.getElementById('lu-defmax').value||3));
   const ok = await luPut('prefs',{players,defMin,defMax});
   if(ok){ LU.prefs = players; LU.defMin = defMin; LU.defMax = defMax; alert('저장했어요 ✅'); }
   else alert('저장 실패 😢 lineup_store 테이블/권한을 확인해주세요.');
@@ -4261,13 +4261,14 @@ function luRenderMatch(){
       const ex = c.excl[p.id]||[]; const lim = c.limits[p.id]||{};
       return `<div class="lu-grid"><span style="font-size:13px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${luEsc(p.name)}</span>
         ${[0,1,2,3].map(q=>`<input type="checkbox" ${ex.includes(q)?'checked':''} onchange="luSetExcl(${p.id},${q},this.checked)">`).join('')}
-        <input class="lu-sel lu-n" type="number" min="0" max="4" step="0.5" value="${lim.min??''}" placeholder="${luLimit(p,'min')}" onchange="luSetLim(${p.id},'min',this.value)">
-        <input class="lu-sel lu-n" type="number" min="0" max="4" step="0.5" value="${lim.max??''}" placeholder="${luLimit(p,'max')}" onchange="luSetLim(${p.id},'max',this.value)"></div>`;
+        <input class="lu-sel lu-n" type="number" min="0" max="4" step="0.5" value="${lim.min??''}" placeholder="${luLimit(p,'min')}" onfocus="luFillDef(this)" onchange="luSetLim(${p.id},'min',this.value)">
+        <input class="lu-sel lu-n" type="number" min="0" max="4" step="0.5" value="${lim.max??''}" placeholder="${luLimit(p,'max')}" onfocus="luFillDef(this)" onchange="luSetLim(${p.id},'max',this.value)"></div>`;
     }).join('')}
     <button class="lu-btn" onclick="luAuto()">⚡ 자동 배정</button></div>`;
 
   return h;
 }
+function luFillDef(el){ if(el.value==='' && el.placeholder!=='' && !isNaN(parseFloat(el.placeholder))) el.value = el.placeholder; }
 function luLimit(p, k){
   const s = LU.prefs[p.id]||{};
   return (s[k]!=null ? s[k] : (k==='min'?LU.defMin:LU.defMax));
