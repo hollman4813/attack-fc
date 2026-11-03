@@ -4175,8 +4175,8 @@ function luRenderPrefs(){
         <div><div class="lu-lb">1순위</div>${luPosSelect('lp1-'+p.id,a)}</div>
         <div><div class="lu-lb">2순위</div>${luPosSelect('lp2-'+p.id,b)}</div>
         <div><div class="lu-lb">3순위</div>${luPosSelect('lp3-'+p.id,c)}</div>
-        <div><div class="lu-lb">최소</div><input id="lmin-${p.id}" class="lu-sel" type="number" min="0" max="4" step="0.5" placeholder="${LU.defMin}" onfocus="luFillDef(this)" value="${s.min??''}"></div>
-        <div><div class="lu-lb">최대</div><input id="lmax-${p.id}" class="lu-sel" type="number" min="0" max="4" step="0.5" placeholder="${LU.defMax}" onfocus="luFillDef(this)" value="${s.max??''}"></div>
+        <div><div class="lu-lb">최소</div><input id="lmin-${p.id}" class="lu-sel" type="number" min="0" max="4" step="0.5" placeholder="${LU.defMin}" onmousedown="luFillDef(event,this)" onkeydown="luFillDef(event,this)" value="${s.min??''}"></div>
+        <div><div class="lu-lb">최대</div><input id="lmax-${p.id}" class="lu-sel" type="number" min="0" max="4" step="0.5" placeholder="${LU.defMax}" onmousedown="luFillDef(event,this)" onkeydown="luFillDef(event,this)" value="${s.max??''}"></div>
       </div></div>`;
   }).join('');
   return `<div class="lu-card">
@@ -4269,20 +4269,24 @@ function luRenderMatch(){
     <div class="lu-lb">골키퍼 규칙</div>
     <select class="lu-sel" style="width:100%" onchange="LU.cfg.gkRule=this.value">${[['once','한 번 본 선수는 다시 안 맡김 (1경기 1쿼터)'],['consec','연속 쿼터만 제외'],['none','제한 없음']].map(([v,t])=>`<option value="${v}" ${(c.gkRule||'once')===v?'selected':''}>${t}</option>`).join('')}</select></div>`;
   h += `<div class="lu-card"><div style="font-size:13px;font-weight:700;margin-bottom:2px">참석 ${LU.att.length}명 · 제외 / 최소·최대 쿼터</div>
+    <div style="display:flex;align-items:center;gap:6px;margin:8px 0 10px;padding:8px;background:#f4f7fb;border-radius:8px;font-size:12px;flex-wrap:wrap">
+      <b>전체</b> 최소 <input id="lu-allmin" class="lu-sel lu-n" style="width:56px" type="number" min="0" max="4" step="0.5" placeholder="${LU.defMin}" onmousedown="luFillDef(event,this)" onkeydown="luFillDef(event,this)"> 최대 <input id="lu-allmax" class="lu-sel lu-n" style="width:56px" type="number" min="0" max="4" step="0.5" placeholder="${LU.defMax}" onmousedown="luFillDef(event,this)" onkeydown="luFillDef(event,this)">
+      <button onclick="luApplyAllLim()" style="padding:7px 12px;background:var(--skyblue);color:#fff;border:none;border-radius:6px;font:inherit;font-weight:700;cursor:pointer">전체 적용</button>
+      <button onclick="luApplyAllLim(true)" style="padding:7px 10px;background:#fff;color:var(--muted);border:1px solid var(--border);border-radius:6px;font:inherit;cursor:pointer">초기화</button></div>
     <div class="lu-grid" style="font-size:11px;color:var(--muted);font-weight:700"><span>선수</span><span style="font-size:10px;white-space:nowrap">GK제외</span><span>1Q</span><span>2Q</span><span>3Q</span><span>4Q</span><span>최소</span><span>최대</span></div>
     ${LU.att.map(p=>{
       const ex = c.excl[p.id]||[]; const lim = c.limits[p.id]||{};
       return `<div class="lu-grid"><span style="font-size:13px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${luEsc(p.name)}</span>
         <input type="checkbox" ${(c.noGk||{})[p.id]?'checked':''} onchange="luSetNoGk(${p.id},this.checked)">
         ${[0,1,2,3].map(q=>`<input type="checkbox" ${ex.includes(q)?'checked':''} onchange="luSetExcl(${p.id},${q},this.checked)">`).join('')}
-        <input class="lu-sel lu-n" type="number" min="0" max="4" step="0.5" value="${lim.min??''}" placeholder="${luLimit(p,'min')}" onfocus="luFillDef(this)" onchange="luSetLim(${p.id},'min',this.value)">
-        <input class="lu-sel lu-n" type="number" min="0" max="4" step="0.5" value="${lim.max??''}" placeholder="${luLimit(p,'max')}" onfocus="luFillDef(this)" onchange="luSetLim(${p.id},'max',this.value)"></div>`;
+        <input class="lu-sel lu-n" type="number" min="0" max="4" step="0.5" value="${lim.min??''}" placeholder="${luLimit(p,'min')}" onmousedown="luFillDef(event,this)" onkeydown="luFillDef(event,this)" onchange="luSetLim(${p.id},'min',this.value)">
+        <input class="lu-sel lu-n" type="number" min="0" max="4" step="0.5" value="${lim.max??''}" placeholder="${luLimit(p,'max')}" onmousedown="luFillDef(event,this)" onkeydown="luFillDef(event,this)" onchange="luSetLim(${p.id},'max',this.value)"></div>`;
     }).join('')}
     <button class="lu-btn" onclick="luAuto()">⚡ 자동 배정</button></div>`;
 
   return h;
 }
-function luFillDef(el){ if(el.value==='' && el.placeholder!=='' && !isNaN(parseFloat(el.placeholder))) el.value = el.placeholder; }
+function luFillDef(e,el){ if(el.value!=='' || el.placeholder==='' || isNaN(parseFloat(el.placeholder))) return; const spin = e.type==='keydown' ? (e.key==='ArrowUp'||e.key==='ArrowDown') : (e.offsetX > el.clientWidth-24); if(spin) el.value = el.placeholder; }
 function luLimit(p, k){
   const s = LU.prefs[p.id]||{};
   return (s[k]!=null ? s[k] : (k==='min'?LU.defMin:LU.defMax));
@@ -4329,6 +4333,18 @@ function luSetNoGk(pid,on){ const m = LU.cfg.noGk||(LU.cfg.noGk={}); if(on) m[pi
 function luSetExcl(pid,q,on){
   const a = LU.cfg.excl[pid]||(LU.cfg.excl[pid]=[]);
   const i = a.indexOf(q); if(on&&i<0) a.push(q); if(!on&&i>=0) a.splice(i,1);
+}
+function luApplyAllLim(clear){
+  const mnEl = document.getElementById('lu-allmin'), mxEl = document.getElementById('lu-allmax');
+  const norm = v=>v===''?null:Math.max(0,Math.min(4,Math.round(+v*2)/2));
+  const mn = clear?null:norm(mnEl.value), mx = clear?null:norm(mxEl.value);
+  if(!clear && mn==null && mx==null){ alert('전체 최소 또는 최대를 입력해주세요'); return; }
+  LU.att.forEach(p=>{
+    if(clear){ delete LU.cfg.limits[p.id]; return; }
+    const l = LU.cfg.limits[p.id]||(LU.cfg.limits[p.id]={});
+    if(mn!=null) l.min = mn; if(mx!=null) l.max = mx;
+  });
+  luRender();
 }
 function luSetLim(pid,k,v){
   const l = LU.cfg.limits[pid]||(LU.cfg.limits[pid]={});
