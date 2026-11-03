@@ -4186,11 +4186,12 @@ function luRenderPrefs(){
     <button class="lu-btn" onclick="luSavePrefs()">💾 선수 설정 저장</button>`;
 }
 let luAuthed = false;
+const LU_PW = '1103';
 function luAuth(){
   if(isAdmin || luAuthed) return true;
   const pw = prompt('저장하려면 관리자 비밀번호를 입력하세요:');
   if(pw===null) return false;
-  if(pw!==ADMIN_PW){ alert('비밀번호가 틀렸습니다.'); return false; }
+  if(pw!==LU_PW){ alert('비밀번호가 틀렸습니다.'); return false; }
   luAuthed = true; return true;
 }
 async function luSaveAtt(){
