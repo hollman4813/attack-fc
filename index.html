@@ -268,7 +268,11 @@
   .lu-ps{font-size:9px;color:rgba(255,255,255,.75)}
   .lu-chip{background:#eef1f6;border-radius:12px;padding:3px 9px;font-size:12px}
   .lu-tbl{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px;text-align:center}
-  .lu-tbl th,.lu-tbl td{padding:5px 3px;border-bottom:1px solid #eef0f4}
+  .lu-tbl th,.lu-tbl td{padding:0 3px;height:40px;box-sizing:border-box;vertical-align:middle;white-space:nowrap;border-bottom:1px solid #eef0f4}
+  .lu-tbl thead th{background:#e8eef7;color:#1a3a6b;font-weight:700;height:38px;border-bottom:2px solid #c3cfe2}
+  .lu-tbl thead th:first-child{border-radius:8px 0 0 0;padding-left:8px}.lu-tbl thead th:last-child{border-radius:0 8px 0 0}
+  .lu-tbl tbody td:first-child{padding-left:8px}
+  .lu-tbl tbody tr:nth-child(even) td{background:#f8f9fb}
   .lu-shade{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:600}
   .lu-sheetbox{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:14px 14px 0 0;padding:14px;z-index:601;max-width:600px;margin:0 auto}
   .lu-row{display:flex;align-items:center;padding:10px;border-bottom:1px solid #f0f2f6;cursor:pointer;font-size:14px}
@@ -4535,7 +4539,7 @@ function luRenderPlan(){
     const bad = cnt<l.min||cnt>l.max;
     let gkq = 0; plan.forEach(e=>{ const g=e.slots.GK; if(!g) return; if(g.p===p.id) gkq += (g.s&&g.s!==g.p)?.5:1; if(g.s===p.id&&g.s!==g.p) gkq += .5; });
     const field = cnt - gkq;
-    return `<tr><td style="text-align:left;font-weight:600">${luEsc(p.name)}</td>${cells}<td style="font-weight:700;color:${bad?'#d9534f':'inherit'}">${field}${gkq?`<div style="font-size:9px;font-weight:400;color:var(--muted)">GK ${gkq}</div>`:''}</td></tr>`;
+    return `<tr><td style="text-align:left;font-weight:600">${luEsc(p.name)}</td>${cells}<td style="font-weight:700;color:${bad?'#d9534f':'inherit'}">${field}${gkq?` <span style="font-size:10px;font-weight:400;color:var(--muted)">(GK ${gkq})</span>`:''}</td></tr>`;
   }).join('');
   { const rl = LU.cfg.gkRule||'once';
     const gks = plan.map(e=>{ const g=e.slots.GK; return new Set(g?[g.p,g.s].filter(Boolean):[]); });
@@ -4562,7 +4566,7 @@ function luRenderPlan(){
     <div style="font-size:10px;color:var(--muted);margin:6px 4px 0">초록 1순위 · 노랑 2·3순위 · 빨강 선호 외</div>
     <div style="margin:10px 4px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>
     ${uniq.length?`<div class="lu-warn" style="margin:10px 4px 0">${uniq.map(w=>'• '+luEsc(w)).join('<br>')}</div>`:''}
-    <table class="lu-tbl"><thead><tr><th style="text-align:left">선수</th><th>1Q</th><th>2Q</th><th>3Q</th><th>4Q</th><th>합<div style="font-size:9px;font-weight:400">(GK 제외)</div></th></tr></thead><tbody>${rows}</tbody></table>
+    <table class="lu-tbl"><thead><tr><th style="text-align:left">선수</th><th>1Q</th><th>2Q</th><th>3Q</th><th>4Q</th><th>합 <span style="font-size:10px;font-weight:400">(GK 제외)</span></th></tr></thead><tbody>${rows}</tbody></table>
     <button class="lu-btn" onclick="luSavePlan()">💾 라인업 저장</button>
     <button class="lu-btn" style="background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);margin-top:8px" onclick="luDownloadEdit()">📥 4분할 + 배정표 이미지 저장</button>
   </div>
