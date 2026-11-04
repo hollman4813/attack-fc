@@ -2476,11 +2476,12 @@ async function saveVotes() {
   const total = parseInt(document.getElementById('vote-total').value) || 0;
   const inputs = document.querySelectorAll('[id^="vote-"]:not(#vote-match-select):not(#vote-total):not(#vote-count-hint):not(#vote-player-list)');
 
-  let saved = 0;
+  let saved = 0; const tally = [];
   for (const input of inputs) {
     const playerId = parseInt(input.id.replace('vote-',''));
     if (isNaN(playerId)) continue;
     const voteCount = parseInt(input.value) || 0;
+    tally.push({playerId, voteCount});
     const isDefender = document.getElementById(`def-${playerId}`)?.checked || false;
 
     const existing = await api(`match_votes?select=id&match_id=eq.${matchId}&player_id=eq.${playerId}`);
@@ -2502,7 +2503,25 @@ async function saveVotes() {
     saved++;
   }
 
-  alert(`득표 저장 완료! ✅ ${saved}명`);
+  // 최다 득표자를 MOM으로 자동 지정 (동률이면 공동 MOM)
+  let momTxt = '';
+  const maxVote = tally.reduce((m,t)=>Math.max(m,t.voteCount),0);
+  if (maxVote > 0) {
+    const winners = new Set(tally.filter(t=>t.voteCount===maxVote).map(t=>t.playerId));
+    const hd = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+    const rows = await api(`match_stats?select=id,player_id,is_mom&match_id=eq.${matchId}`);
+    for (const r of rows) {
+      const want = winners.has(r.player_id);
+      if (!!r.is_mom !== want) await fetch(`${SUPA_URL}/rest/v1/match_stats?id=eq.${r.id}`, { method:'PATCH', headers:hd, body: JSON.stringify({ is_mom: want }) });
+    }
+    for (const pid of winners) {
+      if (!rows.some(r=>r.player_id===pid)) await fetch(`${SUPA_URL}/rest/v1/match_stats`, { method:'POST', headers:hd, body: JSON.stringify({ match_id: parseInt(matchId), player_id: pid, goals: 0, assists: 0, is_mom: true, attended: true }) });
+    }
+    const nm = id => (allPlayers.find(p=>p.id===id)||{}).name || id;
+    momTxt = `\nMOM: ${[...winners].map(nm).join(', ')} (${maxVote}표${winners.size>1?' · 공동':''})`;
+  }
+
+  alert(`득표 저장 완료! ✅ ${saved}명${momTxt}`);
   document.getElementById('vote-match-select').value = '';
   document.getElementById('vote-total').value = '0';
   document.getElementById('vote-player-list').innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0">경기를 먼저 선택해주세요</div>';
