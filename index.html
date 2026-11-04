@@ -335,7 +335,7 @@
           <div class="sec-header"><div class="sec-title">팀 기록</div></div>
           <div class="form-strip" id="form-strip"></div>
           <div class="divider"></div>
-          <div class="sec-header"><div class="sec-title">시즌 통계</div></div>
+          <div class="sec-header"><div class="sec-title" id="ov-season-title">2026 시즌 통계</div></div>
           <div class="stats-summary-card" style="padding:14px">
             <div class="wdl-wrap">
               <div class="wdl-top">
@@ -1160,6 +1160,7 @@ async function loadOverview() {
   }
 
   // 시즌 통계
+  { const st = document.getElementById('ov-season-title'); if(st) st.textContent = `${currentSeasonName} 통계`; }
   document.getElementById('s-games').textContent = s.총경기수||0;
   document.getElementById('s-goals').textContent = s.총득점||0;
   document.getElementById('s-concede').textContent = s.총실점||0;
