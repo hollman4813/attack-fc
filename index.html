@@ -4682,7 +4682,7 @@ async function luSavePlan(){
 <script>
 // Pull-to-refresh (탭바 아래에서만 동작)
 (() => {
-  let startY = 0, pulling = false, pullDist = 0, triggered = false;
+  let startY = 0, startX = 0, pulling = false, pullDist = 0, triggered = false, decided = false;
   const THRESHOLD = 70;
   const indicator = document.getElementById('ptr-indicator');
 
@@ -4691,10 +4691,12 @@ async function luSavePlan(){
   }
 
   document.addEventListener('touchstart', (e) => {
-    if (e.target.closest && e.target.closest('#lineup-overlay')) { pulling = false; return; }
+    if (e.target.closest && e.target.closest('#lineup-overlay, #team-tab-bar, .team-tab-bar')) { pulling = false; return; }
     if (getScrollTop() <= 0) {
       startY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
       pulling = true;
+      decided = false;
       triggered = false;
     } else {
       pulling = false;
@@ -4707,6 +4709,12 @@ async function luSavePlan(){
   document.addEventListener('touchmove', (e) => {
     if (!pulling) return;
     const currentY = e.touches[0].clientY;
+    if (!decided) {
+      const dx = Math.abs(e.touches[0].clientX - startX), dy = currentY - startY;
+      if (dx > 8 && dx > Math.abs(dy) * 0.7) { pulling = false; return; }   // 가로 스와이프는 새로고침에서 제외
+      if (dy < 12) return;                                                  // 충분히 아래로 당길 때만 시작
+      decided = true; startY = currentY - 12;
+    }
     pullDist = currentY - startY;
     if (pullDist > 0 && getScrollTop() <= 0) {
       const capped = Math.min(pullDist, 110);
