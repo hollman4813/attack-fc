@@ -4036,7 +4036,7 @@ async function luSyncStats(){
   }
   const mr = await fetch(`${SUPA_URL}/rest/v1/matches?id=eq.${v.matchId}`,{method:'PATCH',headers:hd,body:JSON.stringify(finish?{our_score:us,opponent_score:them,result,status:'finished'}:(v.status==='upcoming'?{our_score:us,opponent_score:them,result}:{our_score:us,opponent_score:them,result}))});
   if(!mr.ok) ok = false;
-  try{ if(typeof loaded!=='undefined'){ loaded['matches']=false; loaded['overview']=false; } }catch(e){}
+  try{ if(typeof loaded!=='undefined'){ ['matches','overview','teamstats','scorers','squad'].forEach(k=>{ loaded[k]=false; }); } if(typeof allStats!=='undefined') allStats=[]; }catch(e){}
   alert(ok?`반영 완료 ✅ ${us}:${them}`:'일부 반영에 실패했어요 😢 다시 시도해주세요.');
   if(ok) showMatch(v.matchId, true);
   return ok;
