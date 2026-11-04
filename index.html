@@ -3448,7 +3448,7 @@ async function showMatch(matchId, skipPushState) {
   const rcBg = rc==='win'?'#e8f5e9':rc==='lose'?'#ffebee':'#f5f5f5';
 
   // 역대 전적 계산
-  const h2h = allMatches.filter(x=>(x.opponents?.name||x.opponent)===oppName && x.id!==parseInt(matchId));
+  const h2h = allMatches.filter(x=>(x.opponents?.name||x.opponent)===oppName);   // 종료된 이 경기 결과도 포함
   const h2hWins = h2h.filter(x=>x.result==='Win').length;
   const h2hDraws = h2h.filter(x=>x.result==='Draw').length;
   const h2hLoses = h2h.filter(x=>x.result==='Lose').length;
