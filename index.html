@@ -309,8 +309,6 @@
   <button class="team-tab" onclick="switchTab('squad',this)">스쿼드</button>
   <button class="team-tab" onclick="switchTab('scorers',this)">플레이어 통계</button>
   <button class="team-tab" onclick="switchTab('teamstats',this)">팀 통계</button>
-  <button class="team-tab" onclick="switchTab('grounds',this)">운동장</button>
-  <button class="team-tab" onclick="switchTab('opponents',this)">상대팀</button>
   <button class="team-tab" onclick="openAdminTab(this)">🔒</button>
 </div>
 </div>
@@ -1066,7 +1064,7 @@ const api = async path => {
   return Array.isArray(d) ? d : [];
 };
 
-const TAB_ORDER = ['overview','matches','squad','scorers','teamstats','grounds','opponents'];
+const TAB_ORDER = ['overview','matches','squad','scorers','teamstats'];
 let allStats = [];
 let currentSeasonId = 1;
 let currentSeasonName = "2026 시즌";
