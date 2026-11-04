@@ -3611,7 +3611,7 @@ async function showMatch(matchId, skipPushState) {
         </div>
       </div>
 
-      ${luViewHtml(lineupData, stats, `${(m.match_date||'').slice(0,10)} vs ${oppName}`, {matchId:m.id, status:m.status, rec:lineupRec, canEdit:canRec})}
+      ${luViewHtml(lineupData, stats, `${(m.match_date||'').slice(0,10)} vs ${oppName}`, {matchId:m.id, status:m.status, rec:lineupRec, canEdit:canRec && m.status!=='finished'})}
       <!-- 참석 인원 -->
       <div style="margin-top:16px">
         <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">
@@ -3835,6 +3835,21 @@ function luViewHtml(data, stats, label, meta){
     <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">라인업${meta.canEdit?' · 기록 입력':''}</div>
     <div id="lv-wrap" style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 8px">${luViewInner()}</div></div>`;
 }
+async function luGoEditResult(id){
+  if(!isAdmin){
+    const pw = prompt('관리자 비밀번호를 입력하세요:');
+    if(pw===null) return;
+    if(pw!==ADMIN_PW){ alert('비밀번호가 틀렸습니다.'); return; }
+    isAdmin = true;
+    const ab = document.getElementById('admin-btn'); if(ab){ ab.textContent='관리자 ✓'; ab.classList.add('active'); }
+  }
+  await showAdminPage();
+  for(let i=0;i<30;i++){
+    const sel = document.getElementById('er-match-select');
+    if(sel && [...sel.options].some(o=>+o.value===+id)){ sel.value = id; loadEditResult(); sel.scrollIntoView({block:'center'}); return; }
+    await new Promise(r=>setTimeout(r,100));
+  }
+}
 function luViewRefresh(){ const el=document.getElementById('lv-wrap'); if(el) el.innerHTML = luViewInner(); }
 function luViewInner(){
   const v = window._lvData, data = v.data, rec = v.rec, plan = data.plan, q = v.q;
@@ -3856,7 +3871,7 @@ function luViewInner(){
     ${np?'':`<div class="lu-pitch"><i class="lu-box t"></i><i class="lu-box b"></i>${bubbles}</div>
     <div style="margin:10px 2px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>`}
     ${v.canEdit ? luViewEditHtml(q, used) : luGoalLine(rec,q,nm)}
-    ${rec && (v.canEdit||tu||tt) ? `<button onclick="luSyncStats()" style="width:100%;margin-top:10px;padding:10px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">📊 모든 경기 종료 (스코어 합산)</button>` : ''}
+    ${v.status==='finished' ? `<button onclick="luGoEditResult(${v.matchId})" style="width:100%;margin-top:10px;padding:10px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">✏️ 경기 결과 수정</button>` : rec && (v.canEdit||tu||tt) ? `<button onclick="luSyncStats()" style="width:100%;margin-top:10px;padding:10px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">📊 모든 경기 종료 (스코어 합산)</button>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 4px 0"><span style="font-size:11px;color:var(--muted)">${rec?`전체 ${tu} : ${tt}`:''}${np?'':`${rec?' · ':''}↻ 후반 교체`}</span>${np?'':`<button onclick="luDownloadView()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">📥 이미지 저장</button>`}</div>`;
 }
 function luViewEditHtml(q, used){
@@ -4035,7 +4050,7 @@ async function luMakeImage(o){
   const FONT = "'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
   const W = 1080, PAD = 30, GAP = 20, CW = (W-PAD*2-GAP)/2, PH = CW*1.35;
   const plan = o.plan, ids = o.order, nm = id=>o.people[id]||{name:'?',number:''};
-  const ROW = 44, TH = 56 + (ids.length+1)*ROW + 30;
+  const ROW = 44, TH = o.noTable ? 0 : 56 + (ids.length+1)*ROW + 30;
   const restH = 100;
   const H = Math.round(120 + 2*(PH+36+restH) + GAP + TH - 10);
   const imgs = {};
@@ -4085,6 +4100,7 @@ async function luMakeImage(o){
     if(o.rec){ const r=luRecOf(o.rec,q); if(r.goals.length){ ctx.fillStyle='#1c2430'; ctx.font=`600 20px ${FONT}`; const gt = r.goals.map(g=>luGoalPlain(g,nm)).join('  '); luWrapText(ctx,gt,CW).slice(0,2).forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+2*26+i*26-(lines.length>1?0:26))); } }
   }
   // 배정표
+  if(!o.noTable){
   const ty = 116 + 2*(PH+36+restH) + GAP;
   ctx.fillStyle='#1a3a6b'; ctx.font=`700 28px ${FONT}`; ctx.textAlign='left'; ctx.fillText('배정표', PAD, ty+14);
   const cols = [PAD, PAD+250, PAD+250+150, PAD+250+300, PAD+250+450, PAD+250+600], cw = [250,150,150,150,150,W-PAD*2-250-600];
@@ -4106,6 +4122,7 @@ async function luMakeImage(o){
     y += ROW;
   });
   ctx.strokeStyle='#d5dbe6'; ctx.lineWidth=1; ctx.strokeRect(PAD,ty+40,W-PAD*2,y-ty-40);
+  }
   return new Promise(res=>cv.toBlob(res,'image/png'));
 }
 async function luSaveImage(o, fname){
@@ -4128,7 +4145,7 @@ function luDownloadView(){
   const people = {}; const order = [];
   (v.stats||[]).filter(s=>s.attended&&s.players).forEach(s=>{ const id=s.players.id||s.player_id; people[id]={name:s.players.name,number:s.players.number,photo:s.players.photo_url||null}; order.push(id); });
   const gs = (v.data.cfg&&v.data.cfg.guests)||[]; gs.forEach(g=>{ people[g.id]={name:g.name,number:'용'}; order.push(g.id); });
-  luSaveImage({plan:v.data.plan,rec:v.rec,label:v.label||'',people,order}, `라인업_${(v.label||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}.png`);
+  luSaveImage({plan:v.data.plan,rec:v.rec,label:v.label||'',people,order,noTable:v.status==='finished'}, `라인업_${(v.label||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}.png`);
 }
 
 /* ---------- 오버레이 열기/닫기 ---------- */
