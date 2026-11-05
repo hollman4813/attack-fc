@@ -3060,6 +3060,7 @@ async function showPlayer(playerId) {
   // 서브탭 상태 저장
   const activeStatBtn = document.querySelector('.tab-btn.active');
   window._prevStatTab = activeStatBtn ? activeStatBtn.textContent.trim() : null;
+  window._prevScrollY = window.scrollY || document.documentElement.scrollTop || 0;
   history.pushState({ page: 'player', id: playerId }, '');
   document.getElementById('team-hero-header').style.display = 'none';
   ['home','match-detail','player-detail','admin-page'].forEach(id=>{
@@ -3069,6 +3070,7 @@ async function showPlayer(playerId) {
   document.getElementById('player-detail').classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'none';
   document.getElementById('player-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  window.scrollTo(0, 0);   // 목록 스크롤 위치가 남아 뒤로 버튼이 가려지지 않게
 
   let players = [], stats = [], matchStats = [];
   try {
@@ -3762,6 +3764,7 @@ function backToSquad() {
   document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.team-tab')[3].classList.add('active');
   document.getElementById('tab-squad').classList.add('active');
+  window.scrollTo(0, window._prevScrollY || 0);   // 보던 목록 위치로 복귀
 }
 /* ===== 포메이션 · 라인업 ===== */
 const LU_POS = ['GK','CB','LB','RB','DM','CM','CAM','LM','RM','LW','RW','ST'];
@@ -4709,7 +4712,7 @@ async function luSavePlan(){
   }
 
   document.addEventListener('touchstart', (e) => {
-    if (e.target.closest && e.target.closest('#lineup-overlay, #team-tab-bar, .team-tab-bar')) { pulling = false; return; }
+    if (e.target.closest && e.target.closest('#lineup-overlay, #team-tab-bar, .team-tab-bar, #player-detail')) { pulling = false; return; }
     if (getScrollTop() <= 0) {
       startY = e.touches[0].clientY;
       startX = e.touches[0].clientX;
