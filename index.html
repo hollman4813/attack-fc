@@ -619,7 +619,7 @@
 
   <!-- 관리자 페이지 -->
   <div class="section" id="admin-page">
-    <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:20px 16px">
+    <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:calc(20px + env(safe-area-inset-top, 0px)) 16px">
       <button onclick="exitAdmin()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;margin-bottom:12px;font-family:inherit">← 나가기</button>
       <div style="font-size:18px;font-weight:700;color:#fff">관리자 모드</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">ATTACK F.C. 데이터 관리</div>
@@ -3228,7 +3228,7 @@ async function showPlayer(playerId) {
 
   document.getElementById('player-detail-content').innerHTML = `
     <!-- 헤더 -->
-    <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:20px 16px 24px;position:relative">
+    <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:calc(20px + env(safe-area-inset-top, 0px)) 16px 24px;position:relative">
       <button onclick="backFromPlayer()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>
       <div style="display:flex;align-items:center;gap:16px">
         ${photoEl}
@@ -3509,7 +3509,7 @@ async function showMatch(matchId, skipPushState) {
   }).join('') : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">없음</div>';
 
   const heroHtml = isUpcoming ? `
-    <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:20px 16px">
+    <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:calc(20px + env(safe-area-inset-top, 0px)) 16px">
       <button onclick="backToMatches()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>
       <div style="text-align:center">
         <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:4px">${luIsLive(m)?'<span class="live-badge">● LIVE</span>':luIsOver(m)?'경기 종료':'예정 경기'}</div>
@@ -3530,7 +3530,7 @@ async function showMatch(matchId, skipPushState) {
         <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.6)">📍 ${m.grounds?.name||m.ground||'미정'}</div>
       </div>
     </div>` : `
-    <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:20px 16px">
+    <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:calc(20px + env(safe-area-inset-top, 0px)) 16px">
       <button onclick="backToMatches()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>
       <div style="text-align:center">
         <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:12px">${dateStr} · ${m.grounds?.name||m.ground||'미정'}</div>
@@ -4716,7 +4716,9 @@ async function luSavePlan(){
     // 새로고침은 상단바(헤더)에서 잡아당길 때만
     { const sh = document.getElementById('sticky-header');
       const shr = sh ? sh.getBoundingClientRect() : null;
-      const topLimit = (shr && shr.height > 20) ? shr.bottom : 90;
+      let probe = document.getElementById('safe-probe'); if(!probe){ probe = document.createElement('div'); probe.id='safe-probe'; probe.style.cssText='position:fixed;top:0;left:0;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top,0px)'; document.body.appendChild(probe); }
+      const safeTop = parseFloat(getComputedStyle(probe).paddingTop) || 0;
+      const topLimit = (shr && shr.height > 20) ? shr.bottom : 90 + safeTop;
       if (e.touches[0].clientY > topLimit) { pulling = false; return; } }
     if (getScrollTop() <= 0) {
       startY = e.touches[0].clientY;
