@@ -3798,6 +3798,16 @@ async function newsFetch(limit, b){
   return (rows||[]).map(r=>({key:r.key, ...(r.data||{})})).filter(p=>p.title);
 }
 function newsDateTxt(d){ if(!d) return ''; const x=new Date(d); return isNaN(x)?'':`${x.getFullYear()}.${String(x.getMonth()+1).padStart(2,'0')}.${String(x.getDate()).padStart(2,'0')}`; }
+function newsGo(a){
+  let host = ''; try{ host = new URL(a.href).hostname.replace(/^www\./,''); }catch(e){}
+  return confirm(`외부 사이트로 이동해요.\n\n${host}\n\n계속할까요?`);
+}
+function newsLinkify(t){
+  return luEsc(t||'').replace(/https?:\/\/[^\s<]+/g, m=>{
+    const tail = (m.match(/[.,;:!?)\]]+$/)||[''])[0]; const u = m.slice(0, m.length-tail.length);
+    return `<a href="${u}" target="_blank" rel="noopener noreferrer" onclick="return newsGo(this)" style="color:var(--skyblue);text-decoration:underline;word-break:break-all">${u}</a>${tail}`;
+  });
+}
 function newsImgErr(el){ const d=document.createElement('div'); d.className='news-thumb ph'; d.textContent='📋'; el.replaceWith(d); }
 function newsRowHtml(p, idx, b){
   b = b||'news';
@@ -3823,7 +3833,7 @@ function newsOpen(i, b){
   if(!ov){ ov = document.createElement('div'); ov.id='news-overlay'; ov.style.cssText='position:fixed;inset:0;z-index:9000;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain'; document.documentElement.appendChild(ov); }
   ov.innerHTML = `<div style="position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center"><button onclick="newsClose()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">← 닫기</button><span style="margin-left:auto">${admIcon('✏️',`newsClose();newsEdit(${i},true,'${b}')`,'수정','수정')}</span></div>
     ${p.photo?`<div style="padding:14px 16px 0"><img src="${p.photo}" referrerpolicy="no-referrer" onerror="this.parentNode.remove()" style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:10px" alt=""></div>`:''}
-    <div style="padding:18px 16px 60px"><div style="font-size:19px;font-weight:800;line-height:1.35;color:var(--text)">${luEsc(p.title)}</div><div style="font-size:12px;color:var(--muted);margin:6px 0 16px">${newsDateTxt(p.date)}</div><div style="font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap">${luEsc(p.body||'')}</div>${(p.link&&/^https?:\/\//.test(p.link))?`<a href="${luEsc(p.link)}" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:22px;padding:13px;text-align:center;background:var(--skyblue);color:#fff;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">원문 보기 ↗ ${luEsc(p.source||'')}</a>`:''}</div>`;
+    <div style="padding:18px 16px 60px"><div style="font-size:19px;font-weight:800;line-height:1.35;color:var(--text)">${luEsc(p.title)}</div><div style="font-size:12px;color:var(--muted);margin:6px 0 16px">${newsDateTxt(p.date)}</div><div style="font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap">${newsLinkify(p.body)}</div>${(p.link&&/^https?:\/\//.test(p.link))?`<a href="${luEsc(p.link)}" target="_blank" rel="noopener noreferrer" onclick="return newsGo(this)" style="display:block;margin-top:22px;padding:13px;text-align:center;background:var(--skyblue);color:#fff;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">원문 보기 ↗ ${luEsc(p.source||'')}</a>`:''}</div>`;
   ov.style.display='block'; ov.scrollTop=0; document.body.style.overflow='hidden';
 }
 function newsClose(){ const ov=document.getElementById('news-overlay'); if(ov) ov.style.display='none'; document.body.style.overflow=''; }
@@ -3844,7 +3854,7 @@ function newsEdit(i, fromHome, b){
   ov.innerHTML = `<div style="padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;background:#fff;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><button onclick="newsEditClose()" style="background:none;border:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">취소</button><b>${b==='info'?(p.key?'글 수정':'새 글'):(p.key?'소식 수정':'새 소식')}</b><button onclick="newsSave()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:6px 0">저장</button></div>
     <div style="padding:16px 16px 80px">
       <div style="font-size:11px;color:var(--muted);margin-bottom:4px">제목</div><input id="news-title" style="${inp};margin-bottom:14px" maxlength="80" value="${luEsc(p.title||'').replace(/"/g,'&quot;')}">
-      ${b==='info'?`<div style="font-size:11px;color:var(--muted);margin-bottom:4px">링크 (선택) — 붙여넣고 불러오기를 누르면 제목·사진이 채워져요</div><div style="display:flex;gap:6px;margin-bottom:4px"><input id="news-link" type="url" inputmode="url" placeholder="https://..." style="${inp};flex:1;min-width:0" value="${luEsc(p.link||'').replace(/"/g,'&quot;')}"><button onclick="newsFetchLink()" style="flex:none;padding:0 14px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font:inherit;font-weight:700;font-size:13px;cursor:pointer">불러오기</button></div><div id="news-link-msg" style="font-size:11px;color:var(--muted);min-height:16px;margin-bottom:12px"></div>`:''}
+      ${true?`<div style="font-size:11px;color:var(--muted);margin-bottom:4px">링크 (선택) — 붙여넣고 불러오기를 누르면 제목·사진이 채워져요</div><div style="display:flex;gap:6px;margin-bottom:4px"><input id="news-link" type="url" inputmode="url" placeholder="https://..." style="${inp};flex:1;min-width:0" value="${luEsc(p.link||'').replace(/"/g,'&quot;')}"><button onclick="newsFetchLink()" style="flex:none;padding:0 14px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font:inherit;font-weight:700;font-size:13px;cursor:pointer">불러오기</button></div><div id="news-link-msg" style="font-size:11px;color:var(--muted);min-height:16px;margin-bottom:12px"></div>`:''}
       <div style="font-size:11px;color:var(--muted);margin-bottom:4px">사진</div>
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px"><div id="news-prev" style="width:88px;height:88px;border-radius:8px;background:#e8eef7;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:28px;color:#9db0cc;flex:none">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:'📰'}</div>
         <div><label style="display:inline-block;padding:9px 14px;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer">사진 선택<input type="file" accept="image/*" onchange="newsPick(this)" style="display:none"></label><button onclick="newsNoPhoto()" style="margin-left:6px;padding:9px 12px;background:none;border:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer">삭제</button></div></div>
