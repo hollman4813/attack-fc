@@ -3798,11 +3798,12 @@ async function newsFetch(limit, b){
   return (rows||[]).map(r=>({key:r.key, ...(r.data||{})})).filter(p=>p.title);
 }
 function newsDateTxt(d){ if(!d) return ''; const x=new Date(d); return isNaN(x)?'':`${x.getFullYear()}.${String(x.getMonth()+1).padStart(2,'0')}.${String(x.getDate()).padStart(2,'0')}`; }
+function newsImgErr(el){ const d=document.createElement('div'); d.className='news-thumb ph'; d.textContent='📋'; el.replaceWith(d); }
 function newsRowHtml(p, idx, b){
   b = b||'news';
   const ed = admIcon('✏️',`newsEdit(${idx},true,'${b}')`,'수정');
-  const img = p.photo ? `<img class="news-thumb" src="${p.photo}" alt="">` : `<div class="news-thumb ph">${BOARDS[b].ph}</div>`;
-  return `<div class="news-row" onclick="newsOpen(${idx},'${b}')">${img}<div class="news-body"><div class="news-title">${luEsc(p.title)}</div><div class="news-sum">${luEsc((p.body||'').replace(/\s+/g,' ').slice(0,120))}</div><div class="news-date">${newsDateTxt(p.date)}</div></div>${ed?`<div style="position:absolute;top:8px;right:8px">${ed}</div>`:''}</div>`;
+  const img = p.photo ? `<img class="news-thumb" src="${p.photo}" alt="" referrerpolicy="no-referrer" onerror="newsImgErr(this)">` : `<div class="news-thumb ph">${BOARDS[b].ph}</div>`;
+  return `<div class="news-row" onclick="newsOpen(${idx},'${b}')">${img}<div class="news-body"><div class="news-title">${luEsc(p.title)}</div><div class="news-sum">${luEsc((p.body||'').replace(/\s+/g,' ').slice(0,120))}</div><div class="news-date">${newsDateTxt(p.date)}${p.link?` · ↗ ${luEsc(p.source||'링크')}`:''}</div></div>${ed?`<div style="position:absolute;top:8px;right:8px">${ed}</div>`:''}</div>`;
 }
 async function loadNews(){
   const host = document.getElementById('ov-content'); if(!host) return;
@@ -3821,8 +3822,8 @@ function newsOpen(i, b){
   let ov = document.getElementById('news-overlay');
   if(!ov){ ov = document.createElement('div'); ov.id='news-overlay'; ov.style.cssText='position:fixed;inset:0;z-index:9000;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain'; document.documentElement.appendChild(ov); }
   ov.innerHTML = `<div style="position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center"><button onclick="newsClose()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">← 닫기</button><span style="margin-left:auto">${admIcon('✏️',`newsClose();newsEdit(${i},true,'${b}')`,'수정','수정')}</span></div>
-    ${p.photo?`<div style="padding:14px 16px 0"><img src="${p.photo}" style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:10px" alt=""></div>`:''}
-    <div style="padding:18px 16px 60px"><div style="font-size:19px;font-weight:800;line-height:1.35;color:var(--text)">${luEsc(p.title)}</div><div style="font-size:12px;color:var(--muted);margin:6px 0 16px">${newsDateTxt(p.date)}</div><div style="font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap">${luEsc(p.body||'')}</div></div>`;
+    ${p.photo?`<div style="padding:14px 16px 0"><img src="${p.photo}" referrerpolicy="no-referrer" onerror="this.parentNode.remove()" style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:10px" alt=""></div>`:''}
+    <div style="padding:18px 16px 60px"><div style="font-size:19px;font-weight:800;line-height:1.35;color:var(--text)">${luEsc(p.title)}</div><div style="font-size:12px;color:var(--muted);margin:6px 0 16px">${newsDateTxt(p.date)}</div><div style="font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap">${luEsc(p.body||'')}</div>${(p.link&&/^https?:\/\//.test(p.link))?`<a href="${luEsc(p.link)}" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:22px;padding:13px;text-align:center;background:var(--skyblue);color:#fff;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">원문 보기 ↗ ${luEsc(p.source||'')}</a>`:''}</div>`;
   ov.style.display='block'; ov.scrollTop=0; document.body.style.overflow='hidden';
 }
 function newsClose(){ const ov=document.getElementById('news-overlay'); if(ov) ov.style.display='none'; document.body.style.overflow=''; }
@@ -3836,13 +3837,14 @@ async function newsAdminLoad(){
 function newsEdit(i, fromHome, b){
   b = b||'news';
   const p = i==null ? {} : (((fromHome?window[BOARDS[b].list]:window._newsAdmin)||[])[i]||{});
-  window._newsDraft = {board:b, key:p.key||null, photo:p.photo||'', date:p.date||new Date().toISOString()};
+  window._newsDraft = {board:b, source:p.source||'', key:p.key||null, photo:p.photo||'', date:p.date||new Date().toISOString()};
   let ov = document.getElementById('news-edit');
   if(!ov){ ov = document.createElement('div'); ov.id='news-edit'; ov.style.cssText='position:fixed;inset:0;z-index:9100;background:#f4f6f9;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain'; document.documentElement.appendChild(ov); }
   const inp = 'width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:14px;box-sizing:border-box;background:#fff';
   ov.innerHTML = `<div style="padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;background:#fff;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><button onclick="newsEditClose()" style="background:none;border:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">취소</button><b>${b==='info'?(p.key?'글 수정':'새 글'):(p.key?'소식 수정':'새 소식')}</b><button onclick="newsSave()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:6px 0">저장</button></div>
     <div style="padding:16px 16px 80px">
       <div style="font-size:11px;color:var(--muted);margin-bottom:4px">제목</div><input id="news-title" style="${inp};margin-bottom:14px" maxlength="80" value="${luEsc(p.title||'').replace(/"/g,'&quot;')}">
+      ${b==='info'?`<div style="font-size:11px;color:var(--muted);margin-bottom:4px">링크 (선택) — 붙여넣고 불러오기를 누르면 제목·사진이 채워져요</div><div style="display:flex;gap:6px;margin-bottom:4px"><input id="news-link" type="url" inputmode="url" placeholder="https://..." style="${inp};flex:1;min-width:0" value="${luEsc(p.link||'').replace(/"/g,'&quot;')}"><button onclick="newsFetchLink()" style="flex:none;padding:0 14px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font:inherit;font-weight:700;font-size:13px;cursor:pointer">불러오기</button></div><div id="news-link-msg" style="font-size:11px;color:var(--muted);min-height:16px;margin-bottom:12px"></div>`:''}
       <div style="font-size:11px;color:var(--muted);margin-bottom:4px">사진</div>
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px"><div id="news-prev" style="width:88px;height:88px;border-radius:8px;background:#e8eef7;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:28px;color:#9db0cc;flex:none">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:'📰'}</div>
         <div><label style="display:inline-block;padding:9px 14px;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer">사진 선택<input type="file" accept="image/*" onchange="newsPick(this)" style="display:none"></label><button onclick="newsNoPhoto()" style="margin-left:6px;padding:9px 12px;background:none;border:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer">삭제</button></div></div>
@@ -3850,6 +3852,20 @@ function newsEdit(i, fromHome, b){
       ${p.key?`<button onclick="newsDelete()" style="margin-top:18px;width:100%;padding:11px;background:#fff;color:#c62828;border:1px solid #f0c4c4;border-radius:8px;font:inherit;font-weight:700;cursor:pointer">${b==='info'?'이 글 삭제':'이 소식 삭제'}</button>`:''}
     </div>`;
   ov.style.display='block'; ov.scrollTop=0;
+}
+async function newsFetchLink(){
+  const inp = document.getElementById('news-link'), msg = document.getElementById('news-link-msg');
+  const url = (inp.value||'').trim();
+  if(!/^https?:\/\//i.test(url)){ msg.textContent = 'http:// 또는 https:// 로 시작하는 주소를 넣어주세요'; return; }
+  msg.textContent = '불러오는 중...';
+  try{
+    const r = await fetch('/api/og?url='+encodeURIComponent(url)); const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    const t = document.getElementById('news-title'); if(d.title && !t.value.trim()) t.value = d.title.slice(0,80);
+    if(d.image){ window._newsDraft.photo = d.image; document.getElementById('news-prev').innerHTML = `<img src="${d.image}" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover">`; }
+    window._newsDraft.source = d.site || '';
+    msg.textContent = d.title ? `✓ 가져왔어요 (${d.site||''}) — 제목은 직접 고쳐도 돼요` : '제목을 찾지 못했어요. 직접 입력해 주세요';
+  }catch(e){ msg.textContent = '자동으로 불러오지 못했어요. 제목과 사진은 직접 입력해 주세요'; }
 }
 function newsEditClose(){ const ov=document.getElementById('news-edit'); if(ov) ov.style.display='none'; }
 function newsNoPhoto(){ window._newsDraft.photo=''; document.getElementById('news-prev').innerHTML='📰'; }
@@ -3869,7 +3885,10 @@ async function newsSave(){
   const title = document.getElementById('news-title').value.trim(), body = document.getElementById('news-body').value.trim();
   if(!title){ alert('제목을 입력해주세요'); return; }
   const d = window._newsDraft; const key = d.key || (BOARDS[d.board||'news'].prefix + String(Date.now()).padStart(13,'0'));
-  const ok = await luPut(key, {title, body, photo:d.photo||'', date:d.date});
+  const lk = ((document.getElementById('news-link')||{}).value||'').trim();
+  if(lk && !/^https?:\/\//i.test(lk)){ alert('링크는 http:// 또는 https:// 로 시작해야 해요'); return; }
+  const payload = {title, body, photo:d.photo||'', date:d.date}; if(lk){ payload.link = lk; payload.source = d.source || (()=>{try{return new URL(lk).hostname.replace(/^www\./,'')}catch(e){return ''}})(); }
+  const ok = await luPut(key, payload);
   if(!ok){ alert('저장에 실패했어요. lineup_store 테이블 설정을 확인해주세요.'); return; }
   newsEditClose(); await newsAdminLoad(); loaded['overview']=false; loadNews();
 }
