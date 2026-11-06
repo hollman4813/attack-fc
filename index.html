@@ -243,7 +243,9 @@
   .lu-sel{padding:7px 6px;border:1px solid var(--border);border-radius:6px;font:inherit;font-size:13px;background:#fff;min-width:0;width:100%;box-sizing:border-box}
   .lu-btn{width:100%;padding:11px;background:var(--skyblue);color:#fff;border:none;border-radius:8px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px}
   .lu-warn{background:#fff7e0;border:1px solid #f0d58a;color:#7a5a00;border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.5}
-  .news-row{display:flex;gap:12px;padding:12px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer}
+  .adm-btn{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 10px;border-radius:16px;background:#fff3e0;border:1px solid #ffc27a;color:#d35400;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;gap:4px;flex:none}
+  .adm-bar{display:flex;justify-content:flex-end;padding:10px 12px 0}
+  .news-row{position:relative;display:flex;gap:12px;padding:12px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer}
   .news-thumb{width:88px;height:88px;border-radius:8px;object-fit:cover;flex:none;background:#e8eef7}
   .news-thumb.ph{display:flex;align-items:center;justify-content:center;font-size:28px;color:#9db0cc}
   .news-body{min-width:0;flex:1;display:flex;flex-direction:column}
@@ -620,7 +622,7 @@
   <!-- 관리자 페이지 -->
   <div class="section" id="admin-page">
     <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:calc(20px + env(safe-area-inset-top, 0px)) 16px">
-      <button onclick="exitAdmin()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;margin-bottom:12px;font-family:inherit">← 나가기</button>
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px"><button onclick="exitAdmin()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;font-family:inherit">← 돌아가기</button><button onclick="adminLogout()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:12px;cursor:pointer;padding:5px 10px;border-radius:12px;font-family:inherit">로그아웃</button></div>
       <div style="font-size:18px;font-weight:700;color:#fff">관리자 모드</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">ATTACK F.C. 데이터 관리</div>
     </div>
@@ -730,7 +732,7 @@
       </div>
 
       <!-- 경기 일정 추가 -->
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 일정 추가</div>
+      <div id="a-card-addmatch" style="scroll-margin-top:12px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 일정 추가</div>
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
@@ -788,7 +790,7 @@
       </div>
 
       <!-- 경기 정보 수정 -->
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 정보 수정</div>
+      <div id="a-card-editmatch" style="scroll-margin-top:12px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 정보 수정</div>
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
         <div style="margin-bottom:10px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">경기 선택</div>
@@ -822,7 +824,7 @@
       </div>
 
       <!-- 선수 등록 -->
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">선수 등록</div>
+      <div id="a-card-addplayer" style="scroll-margin-top:12px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">선수 등록</div>
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
@@ -877,7 +879,7 @@
       </div>
 
       <!-- 선수 정보 수정 -->
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">선수 정보 수정</div>
+      <div id="a-card-editplayer" style="scroll-margin-top:12px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">선수 정보 수정</div>
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
         <div style="margin-bottom:10px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">선수 선택</div>
@@ -1288,7 +1290,7 @@ async function loadMatches() {
     });
   });
 
-  document.getElementById('matches-list').innerHTML = html;
+  document.getElementById('matches-list').innerHTML = (isAdmin?`<div class="adm-bar">${admIcon('＋','admAddMatch()','경기 등록','경기 등록')}</div>`:'') + html;
   window._cachedMatches = [...finished, ...upcoming];
   document.getElementById('matches-loading').style.display = 'none';
   document.getElementById('matches-content').style.display = 'block';
@@ -1581,7 +1583,7 @@ async function loadSquad() {
     html += inactive.sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(row).join('');
   }
 
-  document.getElementById('squad-list').innerHTML = html;
+  document.getElementById('squad-list').innerHTML = (isAdmin?`<div class="adm-bar" style="padding:0 0 10px">${admIcon('＋','admAddPlayer()','선수 등록','선수 등록')}</div>`:'') + html;
   document.getElementById('squad-loading').style.display = 'none';
   document.getElementById('squad-content').style.display = 'block';
 }
@@ -2134,12 +2136,51 @@ loaded['overview'] = true;
 const ADMIN_PW = 'attack12#';
 let isAdmin = false;
 let allPlayers = [];
+function admIcon(icon, onclick, title, label){
+  return isAdmin ? `<button class="adm-btn" title="${title||''}" onclick="event.stopPropagation();${onclick}">${icon}${label?`<span>${label}</span>`:''}</button>` : '';
+}
+function admSetLock(){
+  const b = document.querySelectorAll('.team-tab'); const lock = b[b.length-1];
+  if(lock && /🔒|🔓/.test(lock.textContent)) lock.textContent = isAdmin ? '🔓' : '🔒';
+}
+function admReloadActive(){
+  ['overview','matches','squad','scorers','teamstats'].forEach(k=>loaded[k]=false);
+  const id = (document.querySelector('.tab-section.active')||{}).id || 'tab-overview';
+  const tab = id.replace('tab-','');
+  loaded[tab] = true;
+  if(tab==='overview') loadOverview();
+  else if(tab==='matches') loadMatches();
+  else if(tab==='squad') loadSquad();
+  else if(tab==='scorers') loadScorers();
+  else if(tab==='teamstats') loadTeamStats();
+}
+function admLogin(){
+  isAdmin = true; admSetLock();
+  const ab = document.getElementById('admin-btn'); if(ab){ ab.textContent='관리자 ✓'; ab.classList.add('active'); }
+  admReloadActive();
+  alert('관리자 모드가 켜졌어요.\n각 화면의 ✏️ / ＋ 버튼으로 바로 등록·수정할 수 있어요.\n(전체 관리 화면은 🔓 탭)');
+}
+function adminLogout(){
+  isAdmin = false; admSetLock();
+  const ab = document.getElementById('admin-btn'); if(ab){ ab.textContent='관리자'; ab.classList.remove('active'); }
+  exitAdmin();
+}
+async function admOpen(anchor, setup){
+  await showAdminPage();
+  if(setup) { try{ setup(); }catch(e){ console.error(e); } }
+  const el = document.getElementById(anchor); if(el) el.scrollIntoView({block:'start'});
+}
+function admAddMatch(){ admOpen('a-card-addmatch'); }
+function admEditMatch(id){ admOpen('a-card-editmatch', ()=>{ document.getElementById('em-match-select').value = id; loadEditMatch(); }); }
+function admAddPlayer(){ admOpen('a-card-addplayer'); }
+function admEditPlayer(id){ admOpen('a-card-editplayer', ()=>{ document.getElementById('ep-select').value = id; loadEditPlayer(); }); }
 
 function openAdminTab(btn) {
+  if (isAdmin) { showAdminPage(); return; }
   const pw = prompt('관리자 비밀번호를 입력하세요:');
   if (pw === ADMIN_PW) {
-    isAdmin = true;
-    showAdminPage();
+    if (isAdmin) { showAdminPage(); return; }
+    admLogin();
   } else if (pw !== null) {
     alert('비밀번호가 틀렸습니다.');
     // 탭 active 상태 원복
@@ -2149,13 +2190,10 @@ function openAdminTab(btn) {
 }
 
 function toggleAdmin() {
-  if (isAdmin) { exitAdmin(); return; }
+  if (isAdmin) { adminLogout(); return; }
   const pw = prompt('관리자 비밀번호를 입력하세요:');
   if (pw === ADMIN_PW) {
-    isAdmin = true;
-    document.getElementById('admin-btn').textContent = '관리자 ✓';
-    document.getElementById('admin-btn').classList.add('active');
-    showAdminPage();
+    admLogin();
   } else if (pw !== null) {
     alert('비밀번호가 틀렸습니다.');
   }
@@ -3042,18 +3080,20 @@ async function deletePlayer() {
 }
 
 function exitAdmin() {
-  isAdmin = false;
   ['home','match-detail','player-detail','admin-page'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.classList.remove('active');
   });
-  document.querySelectorAll('.team-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('home').classList.add('active');
-  document.querySelectorAll('.team-tab')[0].classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'flex';
   document.getElementById('team-hero-header').style.display = 'block';
-  loaded['overview'] = false;
-  loadOverview();
+  if(!document.querySelector('.team-tab.active')){
+    const t = document.querySelectorAll('.team-tab'); t[0].classList.add('active');
+    document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('tab-overview').classList.add('active');
+  }
+  window.scrollTo(0,0);
+  admReloadActive();
 }
 
 /* ── 선수 상세 페이지 ── */
@@ -3235,7 +3275,7 @@ async function showPlayer(playerId) {
   document.getElementById('player-detail-content').innerHTML = `
     <!-- 헤더 -->
     <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:calc(20px + env(safe-area-inset-top, 0px)) 16px 24px;position:relative">
-      <button onclick="backFromPlayer()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><button onclick="backFromPlayer()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>${admIcon('✏️',`admEditPlayer(${p.id})`,'선수 수정','선수 수정')}</div>
       <div style="display:flex;align-items:center;gap:16px">
         ${photoEl}
         <div>
@@ -3516,7 +3556,7 @@ async function showMatch(matchId, skipPushState) {
 
   const heroHtml = isUpcoming ? `
     <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:calc(20px + env(safe-area-inset-top, 0px)) 16px">
-      <button onclick="backToMatches()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><button onclick="backToMatches()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>${admIcon('✏️',`admEditMatch(${m.id})`,'일정 수정','일정 수정')}</div>
       <div style="text-align:center">
         <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:4px">${luIsLive(m)?'<span class="live-badge">● LIVE</span>':luIsOver(m)?'경기 종료':'예정 경기'}</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:12px">${dateStr}${m.match_time ? ' · ' + m.match_time : ''}</div>
@@ -3537,7 +3577,7 @@ async function showMatch(matchId, skipPushState) {
       </div>
     </div>` : `
     <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:calc(20px + env(safe-area-inset-top, 0px)) 16px">
-      <button onclick="backToMatches()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><button onclick="backToMatches()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>${admIcon('✏️',`admEditMatch(${m.id})`,'일정 수정','일정 수정')}</div>
       <div style="text-align:center">
         <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:12px">${dateStr} · ${m.grounds?.name||m.ground||'미정'}</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:16px">
@@ -3781,8 +3821,9 @@ async function newsFetch(limit){
 }
 function newsDateTxt(d){ if(!d) return ''; const x=new Date(d); return isNaN(x)?'':`${x.getFullYear()}.${String(x.getMonth()+1).padStart(2,'0')}.${String(x.getDate()).padStart(2,'0')}`; }
 function newsRowHtml(p, idx){
+  const ed = admIcon('✏️',`newsEdit(${idx},true)`,'소식 수정');
   const img = p.photo ? `<img class="news-thumb" src="${p.photo}" alt="">` : `<div class="news-thumb ph">📰</div>`;
-  return `<div class="news-row" onclick="newsOpen(${idx})">${img}<div class="news-body"><div class="news-title">${luEsc(p.title)}</div><div class="news-sum">${luEsc((p.body||'').replace(/\s+/g,' ').slice(0,120))}</div><div class="news-date">${newsDateTxt(p.date)}</div></div></div>`;
+  return `<div class="news-row" onclick="newsOpen(${idx})">${img}<div class="news-body"><div class="news-title">${luEsc(p.title)}</div><div class="news-sum">${luEsc((p.body||'').replace(/\s+/g,' ').slice(0,120))}</div><div class="news-date">${newsDateTxt(p.date)}</div></div>${ed?`<div style="position:absolute;top:8px;right:8px">${ed}</div>`:''}</div>`;
 }
 async function loadNews(){
   const host = document.getElementById('ov-content'); if(!host) return;
@@ -3790,13 +3831,13 @@ async function loadNews(){
   if(!box){ box = document.createElement('div'); box.id='ov-news'; host.appendChild(box); }
   const posts = await newsFetch(5);
   window._news = posts;
-  box.innerHTML = `<div class="divider"></div><div class="sec-header"><div class="sec-title">NEWS</div></div><div style="padding:0 12px 20px">${posts.length ? posts.map(newsRowHtml).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">등록된 소식이 없어요</div>'}</div>`;
+  box.innerHTML = `<div class="divider"></div><div class="sec-header" style="padding:0 12px"><div class="sec-title">NEWS</div>${admIcon('✏️','newsEdit(null)','소식 쓰기','글쓰기')}</div><div style="padding:0 12px 20px">${posts.length ? posts.map(newsRowHtml).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">등록된 소식이 없어요</div>'}</div>`;
 }
 function newsOpen(i){
   const p = (window._news||[])[i]; if(!p) return;
   let ov = document.getElementById('news-overlay');
   if(!ov){ ov = document.createElement('div'); ov.id='news-overlay'; ov.style.cssText='position:fixed;inset:0;z-index:9000;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain'; document.documentElement.appendChild(ov); }
-  ov.innerHTML = `<div style="position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center"><button onclick="newsClose()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">← 닫기</button></div>
+  ov.innerHTML = `<div style="position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center"><button onclick="newsClose()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">← 닫기</button><span style="margin-left:auto">${admIcon('✏️',`newsClose();newsEdit(${i},true)`,'소식 수정','수정')}</span></div>
     ${p.photo?`<img src="${p.photo}" style="width:100%;max-height:60vh;object-fit:cover;display:block" alt="">`:''}
     <div style="padding:18px 16px 60px"><div style="font-size:19px;font-weight:800;line-height:1.35;color:var(--text)">${luEsc(p.title)}</div><div style="font-size:12px;color:var(--muted);margin:6px 0 16px">${newsDateTxt(p.date)}</div><div style="font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap">${luEsc(p.body||'')}</div></div>`;
   ov.style.display='block'; ov.scrollTop=0; document.body.style.overflow='hidden';
@@ -3809,8 +3850,8 @@ async function newsAdminLoad(){
   const posts = await newsFetch(30); window._newsAdmin = posts;
   box.innerHTML = posts.length ? posts.map((p,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #eef0f4"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${luEsc(p.title)}</div><div style="font-size:11px;color:var(--muted)">${newsDateTxt(p.date)}</div></div><button onclick="newsEdit(${i})" style="padding:6px 10px;border:1px solid var(--border);background:#fff;border-radius:6px;font:inherit;font-size:12px;cursor:pointer">수정</button></div>`).join('') : '<div style="font-size:12px;color:var(--muted);text-align:center;padding:6px 0">등록된 소식이 없어요</div>';
 }
-function newsEdit(i){
-  const p = i==null ? {} : ((window._newsAdmin||[])[i]||{});
+function newsEdit(i, fromHome){
+  const p = i==null ? {} : (((fromHome?window._news:window._newsAdmin)||[])[i]||{});
   window._newsDraft = {key:p.key||null, photo:p.photo||'', date:p.date||new Date().toISOString()};
   let ov = document.getElementById('news-edit');
   if(!ov){ ov = document.createElement('div'); ov.id='news-edit'; ov.style.cssText='position:fixed;inset:0;z-index:9100;background:#f4f6f9;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain'; document.documentElement.appendChild(ov); }
@@ -3846,14 +3887,14 @@ async function newsSave(){
   const d = window._newsDraft; const key = d.key || (NEWS_PREFIX + String(Date.now()).padStart(13,'0'));
   const ok = await luPut(key, {title, body, photo:d.photo||'', date:d.date});
   if(!ok){ alert('저장에 실패했어요. lineup_store 테이블 설정을 확인해주세요.'); return; }
-  newsEditClose(); await newsAdminLoad(); loaded['overview']=false;
+  newsEditClose(); await newsAdminLoad(); loaded['overview']=false; loadNews();
 }
 async function newsDelete(){
   const d = window._newsDraft; if(!d||!d.key) return;
   if(!confirm('이 소식을 삭제할까요?')) return;
   const res = await fetch(`${SUPA_URL}/rest/v1/${LU_STORE}?key=eq.${encodeURIComponent(d.key)}`,{method:'DELETE',headers:{apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`}});
   if(!res.ok){ alert('삭제에 실패했어요'); return; }
-  newsEditClose(); await newsAdminLoad(); loaded['overview']=false;
+  newsEditClose(); await newsAdminLoad(); loaded['overview']=false; loadNews();
 }
 
 /* ===== 포메이션 · 라인업 ===== */
@@ -3949,7 +3990,7 @@ async function luGoEditResult(id){
     const pw = prompt('관리자 비밀번호를 입력하세요:');
     if(pw===null) return;
     if(pw!==ADMIN_PW){ alert('비밀번호가 틀렸습니다.'); return; }
-    isAdmin = true;
+    isAdmin = true; admSetLock();
     const ab = document.getElementById('admin-btn'); if(ab){ ab.textContent='관리자 ✓'; ab.classList.add('active'); }
   }
   await showAdminPage();
