@@ -392,13 +392,6 @@
               </div>
             </div>
           </div>
-          <div class="divider"></div>
-          <div class="sec-header"><div class="sec-title">득점 순위</div><button class="sec-more" onclick="switchTab('scorers',document.querySelectorAll('.team-tab')[2])">모두</button></div>
-          <div class="rank-list" id="ov-goals"></div>
-          <div class="sec-header"><div class="sec-title">어시스트 순위</div><button class="sec-more" onclick="switchTab('scorers',document.querySelectorAll('.team-tab')[2])">모두</button></div>
-          <div class="rank-list" id="ov-assists"></div>
-          <div class="sec-header"><div class="sec-title">MOM 순위</div><button class="sec-more" onclick="switchTab('scorers',document.querySelectorAll('.team-tab')[2])">모두</button></div>
-          <div class="rank-list" id="ov-mom"></div>
         </div>
       </div>
     </div>
@@ -1218,9 +1211,6 @@ async function loadOverview() {
       </div>
     </div>`;
   };
-  document.getElementById('ov-goals').innerHTML = [...stats].sort((a,b)=>b['총골']-a['총골']).slice(0,3).map((p,i)=>ri(p,i,'총골','골')).join('');
-  document.getElementById('ov-assists').innerHTML = [...stats].sort((a,b)=>b['총어시스트']-a['총어시스트']).slice(0,3).map((p,i)=>ri(p,i,'총어시스트','어시스트')).join('');
-  document.getElementById('ov-mom').innerHTML = [...stats].sort((a,b)=>b['mom횟수']-a['mom횟수']).filter(p=>p['mom횟수']>0).slice(0,3).map((p,i)=>ri(p,i,'mom횟수','MOM')).join('');
 
   document.getElementById('ov-loading').style.display='none';
   document.getElementById('ov-content').style.display='block';
