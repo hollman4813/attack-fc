@@ -172,6 +172,20 @@
   .mom-val-lbl { font-size:10px; color:var(--muted); text-align:right; }
 
   /* 탭 */
+  .fm-season{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin:14px 0 12px;font-size:14px;font-weight:700}
+  .fm-season-ico{font-size:16px}
+  .fm-card{background:#fff;border:1px solid var(--border);border-radius:16px;margin-bottom:12px;overflow:hidden}
+  .fm-head{display:flex;justify-content:space-between;align-items:center;padding:16px 16px 10px;font-size:14px;font-weight:700;cursor:pointer}
+  .fm-chev{font-size:22px;line-height:1;color:var(--text)}
+  .fm-row{display:flex;align-items:center;gap:12px;padding:10px 16px;margin:0;border-top:1px solid #f0f2f5;cursor:pointer}
+  .fm-av{width:36px;height:36px;border-radius:50%;background:#e8f0f8;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--skyblue);flex:none}
+  .fm-av img{width:100%;height:100%;object-fit:cover}
+  .fm-name{flex:1;font-size:14px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fm-val{font-size:13px;font-weight:700;min-width:30px;text-align:center}
+  .fm-val.top{background:#111;color:#fff;border-radius:999px;padding:4px 10px}
+  .fm-empty{padding:14px 16px 18px;text-align:center;color:var(--muted);font-size:13px;border-top:1px solid #f0f2f5}
+  .fm-back{display:flex;align-items:center;justify-content:space-between;margin:12px 0}
+  .fm-back button{background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:6px 0;width:48px;text-align:left}
   .tab-row { display:flex; gap:6px; margin:14px 0; overflow-x:auto; padding-bottom:2px; }
   .tab-btn { background:var(--bg3); border:1px solid var(--border); border-radius:20px; color:var(--muted); font-family:inherit; font-size:12px; font-weight:600; padding:6px 14px; cursor:pointer; white-space:nowrap; transition:all 0.15s; }
   .tab-btn.active { background:var(--skyblue); color:#fff; border-color:var(--skyblue); }
@@ -418,14 +432,6 @@
     <div class="tab-section" id="tab-scorers">
       <div class="loading" id="scorers-loading"><div class="spinner"></div>불러오는 중...</div>
       <div id="scorers-content" style="display:none">
-        <div class="tab-row content-wrap">
-          <button class="tab-btn active" onclick="switchStatTab('overview',this)">주요 통계</button>
-          <button class="tab-btn" onclick="switchStatTab('goals',this)">득점</button>
-          <button class="tab-btn" onclick="switchStatTab('assists',this)">어시스트</button>
-          <button class="tab-btn" onclick="switchStatTab('points',this)">공격포인트</button>
-          <button class="tab-btn" onclick="switchStatTab('mom',this)">MOM</button>
-          <button class="tab-btn" onclick="switchStatTab('power',this)">어택 파워랭킹</button>
-        </div>
         <div style="padding:0 12px 16px" id="scorers-body"></div>
       </div>
     </div>
@@ -1307,16 +1313,8 @@ async function loadScorers(restoreTab) {
   allStats = allStats.map(s => ({...s, ...(playerMap[s.name]||{}), name: s.name}));
   document.getElementById('scorers-loading').style.display = 'none';
   document.getElementById('scorers-content').style.display = 'block';
-  // 서브탭 복원
-  const prevTab = restoreTab || window._currentStatTab;
-  if (prevTab && prevTab !== 'overview') {
-    const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4, power:5 };
-    const btns = document.querySelectorAll('.tab-btn');
-    const idx = tabMap[prevTab];
-    if (btns[idx]) switchStatTab(prevTab, btns[idx]);
-  } else {
-    renderStatOverview();
-  }
+  window._powerList = null;
+  statGo(restoreTab || window._currentStatTab || 'overview');
 }
 
 function statCard(p, i, key) {
@@ -1331,29 +1329,48 @@ function statCard(p, i, key) {
   </div>`;
 }
 
+const FM_CATS = [
+  { tab:'goals',   key:'총골',     label:'득점' },
+  { tab:'assists', key:'총어시스트', label:'도움' },
+  { tab:'points',  key:'공격포인트', label:'득점 + 도움' },
+  { tab:'mom',     key:'mom횟수',   label:'MOM' }
+];
+function fmAvatar(p){
+  return p.photo_url
+    ? `<img src="${p.photo_url}" alt="">`
+    : `<span>${(p.name||'?').slice(0,1)}</span>`;
+}
+function fmRow(p, i, val){
+  return `<div class="fm-row" onclick="showPlayer(${p.id})"><div class="fm-av">${fmAvatar(p)}</div><div class="fm-name">${p.name}</div><div class="fm-val ${i===0?'top':''}">${val}</div></div>`;
+}
+function fmCard(tab, label, rowsHtml){
+  return `<div class="fm-card"><div class="fm-head" onclick="statGo('${tab}')"><span>${label}</span><span class="fm-chev">›</span></div>${rowsHtml || '<div class="fm-empty">기록 없음</div>'}</div>`;
+}
+async function getPower(){
+  if(!window._powerList) window._powerList = await calcPowerRanking();
+  return window._powerList;
+}
 function renderStatOverview() {
-  const categories = [
-    { key:'총골', label:'⚽ 득점' },
-    { key:'총어시스트', label:'🎯 어시스트' },
-    { key:'공격포인트', label:'📊 득점+어시스트' },
-    { key:'mom횟수', label:'🏆 MOM', filter: p=>p['mom횟수']>0 }
-  ];
-  document.getElementById('scorers-body').innerHTML = categories.map(cat => {
-    const sorted = [...allStats]
-      .filter(cat.filter || (p=>p[cat.key]>0))
-      .sort((a,b)=>b[cat.key]-a[cat.key])
-      .slice(0,3);
-    return `<div class="stat-category">
-      <div class="stat-category-header">
-        <div class="stat-category-title">${cat.label}</div>
-        <button class="stat-category-more" onclick="switchStatTabByName('${cat.key==='총골'?'goals':cat.key==='총어시스트'?'assists':cat.key==='공격포인트'?'points':'mom'}')">모두 보기</button>
-      </div>
-      <div class="stat-players-row">${sorted.map((p,i)=>statCard(p,i,cat.key)).join('')}</div>
-    </div>`;
+  window._currentStatTab = 'overview';
+  const body = document.getElementById('scorers-body');
+  const season = `<div class="fm-season"><span class="fm-season-ico">⚽</span>ATTACK F.C. ${new Date().getFullYear()} 시즌</div>`;
+  const cards = FM_CATS.map(cat => {
+    const top = [...allStats].filter(p=>p[cat.key]>0).sort((a,b)=>b[cat.key]-a[cat.key]).slice(0,3);
+    return fmCard(cat.tab, cat.label, top.map((p,i)=>fmRow(p,i,p[cat.key])).join(''));
   }).join('');
+  body.innerHTML = season + cards + `<div id="fm-power">${fmCard('power','어택 포인트','<div class="fm-empty">계산 중...</div>')}</div>`;
+  window.scrollTo(0,0);
+  getPower().then(list=>{
+    const box = document.getElementById('fm-power'); if(!box || window._currentStatTab!=='overview') return;
+    box.innerHTML = fmCard('power','어택 포인트', list.slice(0,3).map((p,i)=>fmRow(p,i,Math.round(p.power))).join(''));
+  }).catch(e=>{ console.error('어택포인트 계산 실패:', e); const box=document.getElementById('fm-power'); if(box) box.innerHTML = fmCard('power','어택 포인트',''); });
+}
+function statBackBar(title){
+  return `<div class="fm-back"><button onclick="statGo('overview')">‹ 뒤로</button><b>${title}</b><span style="width:48px"></span></div>`;
 }
 
 function renderStatList(tab) {
+  window._currentStatTab = tab; window.scrollTo(0,0);
   let sorted = [...allStats].sort((a,b)=>
     tab==='goals'?b['총골']-a['총골']:
     tab==='assists'?b['총어시스트']-a['총어시스트']:
@@ -1381,7 +1398,8 @@ function renderStatList(tab) {
     </div>`;
   }).join('');
 
-  document.getElementById('scorers-body').innerHTML = `<div class="stat-full-list" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+  const ttl = {goals:'득점',assists:'도움',points:'득점 + 도움',mom:'MOM'}[tab];
+  document.getElementById('scorers-body').innerHTML = statBackBar(ttl) + `<div class="stat-full-list" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
     <div class="stat-full-header">
       <div style="text-align:center">#</div>
       <div></div>
@@ -1467,9 +1485,10 @@ async function calcPowerRanking() {
 
 async function renderPowerRanking() {
   const body = document.getElementById('scorers-body');
-  body.innerHTML = '<div class="loading"><div class="spinner"></div>계산 중...</div>';
+  window._currentStatTab = 'power'; window.scrollTo(0,0);
+  body.innerHTML = statBackBar('어택 포인트') + '<div class="loading"><div class="spinner"></div>계산 중...</div>';
   let list = [];
-  try { list = await calcPowerRanking(); } catch(e) { console.error('어택포인트 계산 실패:', e); }
+  try { list = await getPower(); } catch(e) { console.error('어택포인트 계산 실패:', e); }
   if (window._currentStatTab !== 'power') return;
   const rows = list.map((p,i) => {
     const cls = ['p1','p2','p3'][i]||'';
@@ -1486,7 +1505,7 @@ async function renderPowerRanking() {
       <div class="stat-full-val">${Math.round(p.power)}</div>
     </div>`;
   }).join('');
-  body.innerHTML = `<div class="stat-full-list" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+  body.innerHTML = statBackBar('어택 포인트') + `<div class="stat-full-list" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
     <div class="stat-full-header"><div style="text-align:center">#</div><div></div><div>선수</div><div style="text-align:right">포인트</div></div>
     ${rows || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음</div>'}
   </div>
@@ -1500,20 +1519,9 @@ async function renderPowerRanking() {
   </div>`;
 }
 
-function switchStatTabByName(tab) {
-  // 탭 버튼 찾아서 활성화
-  const btns = document.querySelectorAll('.tab-btn');
-  const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4, power:5 };
-  const idx = tabMap[tab];
-  if (btns[idx]) switchStatTab(tab, btns[idx]);
-}
-
-function switchStatTab(tab, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  window._currentStatTab = tab;
-  if (tab === 'overview') renderStatOverview();
-  else if (tab === 'power') renderPowerRanking();
+function statGo(tab) {
+  if (tab==='overview' || !tab) renderStatOverview();
+  else if (tab==='power') renderPowerRanking();
   else renderStatList(tab);
 }
 
@@ -3784,27 +3792,12 @@ function backFromPlayer() {
     if (tabName==='overview') loadOverview();
     else if (tabName==='matches') loadMatches();
     else if (tabName==='scorers') {
-      loadScorers().then(() => {
-        const prevTab = window._currentStatTab;
-        if (prevTab && prevTab !== 'overview') {
-          const btns = document.querySelectorAll('.tab-btn');
-          const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4, power:5 };
-          const idx = tabMap[prevTab];
-          if (btns[idx]) switchStatTab(prevTab, btns[idx]);
-        }
-      });
+      loadScorers();
     }
     else if (tabName==='squad') loadSquad();
     else if (tabName==='teamstats') loadTeamStats();
   } else {
-    // 이미 로드됨 - scorers 서브탭 복원
-    if (tabName==='scorers') {
-      const prevTab = window._currentStatTab;
-      const tabMap = { overview:0, goals:1, assists:2, points:3, mom:4, power:5 };
-      const btns = document.querySelectorAll('.tab-btn');
-      const idx = tabMap[prevTab||'overview'];
-      if (btns[idx]) switchStatTab(prevTab||'overview', btns[idx]);
-    }
+    // 이미 로드됨 - 화면 그대로 유지
   }
 }
 
