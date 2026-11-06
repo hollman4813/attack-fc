@@ -3815,29 +3815,39 @@ function backToSquad() {
 
 /* ===== NEWS ===== */
 const NEWS_PREFIX = 'news_';
-async function newsFetch(limit){
-  const rows = await api(`${LU_STORE}?select=key,data&key=like.${NEWS_PREFIX}*&order=key.desc&limit=${limit||5}`);
+const BOARDS = {
+  news:{prefix:'news_', title:'ATTACK NEWS', limit:5, list:'_news', box:'ov-news', empty:'등록된 소식이 없어요', ph:'📰', nm:'소식', write:'글쓰기'},
+  info:{prefix:'info_', title:'정보 게시판', limit:3, list:'_info', box:'ov-info', empty:'등록된 글이 없어요', ph:'📋', nm:'글', write:'글쓰기'}
+};
+async function newsFetch(limit, b){
+  const prefix = BOARDS[b||'news'].prefix;
+  const rows = await api(`${LU_STORE}?select=key,data&key=like.${prefix}*&order=key.desc&limit=${limit||5}`);
   return (rows||[]).map(r=>({key:r.key, ...(r.data||{})})).filter(p=>p.title);
 }
 function newsDateTxt(d){ if(!d) return ''; const x=new Date(d); return isNaN(x)?'':`${x.getFullYear()}.${String(x.getMonth()+1).padStart(2,'0')}.${String(x.getDate()).padStart(2,'0')}`; }
-function newsRowHtml(p, idx){
-  const ed = admIcon('✏️',`newsEdit(${idx},true)`,'소식 수정');
-  const img = p.photo ? `<img class="news-thumb" src="${p.photo}" alt="">` : `<div class="news-thumb ph">📰</div>`;
-  return `<div class="news-row" onclick="newsOpen(${idx})">${img}<div class="news-body"><div class="news-title">${luEsc(p.title)}</div><div class="news-sum">${luEsc((p.body||'').replace(/\s+/g,' ').slice(0,120))}</div><div class="news-date">${newsDateTxt(p.date)}</div></div>${ed?`<div style="position:absolute;top:8px;right:8px">${ed}</div>`:''}</div>`;
+function newsRowHtml(p, idx, b){
+  b = b||'news';
+  const ed = admIcon('✏️',`newsEdit(${idx},true,'${b}')`,'수정');
+  const img = p.photo ? `<img class="news-thumb" src="${p.photo}" alt="">` : `<div class="news-thumb ph">${BOARDS[b].ph}</div>`;
+  return `<div class="news-row" onclick="newsOpen(${idx},'${b}')">${img}<div class="news-body"><div class="news-title">${luEsc(p.title)}</div><div class="news-sum">${luEsc((p.body||'').replace(/\s+/g,' ').slice(0,120))}</div><div class="news-date">${newsDateTxt(p.date)}</div></div>${ed?`<div style="position:absolute;top:8px;right:8px">${ed}</div>`:''}</div>`;
 }
 async function loadNews(){
   const host = document.getElementById('ov-content'); if(!host) return;
-  let box = document.getElementById('ov-news');
-  if(!box){ box = document.createElement('div'); box.id='ov-news'; host.appendChild(box); }
-  const posts = await newsFetch(5);
-  window._news = posts;
-  box.innerHTML = `<div class="divider"></div><div class="sec-header" style="padding:0 12px"><div class="sec-title">NEWS</div>${admIcon('✏️','newsEdit(null)','소식 쓰기','글쓰기')}</div><div style="padding:0 12px 20px">${posts.length ? posts.map(newsRowHtml).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">등록된 소식이 없어요</div>'}</div>`;
+  for(const b of Object.keys(BOARDS)){
+    const c = BOARDS[b];
+    let box = document.getElementById(c.box);
+    if(!box){ box = document.createElement('div'); box.id=c.box; host.appendChild(box); }
+    const posts = await newsFetch(c.limit, b);
+    window[c.list] = posts;
+    box.innerHTML = `<div class="divider"></div><div class="sec-header" style="padding:0 12px"><div class="sec-title">${c.title}</div>${admIcon('✏️',`newsEdit(null,true,'${b}')`,c.nm+' 쓰기',c.write)}</div><div style="padding:0 12px 20px">${posts.length ? posts.map((p,i)=>newsRowHtml(p,i,b)).join('') : `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">${c.empty}</div>`}</div>`;
+  }
 }
-function newsOpen(i){
-  const p = (window._news||[])[i]; if(!p) return;
+function newsOpen(i, b){
+  b = b||'news';
+  const p = (window[BOARDS[b].list]||[])[i]; if(!p) return;
   let ov = document.getElementById('news-overlay');
   if(!ov){ ov = document.createElement('div'); ov.id='news-overlay'; ov.style.cssText='position:fixed;inset:0;z-index:9000;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain'; document.documentElement.appendChild(ov); }
-  ov.innerHTML = `<div style="position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center"><button onclick="newsClose()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">← 닫기</button><span style="margin-left:auto">${admIcon('✏️',`newsClose();newsEdit(${i},true)`,'소식 수정','수정')}</span></div>
+  ov.innerHTML = `<div style="position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center"><button onclick="newsClose()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">← 닫기</button><span style="margin-left:auto">${admIcon('✏️',`newsClose();newsEdit(${i},true,'${b}')`,'수정','수정')}</span></div>
     ${p.photo?`<div style="padding:14px 16px 0"><img src="${p.photo}" style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:10px" alt=""></div>`:''}
     <div style="padding:18px 16px 60px"><div style="font-size:19px;font-weight:800;line-height:1.35;color:var(--text)">${luEsc(p.title)}</div><div style="font-size:12px;color:var(--muted);margin:6px 0 16px">${newsDateTxt(p.date)}</div><div style="font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap">${luEsc(p.body||'')}</div></div>`;
   ov.style.display='block'; ov.scrollTop=0; document.body.style.overflow='hidden';
@@ -3850,20 +3860,21 @@ async function newsAdminLoad(){
   const posts = await newsFetch(30); window._newsAdmin = posts;
   box.innerHTML = posts.length ? posts.map((p,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #eef0f4"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${luEsc(p.title)}</div><div style="font-size:11px;color:var(--muted)">${newsDateTxt(p.date)}</div></div><button onclick="newsEdit(${i})" style="padding:6px 10px;border:1px solid var(--border);background:#fff;border-radius:6px;font:inherit;font-size:12px;cursor:pointer">수정</button></div>`).join('') : '<div style="font-size:12px;color:var(--muted);text-align:center;padding:6px 0">등록된 소식이 없어요</div>';
 }
-function newsEdit(i, fromHome){
-  const p = i==null ? {} : (((fromHome?window._news:window._newsAdmin)||[])[i]||{});
-  window._newsDraft = {key:p.key||null, photo:p.photo||'', date:p.date||new Date().toISOString()};
+function newsEdit(i, fromHome, b){
+  b = b||'news';
+  const p = i==null ? {} : (((fromHome?window[BOARDS[b].list]:window._newsAdmin)||[])[i]||{});
+  window._newsDraft = {board:b, key:p.key||null, photo:p.photo||'', date:p.date||new Date().toISOString()};
   let ov = document.getElementById('news-edit');
   if(!ov){ ov = document.createElement('div'); ov.id='news-edit'; ov.style.cssText='position:fixed;inset:0;z-index:9100;background:#f4f6f9;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain'; document.documentElement.appendChild(ov); }
   const inp = 'width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:14px;box-sizing:border-box;background:#fff';
-  ov.innerHTML = `<div style="padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;background:#fff;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><button onclick="newsEditClose()" style="background:none;border:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">취소</button><b>${p.key?'소식 수정':'새 소식'}</b><button onclick="newsSave()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:6px 0">저장</button></div>
+  ov.innerHTML = `<div style="padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;background:#fff;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><button onclick="newsEditClose()" style="background:none;border:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">취소</button><b>${b==='info'?(p.key?'글 수정':'새 글'):(p.key?'소식 수정':'새 소식')}</b><button onclick="newsSave()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:6px 0">저장</button></div>
     <div style="padding:16px 16px 80px">
       <div style="font-size:11px;color:var(--muted);margin-bottom:4px">제목</div><input id="news-title" style="${inp};margin-bottom:14px" maxlength="80" value="${luEsc(p.title||'').replace(/"/g,'&quot;')}">
       <div style="font-size:11px;color:var(--muted);margin-bottom:4px">사진</div>
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px"><div id="news-prev" style="width:88px;height:88px;border-radius:8px;background:#e8eef7;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:28px;color:#9db0cc;flex:none">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:'📰'}</div>
         <div><label style="display:inline-block;padding:9px 14px;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer">사진 선택<input type="file" accept="image/*" onchange="newsPick(this)" style="display:none"></label><button onclick="newsNoPhoto()" style="margin-left:6px;padding:9px 12px;background:none;border:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer">삭제</button></div></div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:4px">내용</div><textarea id="news-body" rows="10" style="${inp};line-height:1.6;resize:vertical">${luEsc(p.body||'')}</textarea>
-      ${p.key?`<button onclick="newsDelete()" style="margin-top:18px;width:100%;padding:11px;background:#fff;color:#c62828;border:1px solid #f0c4c4;border-radius:8px;font:inherit;font-weight:700;cursor:pointer">이 소식 삭제</button>`:''}
+      ${p.key?`<button onclick="newsDelete()" style="margin-top:18px;width:100%;padding:11px;background:#fff;color:#c62828;border:1px solid #f0c4c4;border-radius:8px;font:inherit;font-weight:700;cursor:pointer">${b==='info'?'이 글 삭제':'이 소식 삭제'}</button>`:''}
     </div>`;
   ov.style.display='block'; ov.scrollTop=0;
 }
@@ -3884,14 +3895,14 @@ function newsPick(el){
 async function newsSave(){
   const title = document.getElementById('news-title').value.trim(), body = document.getElementById('news-body').value.trim();
   if(!title){ alert('제목을 입력해주세요'); return; }
-  const d = window._newsDraft; const key = d.key || (NEWS_PREFIX + String(Date.now()).padStart(13,'0'));
+  const d = window._newsDraft; const key = d.key || (BOARDS[d.board||'news'].prefix + String(Date.now()).padStart(13,'0'));
   const ok = await luPut(key, {title, body, photo:d.photo||'', date:d.date});
   if(!ok){ alert('저장에 실패했어요. lineup_store 테이블 설정을 확인해주세요.'); return; }
   newsEditClose(); await newsAdminLoad(); loaded['overview']=false; loadNews();
 }
 async function newsDelete(){
   const d = window._newsDraft; if(!d||!d.key) return;
-  if(!confirm('이 소식을 삭제할까요?')) return;
+  if(!confirm('삭제할까요?')) return;
   const res = await fetch(`${SUPA_URL}/rest/v1/${LU_STORE}?key=eq.${encodeURIComponent(d.key)}`,{method:'DELETE',headers:{apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`}});
   if(!res.ok){ alert('삭제에 실패했어요'); return; }
   newsEditClose(); await newsAdminLoad(); loaded['overview']=false; loadNews();
