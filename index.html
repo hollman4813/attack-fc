@@ -3838,7 +3838,7 @@ function newsOpen(i){
   let ov = document.getElementById('news-overlay');
   if(!ov){ ov = document.createElement('div'); ov.id='news-overlay'; ov.style.cssText='position:fixed;inset:0;z-index:9000;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain'; document.documentElement.appendChild(ov); }
   ov.innerHTML = `<div style="position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center"><button onclick="newsClose()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">← 닫기</button><span style="margin-left:auto">${admIcon('✏️',`newsClose();newsEdit(${i},true)`,'소식 수정','수정')}</span></div>
-    ${p.photo?`<img src="${p.photo}" style="width:100%;max-height:60vh;object-fit:cover;display:block" alt="">`:''}
+    ${p.photo?`<div style="padding:14px 16px 0"><img src="${p.photo}" style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:10px" alt=""></div>`:''}
     <div style="padding:18px 16px 60px"><div style="font-size:19px;font-weight:800;line-height:1.35;color:var(--text)">${luEsc(p.title)}</div><div style="font-size:12px;color:var(--muted);margin:6px 0 16px">${newsDateTxt(p.date)}</div><div style="font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap">${luEsc(p.body||'')}</div></div>`;
   ov.style.display='block'; ov.scrollTop=0; document.body.style.overflow='hidden';
 }
