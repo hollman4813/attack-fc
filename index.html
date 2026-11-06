@@ -3790,7 +3790,7 @@ function backToSquad() {
 const NEWS_PREFIX = 'news_';
 const BOARDS = {
   news:{prefix:'news_', title:'ATTACK NEWS', limit:5, list:'_news', box:'ov-news', empty:'등록된 소식이 없어요', ph:'📰', nm:'소식', write:'글쓰기'},
-  info:{prefix:'info_', title:'정보 게시판', limit:3, list:'_info', box:'ov-info', empty:'등록된 글이 없어요', ph:'📋', nm:'글', write:'글쓰기'}
+  info:{prefix:'info_', title:'정보 게시판', limit:5, list:'_info', box:'ov-info', empty:'등록된 글이 없어요', ph:'📋', nm:'글', write:'글쓰기'}
 };
 async function newsFetch(limit, b){
   const prefix = BOARDS[b||'news'].prefix;
