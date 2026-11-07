@@ -328,7 +328,7 @@
   </div>
 </div>
 <div class="team-tab-bar" id="team-tab-bar">
-  <button class="team-tab active" onclick="switchTab('overview',this)">팀 개요</button>
+  <button class="team-tab active" onclick="switchTab('overview',this)">메인</button>
   <button class="team-tab" onclick="switchTab('matches',this)">경기</button>
   <button class="team-tab" onclick="switchTab('squad',this)">스쿼드</button>
   <button class="team-tab" onclick="switchTab('scorers',this)">플레이어 통계</button>
@@ -3789,8 +3789,8 @@ function backToSquad() {
 /* ===== NEWS ===== */
 const NEWS_PREFIX = 'news_';
 const BOARDS = {
-  news:{prefix:'news_', title:'ATTACK NEWS', limit:5, list:'_news', box:'ov-news', empty:'등록된 소식이 없어요', ph:'📰', nm:'소식', write:'글쓰기'},
-  info:{prefix:'info_', title:'정보 게시판', limit:5, list:'_info', box:'ov-info', empty:'등록된 글이 없어요', ph:'📋', nm:'글', write:'글쓰기'}
+  news:{prefix:'news_', title:'어택 소식', limit:5, list:'_news', box:'ov-news', empty:'등록된 소식이 없어요', ph:'📰', nm:'소식', write:'글쓰기'},
+  info:{prefix:'info_', title:'축구 정보', limit:5, list:'_info', box:'ov-info', empty:'등록된 글이 없어요', ph:'📋', nm:'글', write:'글쓰기'}
 };
 async function newsFetch(limit, b){
   const prefix = BOARDS[b||'news'].prefix;
