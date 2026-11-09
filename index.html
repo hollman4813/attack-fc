@@ -1101,11 +1101,11 @@ function authSave(sess){
   try { sess ? localStorage.setItem(AUTH_KEY, JSON.stringify(sess)) : localStorage.removeItem(AUTH_KEY); } catch(e) {}
 }
 function authValid(){ return !!(authSession && authSession.access_token && authSession.expires_at > Date.now()/1000 + 20); }
-// 기존의 모든 REST 호출에 로그인 토큰을 자동으로 실어줌 (만료됐으면 익명 키로 폴백)
+// 회원 정보(members)와 RPC 호출에만 로그인 토큰을 실음. 그 외 기존 테이블은 테스트 기간 동안 익명 키 그대로 (RLS 정책이 anon 전용이어도 안 사라지게)
 const _rawFetch = window.fetch.bind(window);
 window.fetch = (u, o) => {
   try {
-    if (authValid() && String(u).startsWith(SUPA_URL + '/rest/v1') && o && o.headers && o.headers.Authorization === `Bearer ${SUPA_KEY}`) {
+    if (authValid() && /^\/rest\/v1\/(members|rpc\/)/.test(String(u).slice(SUPA_URL.length)) && String(u).startsWith(SUPA_URL) && o && o.headers && o.headers.Authorization === `Bearer ${SUPA_KEY}`) {
       o = { ...o, headers: { ...o.headers, Authorization: `Bearer ${authSession.access_token}` } };
     }
   } catch(e) {}
