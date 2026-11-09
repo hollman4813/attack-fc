@@ -1444,7 +1444,7 @@ function renderStatList(tab) {
     b['mom횟수']-a['mom횟수']
   );
   const key = tab==='goals'?'총골':tab==='assists'?'총어시스트':tab==='points'?'공격포인트':'mom횟수';
-  const lbl = tab==='goals'?'골':tab==='assists'?'어시스트':tab==='points'?'공격P':'MOM';
+  const lbl = tab==='goals'?'득점':tab==='assists'?'도움':tab==='points'?'득점+도움':'MOM';
   sorted = sorted.filter(p=>p[key]>0);
 
   const rows = sorted.map((p,i) => {
@@ -1467,7 +1467,7 @@ function renderStatList(tab) {
   const ttl = {goals:'득점',assists:'도움',points:'득점 + 도움',mom:'MOM'}[tab];
   document.getElementById('scorers-body').innerHTML = statBackBar(ttl) + `<div class="stat-full-list" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
     <div class="stat-full-header">
-      <div style="text-align:center">#</div>
+      <div style="text-align:center">순위</div>
       <div></div>
       <div>선수</div>
       <div style="text-align:right">${lbl}</div>
@@ -1572,7 +1572,7 @@ async function renderPowerRanking() {
     </div>`;
   }).join('');
   body.innerHTML = statBackBar('어택 포인트') + `<div class="stat-full-list" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
-    <div class="stat-full-header"><div style="text-align:center">#</div><div></div><div>선수</div><div style="text-align:right">포인트</div></div>
+    <div class="stat-full-header"><div style="text-align:center">순위</div><div></div><div>선수</div><div style="text-align:right">포인트</div></div>
     ${rows || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음</div>'}
   </div>
   <div style="margin-top:10px;padding:10px 12px;font-size:11px;line-height:1.6;color:var(--muted);background:#f8f9fb;border-radius:8px">
@@ -3248,11 +3248,11 @@ async function showPlayer(playerId) {
         </div>
         <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
           <div style="font-size:18px;font-weight:700;color:var(--skyblue)">${a.경기당골}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당골</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당득점</div>
         </div>
         <div style="padding:12px 8px;text-align:center">
           <div style="font-size:18px;font-weight:700;color:var(--skyblue)">${a.경기당어시스트}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당어시</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당도움</div>
         </div>`;
     }
   });
@@ -3435,11 +3435,11 @@ async function showPlayer(playerId) {
         <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)">
           <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
             <div style="font-size:24px;font-weight:800;color:var(--skyblue)">${s['총골']||0}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px">골</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">득점</div>
           </div>
           <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
             <div style="font-size:24px;font-weight:800;color:var(--skyblue)">${s['총어시스트']||0}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px">어시스트</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">도움</div>
           </div>
           <div style="padding:14px;text-align:center">
             <div style="font-size:24px;font-weight:800;color:#f5a623">${s['mom횟수']||0}</div>
@@ -3457,11 +3457,11 @@ async function showPlayer(playerId) {
           </div>
           <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
             <div style="font-size:18px;font-weight:700;color:var(--skyblue)">-</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당골</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당득점</div>
           </div>
           <div style="padding:12px 8px;text-align:center">
             <div style="font-size:18px;font-weight:700;color:var(--skyblue)">-</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당어시</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당도움</div>
           </div>
         </div>
       </div>
@@ -3713,15 +3713,15 @@ async function showMatch(matchId, skipPushState) {
       <div style="margin-top:20px">
         <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">득점</div>
         <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
-          ${scorers.length ? scorers.map(s=>playerRow(s,'goals','골')).join('') : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">기록 없음</div>'}
+          ${scorers.length ? scorers.map(s=>playerRow(s,'goals','득점')).join('') : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">기록 없음</div>'}
         </div>
       </div>
 
       <!-- 어시스트 -->
       <div style="margin-top:16px">
-        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">어시스트</div>
+        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">도움</div>
         <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
-          ${assisters.length ? assisters.map(s=>playerRow(s,'assists','어시스트')).join('') : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">기록 없음</div>'}
+          ${assisters.length ? assisters.map(s=>playerRow(s,'assists','도움')).join('') : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">기록 없음</div>'}
         </div>
       </div>
 
@@ -3916,7 +3916,7 @@ function acctRender(){
   }
   const needSignup = myMember.role==='pending' && !myMember.player_id;
   const waiting = myMember.role==='pending' && !!myMember.player_id;
-  const act = (needSignup || waiting) ? 'gateReopen()' : 'acctSheet()';
+  const act = (needSignup || waiting) ? 'gateReopen()' : 'acctMenu(event)';
   const label = waiting ? '승인중' : needSignup ? '가입 신청' : '';
   const nm = acctDisplayName();
   bar.innerHTML = label
@@ -3930,6 +3930,53 @@ async function authInit(){
   await memLoadMine();
   memApplyRole(); acctRender(); gateRender();
   if(myMember && myMember.role==='admin') memAdminLoad();
+}
+function acctMenuClose(){ const m=document.getElementById('acct-menu'); if(m) m.remove(); }
+function acctMenu(ev){
+  if(document.getElementById('acct-menu')){ acctMenuClose(); return; }
+  const btn = (ev && ev.currentTarget) || document.querySelector('#acct-bar button');
+  const r = btn.getBoundingClientRect();
+  const m = document.createElement('div'); m.id='acct-menu';
+  m.style.cssText='position:fixed;inset:0;z-index:9700';
+  m.onclick = acctMenuClose;
+  m.innerHTML = `<div onclick="event.stopPropagation()" style="position:absolute;top:${Math.round(r.bottom+8)}px;right:12px;min-width:140px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.18);overflow:hidden">
+    <button onclick="acctMenuClose();profileOpen()" style="display:block;width:100%;text-align:left;padding:13px 16px;background:none;border:none;border-bottom:1px solid var(--border);font:inherit;font-size:14px;cursor:pointer">프로필</button>
+    <button onclick="acctMenuClose();memLogout()" style="display:block;width:100%;text-align:left;padding:13px 16px;background:none;border:none;font:inherit;font-size:14px;cursor:pointer">로그아웃</button>
+  </div>`;
+  document.body.appendChild(m);
+}
+async function profileOpen(){
+  let ov = document.getElementById('profile-page');
+  if(!ov){ ov = document.createElement('div'); ov.id='profile-page'; ov.className='mem-ov'; ov.style.zIndex=9600; document.body.appendChild(ov); }
+  const head = `<button onclick="document.getElementById('profile-page').remove()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>`;
+  ov.innerHTML = `<div style="max-width:420px;margin:0 auto">${head}<div style="padding:40px;text-align:center;color:var(--muted)">불러오는 중...</div></div>`;
+  let p = null;
+  if(myMember && myMember.player_id){ const r = await api(`players?select=*&id=eq.${myMember.player_id}`); p = r[0] || null; }
+  const POS = {GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수'}, FOOT = {right:'오른발',left:'왼발',both:'양발'}, ST = {active:'정상',injured:'부상',resting:'휴식'};
+  const fmt = d => d ? new Date(d).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'}) : '-';
+  let age = '';
+  if(p && p.birth_date){ const t=new Date(), b=new Date(p.birth_date); let a=t.getFullYear()-b.getFullYear(); if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate())) a--; age = ` (만 ${a}세)`; }
+  const nm = (p && p.name) || acctDisplayName();
+  const sub = p ? [p.sub_position1,p.sub_position2].filter(Boolean).join(' · ') : '';
+  const row = (k,v) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:13px 16px;border-top:1px solid var(--border);font-size:14px"><span style="color:var(--muted)">${k}</span><span style="text-align:right;font-weight:600">${luEsc(String(v==null||v===''?'-':v))}</span></div>`;
+  const avatar = p && p.photo_url
+    ? `<img src="${p.photo_url}" alt="" referrerpolicy="no-referrer" style="width:96px;height:96px;border-radius:50%;object-fit:cover">` : acctAvatar(96);
+  ov.innerHTML = `<div style="max-width:420px;margin:0 auto;padding-bottom:40px">${head}
+    <div style="text-align:center;margin:10px 0 20px"><div style="display:flex;justify-content:center">${avatar}</div><div style="font-size:20px;font-weight:800;margin-top:12px">${luEsc(nm)}</div><div style="font-size:13px;color:var(--muted);margin-top:3px">${ROLE_LABEL[myMember.role]||''}</div></div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden">
+      ${row('배번', p && p.number)}
+      ${row('포지션', p ? ((POS[p.position]||p.position||'-') + (sub?` · ${sub}`:'')) : '-')}
+      ${row('주발', p && FOOT[p.dominant_foot])}
+      ${row('닉네임', p && p.nickname)}
+      ${row('생일', p ? fmt(p.birth_date)+age : '-')}
+      ${row('입단일', p ? fmt(p.join_date) : '-')}
+      ${row('상태', p && ST[p.status||'active'])}
+      ${row('카카오 닉네임', myMember.kakao_nickname)}
+    </div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.6;margin:12px 4px 24px">프로필 정보는 읽기 전용이에요. 수정이 필요하면 운영진에게 요청해 주세요.</div>
+    <button onclick="memWithdraw()" style="width:100%;padding:13px;background:#fff;color:#c62828;border:1px solid #f0c4c4;border-radius:10px;font:inherit;font-weight:600;cursor:pointer">회원 탈퇴</button>
+    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-top:10px">탈퇴하면 카카오 연결과 생일·사진이 삭제돼요. 이름과 경기 기록은 팀 기록으로 남아요.</div>
+  </div>`;
 }
 function acctSheet(){
   const ov = document.createElement('div'); ov.className='mem-ov'; ov.id='acct-sheet';
@@ -3953,7 +4000,7 @@ function memReset(){
   const wasAdmin = myMember && myMember.role==='admin';
   authSave(null); myMember = null; luAuthed = false;
   if(wasAdmin){ isAdmin = false; admSetLock(); }
-  const sh = document.getElementById('acct-sheet'); if(sh) sh.remove();
+  const sh = document.getElementById('acct-sheet'); if(sh) sh.remove(); const pp = document.getElementById('profile-page'); if(pp) pp.remove();
   try{ sessionStorage.removeItem('attack_gate_skip'); }catch(e){ window._gateSkip = false; }
   acctRender(); if(wasAdmin) exitAdmin(); else admReloadActive();
   gateRender();
