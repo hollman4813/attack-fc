@@ -3922,8 +3922,9 @@ function acctRender(){
   if(!myMember){
     bar.innerHTML = `<button class="acct-chip" onclick="acctSheet()" style="height:34px">회원 설정 필요</button>`; return;
   }
-  const needSignup = myMember.role==='pending' && !myMember.player_id;
-  const waiting = myMember.role==='pending' && !!myMember.player_id;
+  const hasReq = !!(myMember.player_id || myMember.requested_name);
+  const needSignup = myMember.role==='pending' && !hasReq;
+  const waiting = myMember.role==='pending' && hasReq;
   const act = (needSignup || waiting) ? 'gateReopen()' : 'acctMenu(event)';
   const label = waiting ? '승인중' : needSignup ? '가입 신청' : '';
   const nm = acctDisplayName();
@@ -3989,11 +3990,11 @@ async function profileOpen(){
 function acctSheet(){
   const ov = document.createElement('div'); ov.className='mem-ov'; ov.id='acct-sheet';
   const nm = myMember ? acctDisplayName() : '';
-  const role = myMember ? (myMember.role==='pending' ? (myMember.player_id?'승인 대기 중':'가입 신청 전') : ROLE_LABEL[myMember.role]) : '회원 정보 없음';
+  const role = myMember ? (myMember.role==='pending' ? ((myMember.player_id||myMember.requested_name)?'승인 대기 중':'가입 신청 전') : ROLE_LABEL[myMember.role]) : '회원 정보 없음';
   ov.innerHTML = `<div style="max-width:420px;margin:0 auto">
     <button onclick="document.getElementById('acct-sheet').remove()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>
     <div style="display:flex;align-items:center;gap:14px;margin:14px 0 22px">${myMember?acctAvatar(56):''}<div><div style="font-size:18px;font-weight:700">${luEsc(nm)}</div><div style="font-size:13px;color:var(--muted);margin-top:2px">${role}</div></div></div>
-    ${myMember && myMember.role==='pending' && !myMember.player_id ? `<button onclick="document.getElementById('acct-sheet').remove();gateReopen()" style="width:100%;padding:13px;background:var(--skyblue);color:#fff;border:none;border-radius:10px;font:inherit;font-weight:700;cursor:pointer;margin-bottom:10px">가입 신청하기</button>`:''}
+    ${myMember && myMember.role==='pending' && !myMember.player_id && !myMember.requested_name ? `<button onclick="document.getElementById('acct-sheet').remove();gateReopen()" style="width:100%;padding:13px;background:var(--skyblue);color:#fff;border:none;border-radius:10px;font:inherit;font-weight:700;cursor:pointer;margin-bottom:10px">가입 신청하기</button>`:''}
     <button onclick="memLogout()" style="width:100%;padding:13px;background:#fff;border:1px solid var(--border);border-radius:10px;font:inherit;font-weight:600;cursor:pointer;margin-bottom:10px">로그아웃</button>
     <button onclick="memWithdraw()" style="width:100%;padding:13px;background:#fff;color:#c62828;border:1px solid #f0c4c4;border-radius:10px;font:inherit;font-weight:600;cursor:pointer">회원 탈퇴</button>
     <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-top:12px">탈퇴하면 카카오 연결과 생일·사진이 삭제돼요. 이름과 경기 기록은 팀 기록으로 남아요.</div>
@@ -4038,7 +4039,7 @@ function gateRender(){
   if(GATE_OPEN && gateSkipped()){ gateClose(); return; }
   if(!authSession){ gateLogin(); return; }
   if(!myMember){ gateClose(); return; }          // 회원 설정(SQL) 전에는 막지 않음
-  if(myMember.role==='pending') return myMember.player_id ? gateWaiting() : memSignup();
+  if(myMember.role==='pending') return (myMember.player_id || myMember.requested_name) ? gateWaiting() : memSignup();
   gateClose();
 }
 function gateLoading(){ gateEl().innerHTML = `<div style="max-width:420px;margin:0 auto">${gateHead('확인 중...','')}</div>`; }
@@ -4063,9 +4064,10 @@ function gateSteps(done){
   </div>`;
 }
 function gateWaiting(){
-  const nm = acctDisplayName();
+  const nm = (myMember && (myMember.requested_name || (myMember._player && myMember._player.name))) || acctDisplayName();
+  const isNew = myMember && !myMember.player_id;
   gateEl().innerHTML = `<div style="max-width:420px;margin:0 auto">
-    ${gateHead('관리자 승인을 기다리고 있습니다.', `${luEsc(nm)}님의 가입 신청이 접수됐어요.<br>승인되면 메인 화면에서 바로 이용할 수 있어요.`)}
+    ${gateHead('관리자 승인을 기다리고 있습니다.', `${luEsc(nm)}님의 ${isNew?'신규 선수 ':''}가입 신청이 접수됐어요.<br>승인되면 메인 화면에서 바로 이용할 수 있어요.`)}
     <div style="display:flex;justify-content:center;margin:20px 0 0">${acctAvatar(64)}</div>
     ${gateSteps(2)}
     <button onclick="gateRecheck()" style="width:100%;padding:14px;background:#fff;color:#1a3a6b;border:none;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer">승인 확인</button>
@@ -4077,32 +4079,36 @@ async function gateRecheck(){
   if(myMember && myMember.role!=='pending'){ gateClose(); alert('승인되었어요. 환영합니다!'); admReloadActive(); }
   else alert('아직 승인 전이에요.\n관리자가 승인하면 알려드릴게요.');
 }
-async function memSignup(){
-  gateEl().innerHTML = `<div style="max-width:420px;margin:0 auto">${gateHead('확인 중...','')}</div>`;
-  let list = [];
-  try{ list = await rpc('claimable_players'); }catch(e){ gateClose(); alert('선수 목록을 불러오지 못했어요.\n' + e.message); return; }
-  window._signup = { list, sel:null };
+function memSignup(msg){
+  const keep = (document.getElementById('signup-name')||{}).value || '';
   gateEl().innerHTML = `<div style="max-width:420px;margin:0 auto">
-    ${gateHead('본인 이름을 선택해 주세요','팀 명단에서 본인을 골라 가입 신청을 해주세요.')}
-    <div id="signup-list" style="margin-top:18px">${list.length ? list.map(p=>`<button class="mem-pick" data-id="${p.id}" onclick="memPick(${p.id})"><span class="no">${p.number??''}</span><span style="flex:1">${luEsc(p.name)}</span></button>`).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">선택할 수 있는 선수가 없어요. 운영진에게 문의해 주세요.</div>'}</div>
-    <button id="signup-go" onclick="memSubmit()" disabled style="width:100%;margin-top:14px;padding:14px;background:#fff;color:#1a3a6b;border:none;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;opacity:.4">가입 신청</button>
+    ${gateHead('이름을 입력해 주세요','본인 이름(실명)을 입력하면 팀 명단과 맞춰 가입 신청을 해요.')}
+    <div style="margin-top:22px">
+      <input id="signup-name" type="text" maxlength="20" placeholder="예) 홍길동" autocomplete="off" value="${luEsc(keep)}" oninput="document.getElementById('signup-msg').innerHTML=''" onkeydown="if(event.key==='Enter')memSubmit(false)" style="width:100%;padding:14px;border:none;border-radius:12px;font:inherit;font-size:16px;text-align:center;color:#222831">
+      <div id="signup-msg" style="min-height:20px;font-size:13px;line-height:1.6;text-align:center;margin-top:10px">${msg||''}</div>
+      <button id="signup-go" onclick="memSubmit(false)" style="width:100%;margin-top:6px;padding:14px;background:#fff;color:#1a3a6b;border:none;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer">가입 신청</button>
+    </div>
     <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:10px;text-align:center">신청 후 관리자가 승인하면 가입이 완료됩니다.</div>
     ${gateSkipBtn()}${gateLogoutBtn()}
-    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px;text-align:center">수집 항목: 카카오 닉네임. 팀 회원 관리와 나이 표기에만 쓰이며 탈퇴하면 삭제돼요.</div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px;text-align:center">수집 항목: 카카오 닉네임, 입력한 이름. 팀 회원 관리에만 쓰이며 탈퇴하면 카카오 연결과 개인정보(이름 제외)가 삭제돼요.</div>
   </div>`;
 }
-function memPick(id){
-  const sg = window._signup; sg.sel = id;
-  document.querySelectorAll('#signup-list .mem-pick').forEach(b=>b.classList.toggle('on', +b.dataset.id===id));
-  const p = sg.list.find(x=>x.id===id);
-  const go = document.getElementById('signup-go'); go.disabled = false; go.style.opacity = 1;
-}
-async function memSubmit(){
-  const sg = window._signup; if(!sg || !sg.sel) return;
-  const p = sg.list.find(x=>x.id===sg.sel);
-  try{
-    await rpc('request_membership', { p_player_id: sg.sel, p_birth: null });
-  }catch(e){ alert('신청하지 못했어요.\n' + e.message); return; }
+async function memSubmit(confirmNew){
+  const inp = document.getElementById('signup-name');
+  const name = (inp && inp.value || '').trim();
+  const msg = document.getElementById('signup-msg');
+  if(!name){ msg.innerHTML = '<span style="color:#ffd2d2">이름을 입력해 주세요.</span>'; return; }
+  const btn = document.getElementById('signup-go'); btn.disabled = true; btn.style.opacity = .5;
+  let res;
+  try{ res = await rpc('request_membership_by_name', { p_name: name, p_confirm_new: !!confirmNew }); }
+  catch(e){ btn.disabled = false; btn.style.opacity = 1; msg.innerHTML = `<span style="color:#ffd2d2">신청하지 못했어요. ${luEsc(e.message)}</span>`; return; }
+  res = Array.isArray(res) ? res[0] : res;
+  btn.disabled = false; btn.style.opacity = 1;
+  if(res==='taken'){ msg.innerHTML = '<span style="color:#ffd2d2">이미 등록된 이름이에요.<br>이름을 다시 입력해 주세요.</span>'; inp.focus(); inp.select(); return; }
+  if(res==='not_found'){
+    msg.innerHTML = `<div style="color:#fff;background:rgba(255,255,255,.12);border-radius:12px;padding:12px">명단에 없는 이름이에요.<br><b>${luEsc(name)}</b>(이)가 맞다면 신규 선수로 신청할 수 있어요.<br>기존 선수라면 이름을 다시 확인해 주세요.<div style="display:flex;gap:8px;margin-top:10px"><button onclick="document.getElementById('signup-name').focus();document.getElementById('signup-msg').innerHTML=''" style="flex:1;padding:10px;background:none;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:10px;font:inherit;font-size:13px;cursor:pointer">다시 입력</button><button onclick="memSubmit(true)" style="flex:1;padding:10px;background:#FEE500;border:none;color:#191919;border-radius:10px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">신규로 신청</button></div></div>`;
+    return;
+  }
   await memLoadMine(); acctRender(); gateRender();
 }
 async function memAdminLoad(){
@@ -4117,17 +4123,45 @@ async function memAdminLoad(){
   const sel = (u, cur) => `<select onchange="memSetRole('${u}',this.value)" style="padding:5px;border:1px solid var(--border);border-radius:6px;font:inherit;font-size:12px">${['member','staff','admin'].map(r=>`<option value="${r}" ${cur===r?'selected':''}>${ROLE_LABEL[r]}</option>`).join('')}</select>`;
   box.innerHTML = rows.map(m=>{
     const pend = m.role==='pending';
-    const who = m.player_name ? `<b>${luEsc(m.player_name)}</b>` : '<span style="color:var(--muted)">선수 미선택</span>';
+    const who = m.player_name ? `<b>${luEsc(m.player_name)}</b>` : (m.requested_name ? `<b>${luEsc(m.requested_name)}</b> <span style="font-size:11px;color:#c0392b">${pend?'신규(명단에 없음)':'미연결'}</span>` : '<span style="color:var(--muted)">이름 미입력</span>');
     const sub = `${luEsc(m.kakao_nickname||'')}${m.requested_birth?` · 생일 ${m.requested_birth}`:''}`;
     return `<div style="padding:11px 0;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px">
       <div style="flex:1;min-width:0"><div style="font-size:14px;color:var(--text)">${who} <span style="font-size:11px;color:${pend?'#d35400':'var(--muted)'}">${ROLE_LABEL[m.role]}</span></div><div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sub}</div></div>
-      ${pend ? (m.player_id ? `<button class="adm-btn" onclick="memSetRole('${m.user_id}','member')">승인</button>` : '') : sel(m.user_id, m.role)}
+      ${pend ? ((m.player_id||m.requested_name) ? `<button class="adm-btn" onclick="memSetRole('${m.user_id}','member')">승인</button>` : '') : sel(m.user_id, m.role)}
+      <button class="adm-btn" onclick="memRelink('${m.user_id}')">선수 연결</button>
       <button class="adm-btn" style="background:#fff;border-color:#f0c4c4;color:#c62828" onclick="memReject('${m.user_id}')">${pend?'반려':'삭제'}</button>
     </div>`;
   }).join('');
 }
 async function memSetRole(uid, role){
-  try{ await rpc('approve_member', { p_user: uid, p_role: role }); }catch(e){ alert('처리하지 못했어요.\n' + e.message); }
+  const m = (window._members||[]).find(x=>x.user_id===uid);
+  let num = null;
+  if(m && m.role==='pending' && !m.player_id){
+    const v = prompt(`신규 선수 "${m.requested_name}" 를 새로 등록하고 승인해요.\n등번호를 입력하세요 (비워도 돼요)`, '');
+    if(v===null) return;
+    num = parseInt(v) || null;
+  }
+  try{ await rpc('approve_member', { p_user: uid, p_role: role, p_number: num }); }catch(e){ alert('처리하지 못했어요.\n' + e.message); }
+  memAdminLoad();
+}
+async function memRelink(uid){
+  let list = [];
+  try{ list = await rpc('claimable_players'); }catch(e){ alert('선수 목록을 불러오지 못했어요.\n' + e.message); return; }
+  const m = (window._members||[]).find(x=>x.user_id===uid) || {};
+  let ov = document.getElementById('relink-pop'); if(ov) ov.remove();
+  ov = document.createElement('div'); ov.id='relink-pop'; ov.className='mem-ov'; ov.style.zIndex=9650; ov.style.background='var(--bg)';
+  ov.innerHTML = `<div style="max-width:420px;margin:0 auto;padding-bottom:30px">
+    <button onclick="document.getElementById('relink-pop').remove()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>
+    <div style="font-size:17px;font-weight:800;margin:8px 0 4px">연결할 선수 선택</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">${luEsc(m.kakao_nickname||'')}${m.requested_name?` · 입력한 이름 ${luEsc(m.requested_name)}`:''}${m.player_name?` · 현재 ${luEsc(m.player_name)}`:''}<br>아직 다른 계정과 연결되지 않은 선수만 보여요.</div>
+    ${list.length ? list.map(p=>`<button class="mem-pick" onclick="memRelinkGo('${uid}',${p.id},'${luEsc(p.name).replace(/'/g,'')}')"><span class="no">${p.number??''}</span><span style="flex:1">${luEsc(p.name)}</span></button>`).join('') : '<div style="color:var(--muted);font-size:13px">연결할 수 있는 선수가 없어요.</div>'}
+  </div>`;
+  document.body.appendChild(ov);
+}
+async function memRelinkGo(uid, pid, name){
+  if(!confirm(`이 계정을 "${name}" 선수와 연결할까요?`)) return;
+  try{ await rpc('link_member_player', { p_user: uid, p_player: pid }); }catch(e){ alert('연결하지 못했어요.\n' + e.message); return; }
+  const ov = document.getElementById('relink-pop'); if(ov) ov.remove();
   memAdminLoad();
 }
 async function memReject(uid){
