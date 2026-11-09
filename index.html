@@ -1237,8 +1237,7 @@ async function loadOverview() {
         </div>
       </div>
       <div class="next-match-ground">📍 ${u.grounds?.name || u.ground||'미정'}</div>
-      ${weatherHtml}
-      ${luIsOver(u)?'':rsvpBlock(u.id)}`;
+      ${weatherHtml}`;
     document.getElementById('next-match-wrap').style.display = 'block';
   }
 
@@ -3767,7 +3766,6 @@ async function showMatch(matchId, skipPushState) {
           : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">참석 정보 없음</div>'}
         </div>
       </div>
-      ${isUpcoming && !luIsOver(m) ? `<div style="margin-top:16px;border:1px solid var(--border);border-radius:10px;overflow:hidden">${rsvpBlock(m.id)}</div>` : ''}
       <button onclick="openLineupForMatch(${m.id})" style="width:100%;margin-top:16px;padding:14px;background:#fff;border:1px solid var(--skyblue);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;color:var(--skyblue);cursor:pointer">⚽ ${lineupData&&lineupData.plan?'라인업 수정':'포메이션 · 라인업 만들기'} ${isUpcoming?'· 참석 설정':''}</button>
       <!-- 역대 전적 (완료 경기) -->
       ${!isUpcoming ? h2hHtml : ''}
@@ -4006,105 +4004,6 @@ function memReset(){
   try{ sessionStorage.removeItem('attack_gate_skip'); }catch(e){ window._gateSkip = false; }
   acctRender(); if(wasAdmin) exitAdmin(); else admReloadActive();
   gateRender();
-}
-/* ── 경기 참석 여부 (로그인 회원) ── */
-function rsvpBlock(matchId){
-  setTimeout(()=>rsvpRefresh(matchId), 0);
-  return `<div id="rsvp-box-${matchId}" style="padding:10px 14px;border-top:1px solid var(--border);background:#fff" onclick="event.stopPropagation()">
-    <div style="display:flex;gap:8px">
-      <button onclick="rsvpOpen(${matchId})" id="rsvp-btn-${matchId}" style="flex:1;padding:11px;background:var(--skyblue);color:#fff;border:none;border-radius:10px;font:inherit;font-size:14px;font-weight:700;cursor:pointer">🙋 참석 여부</button>
-      <button onclick="rsvpStatus(${matchId})" style="padding:11px 14px;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:10px;font:inherit;font-size:13px;font-weight:600;cursor:pointer">현황</button>
-    </div>
-    <div id="rsvp-sum-${matchId}" style="font-size:11px;color:var(--muted);margin-top:7px;text-align:center"></div>
-  </div>`;
-}
-function rsvpQTxt(r){ return r.status==='yes' ? `참석 · ${(r.quarters||[]).length===4?'전 쿼터':(r.quarters||[]).map(q=>q+'쿼').join(' ')}` : '불참'; }
-async function rsvpRefresh(matchId){
-  const sum = document.getElementById('rsvp-sum-'+matchId), btn = document.getElementById('rsvp-btn-'+matchId);
-  if(!sum || !authSession || !myMember || myMember.role==='pending') return;
-  try{
-    const rows = await rpc('rsvp_list', {p_match: matchId});
-    const yes = rows.filter(r=>r.status==='yes').length, no = rows.filter(r=>r.status==='no').length;
-    const me = rows.find(r=>r.is_me);
-    sum.textContent = `참석 ${yes} · 불참 ${no} · 미응답 ${rows.length-yes-no}`;
-    if(btn && me && me.status){ btn.textContent = `✅ 내 응답: ${rsvpQTxt(me)}`; btn.style.background = me.status==='yes' ? '#2e9e5b' : '#7b8794'; }
-    window['_rsvpMe'+matchId] = me || null;
-  }catch(e){ /* SQL 미설정 등: 조용히 무시 */ }
-}
-function rsvpGuard(){
-  if(!authSession){ gateReopen(); return false; }
-  if(!myMember){ alert('회원 설정이 아직 완료되지 않았어요.'); return false; }
-  if(myMember.role==='pending'){ alert(myMember.player_id ? '관리자 승인 후 참석 여부를 등록할 수 있어요.' : '가입 신청 후 관리자 승인이 되면 참석 여부를 등록할 수 있어요.'); return false; }
-  if(!myMember.player_id){ alert('연결된 선수 정보가 없어 참석 여부를 등록할 수 없어요.'); return false; }
-  return true;
-}
-async function rsvpOpen(matchId){
-  if(!rsvpGuard()) return;
-  if(!window['_rsvpMe'+matchId]) await rsvpRefresh(matchId);
-  const me = window['_rsvpMe'+matchId];
-  window._rsvp = { match: matchId, status: me ? me.status : null, q: new Set(me && me.status==='yes' ? me.quarters : []) };
-  let m = null; try{ m = (await api(`matches?select=match_date,match_time,opponent,opponents(name)&id=eq.${matchId}`))[0]; }catch(e){}
-  const info = m ? `${new Date(m.match_date).getMonth()+1}월 ${new Date(m.match_date).getDate()}일 ${m.match_time||''} · vs ${(m.opponents&&m.opponents.name)||m.opponent||''}` : '';
-  let ov = document.getElementById('rsvp-pop'); if(ov) ov.remove();
-  ov = document.createElement('div'); ov.id='rsvp-pop';
-  ov.style.cssText='position:fixed;inset:0;z-index:9650;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center';
-  ov.onclick = e => { if(e.target===ov) ov.remove(); };
-  ov.innerHTML = `<div style="width:100%;max-width:440px;background:#fff;border-radius:18px 18px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom,0px))">
-    <div style="font-size:17px;font-weight:800">참석 여부</div>
-    <div style="font-size:12px;color:var(--muted);margin:3px 0 16px">${luEsc(info)}</div>
-    <div style="display:flex;gap:10px" id="rsvp-st"></div>
-    <div id="rsvp-qwrap" style="margin-top:16px">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">뛸 수 있는 쿼터를 모두 선택하세요</div>
-      <div style="display:flex;gap:8px" id="rsvp-q"></div>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:20px">
-      <button onclick="document.getElementById('rsvp-pop').remove()" style="flex:1;padding:13px;background:#fff;border:1px solid var(--border);border-radius:10px;font:inherit;font-size:14px;font-weight:600;cursor:pointer">취소</button>
-      <button id="rsvp-save" onclick="rsvpSave()" style="flex:2;padding:13px;background:var(--skyblue);color:#fff;border:none;border-radius:10px;font:inherit;font-size:14px;font-weight:700;cursor:pointer">저장</button>
-    </div>
-  </div>`;
-  document.body.appendChild(ov); rsvpDraw();
-}
-function rsvpDraw(){
-  const r = window._rsvp; if(!r) return;
-  const sb = (v,t,c) => `<button onclick="rsvpSet('${v}')" style="flex:1;padding:14px;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;border:2px solid ${r.status===v?c:'var(--border)'};background:${r.status===v?c:'#fff'};color:${r.status===v?'#fff':'var(--text)'}">${t}</button>`;
-  document.getElementById('rsvp-st').innerHTML = sb('yes','참석','#2e9e5b') + sb('no','불참','#7b8794');
-  document.getElementById('rsvp-qwrap').style.display = r.status==='yes' ? 'block' : 'none';
-  document.getElementById('rsvp-q').innerHTML = [1,2,3,4].map(q=>`<button onclick="rsvpQ(${q})" style="flex:1;padding:12px 0;border-radius:10px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;border:2px solid ${r.q.has(q)?'var(--skyblue)':'var(--border)'};background:${r.q.has(q)?'var(--skyblue)':'#fff'};color:${r.q.has(q)?'#fff':'var(--text)'}">${q}쿼</button>`).join('');
-}
-function rsvpSet(v){ const r=window._rsvp; r.status=v; if(v==='yes' && !r.q.size) [1,2,3,4].forEach(q=>r.q.add(q)); rsvpDraw(); }
-function rsvpQ(q){ const r=window._rsvp; r.q.has(q) ? r.q.delete(q) : r.q.add(q); rsvpDraw(); }
-async function rsvpSave(){
-  const r = window._rsvp; if(!r) return;
-  if(!r.status){ alert('참석 또는 불참을 선택해 주세요.'); return; }
-  if(r.status==='yes' && !r.q.size){ alert('가능한 쿼터를 1개 이상 선택해 주세요.'); return; }
-  const b = document.getElementById('rsvp-save'); b.disabled = true; b.textContent = '저장 중...';
-  try{
-    await rpc('save_rsvp', {p_match: r.match, p_status: r.status, p_quarters: r.status==='yes' ? [...r.q].sort() : []});
-  }catch(e){ b.disabled=false; b.textContent='저장'; alert('저장하지 못했어요.\n' + e.message); return; }
-  document.getElementById('rsvp-pop').remove();
-  window['_rsvpMe'+r.match] = null;
-  rsvpRefresh(r.match);
-}
-async function rsvpStatus(matchId){
-  if(!rsvpGuard()) return;
-  let rows = [];
-  try{ rows = await rpc('rsvp_list', {p_match: matchId}); }catch(e){ alert('현황을 불러오지 못했어요.\n' + e.message); return; }
-  const yes = rows.filter(r=>r.status==='yes'), no = rows.filter(r=>r.status==='no'), none = rows.filter(r=>!r.status);
-  const qc = [1,2,3,4].map(q=>yes.filter(r=>(r.quarters||[]).includes(q)).length);
-  const nm = r => `${r.number!=null?r.number+' ':''}${luEsc(r.name)}`;
-  const line = (r,extra) => `<div style="display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--border);font-size:14px;${r.is_me?'font-weight:700':''}"><span>${nm(r)}${r.is_me?' (나)':''}</span><span style="color:var(--muted);font-size:12px">${extra||''}</span></div>`;
-  let ov = document.getElementById('rsvp-list'); if(ov) ov.remove();
-  ov = document.createElement('div'); ov.id='rsvp-list'; ov.className='mem-ov'; ov.style.zIndex=9650;
-  ov.innerHTML = `<div style="max-width:420px;margin:0 auto;padding-bottom:40px">
-    <button onclick="document.getElementById('rsvp-list').remove()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>
-    <div style="font-size:19px;font-weight:800;margin:8px 0 14px">참석 현황</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px">${qc.map((n,i)=>`<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 4px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--skyblue)">${n}</div><div style="font-size:11px;color:var(--muted)">${i+1}쿼</div></div>`).join('')}</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:16px">쿼터별 가능 인원</div>
-    <div style="font-size:13px;font-weight:700;margin-bottom:2px">참석 ${yes.length}</div>${yes.map(r=>line(r,rsvpQTxt(r).replace('참석 · ',''))).join('')||'<div style="color:var(--muted);font-size:13px;padding:6px 0">없음</div>'}
-    <div style="font-size:13px;font-weight:700;margin:18px 0 2px">불참 ${no.length}</div>${no.map(r=>line(r)).join('')||'<div style="color:var(--muted);font-size:13px;padding:6px 0">없음</div>'}
-    <div style="font-size:13px;font-weight:700;margin:18px 0 2px">미응답 ${none.length}</div>${none.map(r=>line(r)).join('')||'<div style="color:var(--muted);font-size:13px;padding:6px 0">없음</div>'}
-  </div>`;
-  document.body.appendChild(ov);
 }
 async function memWithdraw(){
   if(!confirm('정말 탈퇴할까요?\n\n· 카카오 연결, 생일, 사진은 삭제돼요\n· 이름과 경기 기록은 팀 기록으로 남아요\n· 되돌릴 수 없어요')) return;
