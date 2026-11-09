@@ -4085,30 +4085,23 @@ async function memSignup(){
   gateEl().innerHTML = `<div style="max-width:420px;margin:0 auto">
     ${gateHead('본인 이름을 선택해 주세요','팀 명단에서 본인을 골라 가입 신청을 해주세요.')}
     <div id="signup-list" style="margin-top:18px">${list.length ? list.map(p=>`<button class="mem-pick" data-id="${p.id}" onclick="memPick(${p.id})"><span class="no">${p.number??''}</span><span style="flex:1">${luEsc(p.name)}</span></button>`).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">선택할 수 있는 선수가 없어요. 운영진에게 문의해 주세요.</div>'}</div>
-    <div id="signup-birth" style="display:none;margin:14px 0">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:4px">생일 (팀 내 나이 표기용)</div>
-      <input id="signup-birth-in" type="date" style="width:100%;padding:11px;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:14px">
-    </div>
     <button id="signup-go" onclick="memSubmit()" disabled style="width:100%;margin-top:14px;padding:14px;background:#fff;color:#1a3a6b;border:none;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;opacity:.4">가입 신청</button>
     <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:10px;text-align:center">신청 후 관리자가 승인하면 가입이 완료됩니다.</div>
     ${gateSkipBtn()}${gateLogoutBtn()}
-    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px;text-align:center">수집 항목: 카카오 닉네임, (비어 있는 경우) 생일. 팀 회원 관리와 나이 표기에만 쓰이며 탈퇴하면 삭제돼요.</div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px;text-align:center">수집 항목: 카카오 닉네임. 팀 회원 관리와 나이 표기에만 쓰이며 탈퇴하면 삭제돼요.</div>
   </div>`;
 }
 function memPick(id){
   const sg = window._signup; sg.sel = id;
   document.querySelectorAll('#signup-list .mem-pick').forEach(b=>b.classList.toggle('on', +b.dataset.id===id));
   const p = sg.list.find(x=>x.id===id);
-  document.getElementById('signup-birth').style.display = p && p.birth_missing ? 'block' : 'none';
   const go = document.getElementById('signup-go'); go.disabled = false; go.style.opacity = 1;
 }
 async function memSubmit(){
   const sg = window._signup; if(!sg || !sg.sel) return;
   const p = sg.list.find(x=>x.id===sg.sel);
-  const birth = document.getElementById('signup-birth-in').value || null;
-  if(p.birth_missing && !birth){ alert('생일을 입력해 주세요.'); return; }
   try{
-    await rpc('request_membership', { p_player_id: sg.sel, p_birth: p.birth_missing ? birth : null });
+    await rpc('request_membership', { p_player_id: sg.sel, p_birth: null });
   }catch(e){ alert('신청하지 못했어요.\n' + e.message); return; }
   await memLoadMine(); acctRender(); gateRender();
 }
