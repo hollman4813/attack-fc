@@ -3982,22 +3982,29 @@ function gateRender(){
 }
 function gateLoading(){ gateEl().innerHTML = `<div style="max-width:420px;margin:0 auto">${gateHead('확인 중...','')}</div>`; }
 function gateLogin(){
-  gateEl().innerHTML = `<div style="max-width:420px;margin:0 auto">
-    ${gateHead('환영합니다', '로그인하고 팀 활동에 참여해 보세요.')}
-    <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;margin:22px 0 20px">
-      ${['로그인','본인 이름 선택','가입 신청','관리자 승인 → 가입 완료'].map((t,n)=>`<div style="display:flex;align-items:center;gap:10px;padding:5px 0;font-size:14px"><span style="width:22px;height:22px;border-radius:50%;background:var(--skyblue);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">${n+1}</span>${t}</div>`).join('')}
-      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">${GATE_FLOW}</div>
+  const bubble = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="#191919" d="M12 3C6.48 3 2 6.58 2 11c0 2.86 1.9 5.37 4.74 6.78l-.97 3.55c-.08.3.26.54.52.37l4.2-2.78c.5.06 1 .08 1.51.08 5.52 0 10-3.58 10-8S17.52 3 12 3z"/></svg>';
+  gateEl().innerHTML = `<div style="max-width:420px;margin:0 auto;min-height:100%;display:flex;flex-direction:column">
+    ${gateHead('환영합니다', '카카오 계정으로 간편하게 로그인하세요.')}
+    <div style="margin-top:56px">
+      <button class="kakao-btn" onclick="kakaoLogin()" style="width:100%;justify-content:center;gap:8px;height:52px;font-size:16px;font-weight:700;border-radius:12px">${bubble}카카오계정 로그인</button>
+      ${gateSkipBtn()}
     </div>
-    <button class="kakao-btn" onclick="kakaoLogin()" style="width:100%;justify-content:center;height:50px;font-size:16px;border-radius:12px">로그인</button>
-    <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:6px">카카오 계정으로 간편하게 로그인해요</div>
-    ${gateSkipBtn()}
+  </div>`;
+}
+function gateSteps(done){
+  const L = ['카카오 로그인','본인 이름 선택 · 가입 신청','관리자 승인 → 가입 완료'];
+  return `<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:20px 0">
+    ${L.map((t,n)=>{ const ok = n<done, cur = n===done;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:14px;${ok||cur?'':'color:var(--muted)'}"><span style="width:22px;height:22px;border-radius:50%;background:${ok?'#2e9e5b':cur?'var(--skyblue)':'#d5dae1'};color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">${ok?'✓':n+1}</span><span style="${cur?'font-weight:700':''}">${t}${cur?' <span style="font-size:12px;color:var(--skyblue)">진행 중</span>':''}</span></div>`; }).join('')}
+    <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">관리자가 승인하면 가입이 완료됩니다.</div>
   </div>`;
 }
 function gateWaiting(){
   const nm = acctDisplayName();
   gateEl().innerHTML = `<div style="max-width:420px;margin:0 auto">
     ${gateHead('관리자 승인을 기다리고 있습니다.', `${luEsc(nm)}님의 가입 신청이 접수됐어요.<br>승인되면 메인 화면에서 바로 이용할 수 있어요.`)}
-    <div style="display:flex;justify-content:center;margin:22px 0">${acctAvatar(64)}</div>
+    <div style="display:flex;justify-content:center;margin:20px 0 0">${acctAvatar(64)}</div>
+    ${gateSteps(2)}
     <button onclick="gateRecheck()" style="width:100%;padding:14px;background:var(--skyblue);color:#fff;border:none;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer">승인 확인</button>
     ${gateSkipBtn()}${gateLogoutBtn()}
   </div>`;
