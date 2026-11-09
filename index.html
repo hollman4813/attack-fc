@@ -265,6 +265,11 @@
   .mem-ov{position:fixed;inset:0;z-index:9500;background:var(--bg);overflow-y:auto;padding:calc(env(safe-area-inset-top) + 14px) 16px 40px}
   .mem-pick{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;margin-bottom:6px;background:#fff;border:1.5px solid var(--border);border-radius:10px;font:inherit;font-size:14px;cursor:pointer;text-align:left}
   .mem-pick.on{border-color:var(--skyblue);background:#eaf4fc;font-weight:700}
+  /* 시작 화면: 팀 컬러 배경 */
+  #gate{background:linear-gradient(180deg,#1a3a6b,#1e4d8c);color:#fff;--muted:rgba(255,255,255,.72)}
+  #gate .mem-pick,#gate .gate-card{--muted:#8895a7;color:var(--text)}
+  #gate .gate-card{background:#fff}
+  #gate .kakao-btn{box-shadow:0 4px 14px rgba(0,0,0,.25)}
   .mem-pick .no{width:26px;color:var(--muted);font-size:12px;text-align:center}
   .adm-bar{display:flex;justify-content:flex-end;padding:10px 12px 0}
   .news-row{position:relative;display:flex;gap:12px;padding:12px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer}
@@ -4051,7 +4056,7 @@ function gateLogin(){
 }
 function gateSteps(done){
   const L = ['카카오 로그인','본인 이름 선택 · 가입 신청','관리자 승인 → 가입 완료'];
-  return `<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:20px 0">
+  return `<div class="gate-card" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:20px 0">
     ${L.map((t,n)=>{ const ok = n<done, cur = n===done;
       return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:14px;${ok||cur?'':'color:var(--muted)'}"><span style="width:22px;height:22px;border-radius:50%;background:${ok?'#2e9e5b':cur?'var(--skyblue)':'#d5dae1'};color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">${ok?'✓':n+1}</span><span style="${cur?'font-weight:700':''}">${t}${cur?' <span style="font-size:12px;color:var(--skyblue)">진행 중</span>':''}</span></div>`; }).join('')}
     <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">관리자가 승인하면 가입이 완료됩니다.</div>
@@ -4063,7 +4068,7 @@ function gateWaiting(){
     ${gateHead('관리자 승인을 기다리고 있습니다.', `${luEsc(nm)}님의 가입 신청이 접수됐어요.<br>승인되면 메인 화면에서 바로 이용할 수 있어요.`)}
     <div style="display:flex;justify-content:center;margin:20px 0 0">${acctAvatar(64)}</div>
     ${gateSteps(2)}
-    <button onclick="gateRecheck()" style="width:100%;padding:14px;background:var(--skyblue);color:#fff;border:none;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer">승인 확인</button>
+    <button onclick="gateRecheck()" style="width:100%;padding:14px;background:#fff;color:#1a3a6b;border:none;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer">승인 확인</button>
     ${gateSkipBtn()}${gateLogoutBtn()}
   </div>`;
 }
@@ -4084,7 +4089,7 @@ async function memSignup(){
       <div style="font-size:12px;color:var(--muted);margin-bottom:4px">생일 (팀 내 나이 표기용)</div>
       <input id="signup-birth-in" type="date" style="width:100%;padding:11px;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:14px">
     </div>
-    <button id="signup-go" onclick="memSubmit()" disabled style="width:100%;margin-top:14px;padding:14px;background:var(--skyblue);color:#fff;border:none;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;opacity:.4">가입 신청</button>
+    <button id="signup-go" onclick="memSubmit()" disabled style="width:100%;margin-top:14px;padding:14px;background:#fff;color:#1a3a6b;border:none;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;opacity:.4">가입 신청</button>
     <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:10px;text-align:center">신청 후 관리자가 승인하면 가입이 완료됩니다.</div>
     ${gateSkipBtn()}${gateLogoutBtn()}
     <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px;text-align:center">수집 항목: 카카오 닉네임, (비어 있는 경우) 생일. 팀 회원 관리와 나이 표기에만 쓰이며 탈퇴하면 삭제돼요.</div>
