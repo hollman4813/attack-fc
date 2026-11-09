@@ -3868,6 +3868,7 @@ async function rpc(name, args){
   if(!r.ok) throw new Error((d && (d.message||d.error_description)) || ('오류 '+r.status));
   return d;
 }
+function kakaoLoginOther(){ try{ localStorage.setItem('attack_relogin','1'); }catch(e){} kakaoLogin(); }
 function kakaoLogin(){
   const back = location.origin + location.pathname;
   // 로그아웃 직후에는 카카오 쪽 로그인 세션(쿠키)이 남아 자동 로그인되므로, 계정 선택/입력 화면을 다시 띄움
@@ -4043,6 +4044,7 @@ function gateLogin(){
     <div style="margin-top:56px">
       <button class="kakao-btn" onclick="kakaoLogin()" style="width:100%;justify-content:center;gap:8px;height:52px;font-size:16px;font-weight:700;border-radius:12px">${bubble}카카오계정 로그인</button>
       <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px">카카오 계정으로 간편하게 로그인하세요.</div>
+      <div style="text-align:center;margin-top:14px"><button onclick="kakaoLoginOther()" style="background:none;border:none;color:var(--muted);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;padding:4px">다른 계정으로 로그인</button></div>
       ${gateSkipBtn()}
     </div>
   </div>`;
