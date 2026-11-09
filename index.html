@@ -4032,7 +4032,7 @@ function gateEl(){
 }
 function gateReopen(){ try{ sessionStorage.removeItem('attack_gate_skip'); }catch(e){ window._gateSkip = false; } gateRender(); }
 const GATE_FLOW = '로그인 → 본인 이름 선택 → 가입 신청 → 관리자가 승인하면 가입이 완료됩니다.';
-const gateSkipBtn = () => GATE_OPEN ? `<button onclick="gateSkip()" style="width:100%;margin-top:10px;padding:12px;background:none;border:none;color:var(--muted);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer">로그인 없이 이용 (테스트 기간)</button>` : '';
+const gateSkipBtn = () => GATE_OPEN ? `<button onclick="gateSkip()" style="width:100%;margin-top:14px;height:52px;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.6);border-radius:12px;color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer">로그인 없이 이용 <span style="font-size:12px;font-weight:500;opacity:.8">(테스트 기간)</span></button>` : '';
 const gateLogoutBtn = () => `<button onclick="memLogout()" style="width:100%;margin-top:2px;padding:10px;background:none;border:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer">다른 계정으로 로그인 (로그아웃)</button>`;
 const gateHead = (title, sub) => `<div style="text-align:center;padding-top:28px"><img src="emblem_v4.png" alt="" style="width:76px;height:76px;border-radius:50%;object-fit:cover"><div style="font-size:12px;color:var(--muted);letter-spacing:1px;margin-top:10px">ATTACK F.C.</div><div style="font-size:20px;font-weight:700;margin:6px 0 6px">${title}</div>${sub?`<div style="font-size:13px;color:var(--muted);line-height:1.6">${sub}</div>`:''}</div>`;
 function gateRender(){
