@@ -3875,7 +3875,7 @@ async function memLoadMine(){
   const rows = await api(`members?select=*&user_id=eq.${authSession.user.id}`);
   myMember = rows[0] || null;
   if(myMember && myMember.player_id){
-    const ps = await api(`players?select=id,name&id=eq.${myMember.player_id}`);
+    const ps = await api(`players?select=id,name,photo_url&id=eq.${myMember.player_id}`);
     myMember._player = ps[0] || null;
   }
 }
@@ -3884,6 +3884,21 @@ function memApplyRole(){
   if(role === 'admin'){ if(!isAdmin) admLogin(true); luAuthed = true; }
   else if(role === 'staff'){ luAuthed = true; }
 }
+const AV_COLORS = ['#e57373','#f06292','#ba68c8','#7986cb','#4fc3f7','#4db6ac','#81c784','#ffb74d','#a1887f','#90a4ae'];
+function acctDisplayName(){
+  if(!myMember) return '';
+  const approved = myMember.role!=='pending';
+  return (approved && myMember._player && myMember._player.name) || myMember.kakao_nickname || (myMember._player && myMember._player.name) || '회원';
+}
+function acctAvatar(size){
+  const approved = myMember && myMember.role!=='pending';
+  const photo = approved && myMember._player && myMember._player.photo_url;
+  const nm = acctDisplayName();
+  const base = `width:${size}px;height:${size}px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;overflow:hidden;`;
+  if(photo) return `<span style="${base}background:#fff"><img src="${photo}" alt="" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover"></span>`;
+  let h = 0; for(const c of nm) h = (h*31 + c.codePointAt(0)) >>> 0;
+  return `<span style="${base}background:${AV_COLORS[h % AV_COLORS.length]};color:#fff;font-weight:700;font-size:${Math.round(size*0.42)}px">${luEsc((nm||'?').trim().slice(0,1).toUpperCase())}</span>`;
+}
 function acctRender(){
   const bar = document.getElementById('acct-bar'); if(!bar) return;
   if(!authSession){
@@ -3891,14 +3906,16 @@ function acctRender(){
     return;
   }
   if(!myMember){
-    bar.innerHTML = `<button class="acct-chip" onclick="acctSheet()">로그인됨 · 회원 설정 필요</button>`; return;
+    bar.innerHTML = `<button class="acct-chip" onclick="acctSheet()" style="height:34px">회원 설정 필요</button>`; return;
   }
-  const nm = (myMember._player && myMember._player.name) || myMember.kakao_nickname || '회원';
-  const SHORT = { member:'', staff:'운영', admin:'관리' };
-  let st = SHORT[myMember.role] || '';
-  if(myMember.role==='pending') st = myMember.player_id ? '대기' : '신청';
-  const act = (myMember.role==='pending' && !myMember.player_id) ? 'memSignup()' : 'acctSheet()';
-  bar.innerHTML = `<button class="acct-chip" onclick="${act}" style="height:34px"><span style="overflow:hidden;text-overflow:ellipsis;max-width:60px">${luEsc(nm)}</span>${st?` <span class="acct-st">${st}</span>`:''}</button>`;
+  const needSignup = myMember.role==='pending' && !myMember.player_id;
+  const waiting = myMember.role==='pending' && !!myMember.player_id;
+  const act = needSignup ? 'memSignup()' : 'acctSheet()';
+  const label = waiting ? '승인중' : needSignup ? '가입 신청' : '';
+  const nm = acctDisplayName();
+  bar.innerHTML = label
+    ? `<button class="acct-chip" onclick="${act}" aria-label="${luEsc(nm)}" style="height:34px;padding:0 12px 0 3px">${acctAvatar(28)}<span class="acct-st">${label}</span></button>`
+    : `<button onclick="${act}" aria-label="${luEsc(nm)}" title="${luEsc(nm)}" style="padding:0;border:2px solid rgba(255,255,255,0.5);background:none;border-radius:50%;cursor:pointer;display:flex">${acctAvatar(30)}</button>`;
 }
 async function authInit(){
   if(window._authError){ alert('로그인에 실패했어요.\n' + window._authError); window._authError = null; }
@@ -3913,12 +3930,11 @@ async function authInit(){
 }
 function acctSheet(){
   const ov = document.createElement('div'); ov.className='mem-ov'; ov.id='acct-sheet';
-  const nm = myMember ? ((myMember._player&&myMember._player.name)||myMember.kakao_nickname||'') : '';
+  const nm = myMember ? acctDisplayName() : '';
   const role = myMember ? (myMember.role==='pending' ? (myMember.player_id?'승인 대기 중':'가입 신청 전') : ROLE_LABEL[myMember.role]) : '회원 정보 없음';
   ov.innerHTML = `<div style="max-width:420px;margin:0 auto">
     <button onclick="document.getElementById('acct-sheet').remove()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>
-    <div style="font-size:18px;font-weight:700;margin:12px 0 4px">내 계정</div>
-    <div style="font-size:14px;color:var(--muted);margin-bottom:20px">${luEsc(nm)} · ${role}</div>
+    <div style="display:flex;align-items:center;gap:14px;margin:14px 0 22px">${myMember?acctAvatar(56):''}<div><div style="font-size:18px;font-weight:700">${luEsc(nm)}</div><div style="font-size:13px;color:var(--muted);margin-top:2px">${role}</div></div></div>
     ${myMember && myMember.role==='pending' && !myMember.player_id ? `<button onclick="document.getElementById('acct-sheet').remove();memSignup()" style="width:100%;padding:13px;background:var(--skyblue);color:#fff;border:none;border-radius:10px;font:inherit;font-weight:700;cursor:pointer;margin-bottom:10px">가입 신청하기</button>`:''}
     <button onclick="memLogout()" style="width:100%;padding:13px;background:#fff;border:1px solid var(--border);border-radius:10px;font:inherit;font-weight:600;cursor:pointer;margin-bottom:10px">로그아웃</button>
     <button onclick="memWithdraw()" style="width:100%;padding:13px;background:#fff;color:#c62828;border:1px solid #f0c4c4;border-radius:10px;font:inherit;font-weight:600;cursor:pointer">회원 탈퇴</button>
