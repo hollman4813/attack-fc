@@ -3870,7 +3870,9 @@ async function rpc(name, args){
 }
 function kakaoLogin(){
   const back = location.origin + location.pathname;
-  location.href = `${SUPA_URL}/auth/v1/authorize?provider=kakao&scopes=profile_nickname&redirect_to=${encodeURIComponent(back)}`;
+  // 로그아웃 직후에는 카카오 쪽 로그인 세션(쿠키)이 남아 자동 로그인되므로, 계정 선택/입력 화면을 다시 띄움
+  let again = false; try{ again = localStorage.getItem('attack_relogin')==='1'; localStorage.removeItem('attack_relogin'); }catch(e){}
+  location.href = `${SUPA_URL}/auth/v1/authorize?provider=kakao&scopes=profile_nickname&redirect_to=${encodeURIComponent(back)}${again?'&prompt=login':''}`;
 }
 async function memLoadMine(){
   myMember = null;
@@ -3994,6 +3996,7 @@ function acctSheet(){
 }
 async function memLogout(){
   try{ if(authSession) await _rawFetch(`${SUPA_URL}/auth/v1/logout`, {method:'POST', headers:{apikey:SUPA_KEY, Authorization:`Bearer ${authSession.access_token}`}}); }catch(e){}
+  try{ localStorage.setItem('attack_relogin','1'); }catch(e){}
   memReset();
 }
 function memReset(){
