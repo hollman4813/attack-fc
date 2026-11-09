@@ -885,6 +885,10 @@
             <input id="np-nickname" type="text" placeholder="닉네임" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
           </div>
         </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">입단일</div>
+          <input id="np-join" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+        </div>
         <div id="np-subpos-wrap" style="margin-bottom:10px;display:none">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">세부 포지션</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap" id="np-subpos-btns"></div>
@@ -2977,6 +2981,7 @@ async function addPlayer() {
     dominant_foot: document.getElementById('np-foot').value || null,
     birth_date: document.getElementById('np-birth').value || null,
     nickname: document.getElementById('np-nickname').value.trim() || null,
+    join_date: document.getElementById('np-join').value || null,
     status: 'active'
   };
 
@@ -2988,7 +2993,7 @@ async function addPlayer() {
 
   if (res.ok) {
     alert(`${name} 선수 등록 완료! ✅`);
-    ['np-name','np-number','np-birth','np-nickname'].forEach(id => document.getElementById(id).value = '');
+    ['np-name','np-number','np-birth','np-nickname','np-join'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('np-position').value = '';
     document.getElementById('np-foot').value = '';
     await loadAdminData();
