@@ -2150,9 +2150,15 @@ function mobileYoutube(e) {
   // PC는 기본 a 태그 동작 (새 탭으로 열림)
 }
 
+/* ── 오버레이(개인기록/프로필) 뒤로가기 ── */
+function ovPush(id){ history.pushState({page:'ov',id},''); }
+function ovClose(id){ const el=document.getElementById(id); if(el) el.remove(); if(history.state&&history.state.page==='ov') history.back(); }
 /* ── 브라우저 뒤로가기 처리 ── */
 window.addEventListener('popstate', (e) => {
   const state = e.state;
+  const _ovs = ['my-record','profile-page'].map(i=>document.getElementById(i)).filter(Boolean);
+  if(_ovs.length){ _ovs.forEach(el=>el.remove()); return; }
+  if(state && state.page==='ov') return;
   if (!state || state.page === 'home') {
     ['home','match-detail','player-detail','admin-page'].forEach(id=>{
       const el = document.getElementById(id);
@@ -3977,8 +3983,8 @@ async function myRecordOpen(){
   if(!myMember || !myMember.player_id){ alert('연결된 선수 정보가 없어 개인 기록을 볼 수 없어요.'); return; }
   const pid = myMember.player_id;
   let ov = document.getElementById('my-record');
-  if(!ov){ ov = document.createElement('div'); ov.id='my-record'; ov.className='mem-ov'; ov.style.cssText='z-index:9600;background:var(--bg)'; document.body.appendChild(ov); }
-  ov.innerHTML = `<div style="max-width:440px;margin:0 auto"><button onclick="document.getElementById('my-record').remove()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button><div style="padding:60px;text-align:center;color:var(--muted)">기록을 불러오는 중...</div></div>`;
+  if(!ov){ ov = document.createElement('div'); ov.id='my-record'; ov.className='mem-ov'; ov.style.cssText='z-index:9600;background:var(--bg)'; document.body.appendChild(ov); ovPush('my-record'); }
+  ov.innerHTML = `<div style="max-width:440px;margin:0 auto"><button onclick="ovClose('my-record')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button><div style="padding:60px;text-align:center;color:var(--muted)">기록을 불러오는 중...</div></div>`;
   let me = [], all = [], votes = [], pl = [], lu = [];
   try{
     [me, all, votes, pl, lu] = await Promise.all([
@@ -4058,7 +4064,7 @@ function mrRender(){
   const kpi = (v,l) => `<div style="flex:1;text-align:center"><div style="font-size:30px;font-weight:800;line-height:1">${v}</div><div style="font-size:11px;opacity:.75;margin-top:6px">${l}</div></div>`;
   const total = W+Dr+L;
   ov.innerHTML = `<div style="max-width:440px;margin:0 auto;padding-bottom:40px">
-    <button onclick="document.getElementById('my-record').remove()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>
+    <button onclick="ovClose('my-record')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>
     <div style="background:linear-gradient(160deg,#1a3a6b,#1e5fa3);border-radius:18px;color:#fff;padding:20px 18px 18px;margin-top:6px;box-shadow:0 8px 24px rgba(26,58,107,.25)">
       <div style="font-size:11px;letter-spacing:2px;opacity:.7;font-weight:700">MY RECORD</div>
       <div style="display:flex;align-items:center;gap:14px;margin:12px 0 18px">${av}<div style="flex:1;min-width:0">${D.p.number!=null?`<div style="font-size:34px;font-weight:900;line-height:1;letter-spacing:-1px"><span style="font-size:13px;font-weight:700;opacity:.75;letter-spacing:1px;margin-right:6px">No.</span>${D.p.number}</div>`:''}<div style="font-size:28px;font-weight:800;line-height:1.15;margin-top:6px;word-break:keep-all">${luEsc(D.p.name)}</div></div><div style="text-align:right;flex-shrink:0;padding-left:8px"><div style="font-size:11px;opacity:.75;font-weight:700">어택포인트</div><div style="font-size:34px;font-weight:900;line-height:1.05;margin-top:4px">${power!=null?power:'-'}</div></div></div>
@@ -4090,14 +4096,14 @@ function mrRender(){
     ${card(`${ttl('경기별 기록')}<div style="padding-bottom:4px">${(D.showAll?played:played.slice(0,5)).map(r=>{ const m=r.matches, d=new Date(m.match_date), rl=m.result==='Win'?'W':m.result==='Lose'?'L':'D', cl=m.result==='Win'?'#2e7d32':m.result==='Lose'?'#c62828':'#9e9e9e', rt=ratingOf[r.match_id];
       return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border)"><span style="width:22px;height:22px;border-radius:6px;background:${cl};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">${rl}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${luEsc(m.opponent||'')}</div><div style="font-size:11px;color:var(--muted)">${d.getMonth()+1}월 ${d.getDate()}일 · ${m.our_score}:${m.opponent_score}</div></div><div style="font-size:12px;font-weight:700;color:var(--skyblue);text-align:right">${r.goals?'⚽'+r.goals+' ':''}${r.assists?'🅰'+r.assists+' ':''}${r.is_mom?'⭐':''}</div>${rt?`<div style="width:34px;text-align:right;font-size:13px;font-weight:800;color:${rc(rt)}">${rt.toFixed(1)}</div>`:''}</div>`; }).join('')}${!D.showAll && played.length>5 ? `<button onclick="mrMore()" style="display:block;width:100%;padding:13px;background:none;border:none;border-top:1px solid var(--border);color:var(--skyblue);font:inherit;font-size:13px;font-weight:700;cursor:pointer">더보기 (${played.length-5}경기)</button>` : ''}</div>`)}
     ` : card('<div style="padding:34px 16px;text-align:center;color:var(--muted);font-size:14px">이 기간에 출전 기록이 없어요.</div>')}
-    <button onclick="document.getElementById('my-record').remove();showPlayer(${D.p.id})" style="width:100%;margin-top:16px;padding:13px;background:#fff;border:1px solid var(--border);border-radius:12px;font:inherit;font-size:14px;font-weight:600;cursor:pointer">공개 선수 프로필 보기</button>
+    <button onclick="history.replaceState({page:'home'},'');document.getElementById('my-record').remove();showPlayer(${D.p.id})" style="width:100%;margin-top:16px;padding:13px;background:#fff;border:1px solid var(--border);border-radius:12px;font:inherit;font-size:14px;font-weight:600;cursor:pointer">공개 선수 프로필 보기</button>
   </div>`;
   ov.scrollTop = keepY;
 }
 async function profileOpen(){
   let ov = document.getElementById('profile-page');
-  if(!ov){ ov = document.createElement('div'); ov.id='profile-page'; ov.className='mem-ov'; ov.style.zIndex=9600; document.body.appendChild(ov); }
-  const head = `<button onclick="document.getElementById('profile-page').remove()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>`;
+  if(!ov){ ov = document.createElement('div'); ov.id='profile-page'; ov.className='mem-ov'; ov.style.zIndex=9600; document.body.appendChild(ov); ovPush('profile-page'); }
+  const head = `<button onclick="ovClose('profile-page')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>`;
   ov.innerHTML = `<div style="max-width:420px;margin:0 auto">${head}<div style="padding:40px;text-align:center;color:var(--muted)">불러오는 중...</div></div>`;
   let p = null;
   if(myMember && myMember.player_id){ const r = await api(`players?select=*&id=eq.${myMember.player_id}`); p = r[0] || null; }
@@ -4148,7 +4154,7 @@ function memReset(){
   const wasAdmin = myMember && myMember.role==='admin';
   authSave(null); myMember = null; luAuthed = false;
   if(wasAdmin){ isAdmin = false; admSetLock(); }
-  const sh = document.getElementById('acct-sheet'); if(sh) sh.remove(); const pp = document.getElementById('profile-page'); if(pp) pp.remove();
+  const sh = document.getElementById('acct-sheet'); if(sh) sh.remove(); ovClose('profile-page');
   acctRender(); if(wasAdmin) exitAdmin(); else admReloadActive();
   gateClose();
 }
