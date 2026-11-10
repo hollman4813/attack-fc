@@ -4117,15 +4117,10 @@ async function profileOpen(){
   const avatar = p && p.photo_url
     ? `<img src="${p.photo_url}" alt="" referrerpolicy="no-referrer" style="width:96px;height:96px;border-radius:50%;object-fit:cover">` : acctAvatar(96);
   ov.innerHTML = `<div style="max-width:420px;margin:0 auto;padding-bottom:40px">${head}
-    <div style="text-align:center;margin:10px 0 20px"><div style="display:flex;justify-content:center">${avatar}</div><div style="font-size:20px;font-weight:800;margin-top:12px">${luEsc(nm)}</div><div style="font-size:13px;color:var(--muted);margin-top:3px">${ROLE_LABEL[myMember.role]||''}</div></div>
+    <div style="text-align:center;margin:10px 0 20px"><div style="display:flex;justify-content:center">${avatar}</div><div style="font-size:20px;font-weight:800;margin-top:12px">${luEsc(nm)}</div><div style="font-size:13px;color:var(--muted);margin-top:3px">${ROLE_LABEL[myMember.role]||''}</div><div style="margin-top:8px"><span style="display:inline-block;background:#FEE500;color:#3a1d1d;font-size:12px;font-weight:700;padding:4px 10px;border-radius:12px">💬 카카오 연동됨</span></div></div>
     <div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden">
-      ${row('배번', p && p.number)}
-      ${row('포지션', p ? ((POS[p.position]||p.position||'-') + (sub?` · ${sub}`:'')) : '-')}
-      ${row('주발', p && FOOT[p.dominant_foot])}
-      ${row('닉네임', p && p.nickname)}
       ${row('생일', p ? fmt(p.birth_date)+age : '-')}
       ${row('입단일', p ? fmt(p.join_date) : '-')}
-      ${row('상태', p && ST[p.status||'active'])}
       ${row('카카오 닉네임', myMember.kakao_nickname)}
     </div>
     <div style="font-size:12px;color:var(--muted);line-height:1.6;margin:12px 4px 24px">프로필 정보는 읽기 전용이에요. 수정이 필요하면 운영진에게 요청해 주세요.</div>
