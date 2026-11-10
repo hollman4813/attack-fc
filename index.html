@@ -4559,7 +4559,7 @@ function luViewInner(){
     <div style="margin:10px 2px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>`}
     ${v.canEdit ? luViewEditHtml(q, used) : luGoalLine(rec,q,nm)}
     ${v.status==='finished' ? `<button onclick="luGoEditResult(${v.matchId})" style="width:100%;margin-top:10px;padding:10px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">✏️ 경기 결과 수정</button>` : rec && (v.canEdit||tu||tt) ? `<button onclick="luSyncStats()" style="width:100%;margin-top:10px;padding:10px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">📊 모든 경기 종료 (스코어 합산)</button>` : ''}
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 4px 0"><span style="font-size:11px;color:var(--muted)">${rec?`전체 ${tu} : ${tt}`:''}${np?'':`${rec?' · ':''}↻ 후반 교체`}</span>${np?'':`<button onclick="luDownloadView()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">📥 이미지 저장</button>`}</div>`;
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 4px 0"><span style="font-size:11px;color:var(--muted)">${rec?`전체 ${tu} : ${tt}`:''}${np?'':`${rec?' · ':''}↻ 후반 교체`}</span>${np?'':`<span style="display:flex;gap:6px"><button onclick="luDownloadView()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">📥 이미지 저장</button><button onclick="luDownloadViewQ()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">🖼 쿼터별 4장</button></span>`}</div>`;
 }
 function luViewEditHtml(q, used){
   const v = window._lvData, nm = id => v.info[id] || {name:'?'};
@@ -4735,24 +4735,26 @@ async function luMakeImage(o){
   // o: {plan, label, people:{id:{name,number}}, order:[ids]}
   try{ await document.fonts.ready; }catch(e){}
   const FONT = "'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
-  const W = 1080, PAD = 30, GAP = 20, CW = (W-PAD*2-GAP)/2, PH = CW*1.35;
+  const single = o.onlyQ!=null;   // 한 쿼터만 따로 그리는 모드
+  const PAD = 30, GAP = 20, CW = (1080-PAD*2-GAP)/2, PH = CW*1.35, W = single ? CW+PAD*2 : 1080;
   const plan = o.plan, ids = o.order, nm = id=>o.people[id]||{name:'?',number:''};
-  const ROW = 44, TH = o.noTable ? 0 : 56 + (ids.length+1)*ROW + 30;
+  const ROW = 44, TH = (o.noTable||single) ? 0 : 56 + (ids.length+1)*ROW + 30;
   const restH = 100;
-  const H = Math.round(120 + 2*(PH+36+restH) + GAP + TH - 10);
+  const H = single ? Math.round(116 + PH+36+restH + 10) : Math.round(120 + 2*(PH+36+restH) + GAP + TH - 10);
   const imgs = {};
   await Promise.all(ids.filter(id=>o.people[id]&&o.people[id].photo).map(id=>new Promise(res=>{ const im = new Image(); im.crossOrigin='anonymous'; im.onload=()=>{ imgs[id]=im; res(); }; im.onerror=()=>res(); setTimeout(res,4000); im.src=o.people[id].photo; })));
-  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const ctx = cv.getContext('2d');
+  const cv = document.createElement('canvas'); const SC = single ? 2 : 1; cv.width = W*SC; cv.height = H*SC;
+  const ctx = cv.getContext('2d'); if(SC!==1) ctx.scale(SC,SC);
   ctx.fillStyle = '#f4f6fa'; ctx.fillRect(0,0,W,H);
   ctx.fillStyle = '#1a3a6b'; ctx.fillRect(0,0,W,96);
   ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
   ctx.font = `700 40px ${FONT}`; ctx.fillText('ATTACK F.C. 라인업', PAD, 36);
   ctx.font = `500 26px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillText(o.label||'', PAD, 72);
-  if(o.rec){ let tu=0,tt=0; o.rec.forEach(x=>{ const sc=luQScore(x); tu+=sc.us; tt+=sc.them; }); ctx.textAlign='right'; ctx.font=`800 44px ${FONT}`; ctx.fillStyle='#fff'; ctx.fillText(`${tu} : ${tt}`, W-PAD, 48); ctx.textAlign='left'; }
+  if(o.rec && !single){ let tu=0,tt=0; o.rec.forEach(x=>{ const sc=luQScore(x); tu+=sc.us; tt+=sc.them; }); ctx.textAlign='right'; ctx.font=`800 44px ${FONT}`; ctx.fillStyle='#fff'; ctx.fillText(`${tu} : ${tt}`, W-PAD, 48); ctx.textAlign='left'; }
   for(let q=0;q<4;q++){
     const e = plan[q]; if(!e) continue;
-    const x0 = PAD + (q%2)*(CW+GAP), y0 = 116 + Math.floor(q/2)*(PH+36+restH+GAP);
+    if(single && q!==o.onlyQ) continue;
+    const x0 = single ? PAD : PAD + (q%2)*(CW+GAP), y0 = single ? 116 : 116 + Math.floor(q/2)*(PH+36+restH+GAP);
     ctx.fillStyle = '#1a3a6b'; ctx.textAlign='left'; ctx.font = `700 28px ${FONT}`;
     ctx.fillText(`${q+1}Q`, x0, y0+14); ctx.font = `500 22px ${FONT}`; ctx.fillStyle='#5b6b82'; ctx.fillText(e.formation, x0+64, y0+15);
     if(o.rec){ const r=luRecOf(o.rec,q); ctx.textAlign='right'; ctx.font=`800 30px ${FONT}`; ctx.fillStyle='#1a7abf'; ctx.fillText(luQScoreTxt(r).replace(':',' : '), x0+CW, y0+14); ctx.textAlign='left'; }
@@ -4787,7 +4789,7 @@ async function luMakeImage(o){
     if(o.rec){ const r=luRecOf(o.rec,q); if(r.goals.length){ ctx.fillStyle='#1c2430'; ctx.font=`600 20px ${FONT}`; const gt = r.goals.map(g=>luGoalPlain(g,nm)).join('  '); luWrapText(ctx,gt,CW).slice(0,2).forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+2*26+i*26-(lines.length>1?0:26))); } }
   }
   // 배정표
-  if(!o.noTable){
+  if(!o.noTable && !single){
   const ty = 116 + 2*(PH+36+restH) + GAP;
   ctx.fillStyle='#1a3a6b'; ctx.font=`700 28px ${FONT}`; ctx.textAlign='left'; ctx.fillText('배정표', PAD, ty+14);
   const cols = [PAD, PAD+250, PAD+250+150, PAD+250+300, PAD+250+450, PAD+250+600], cw = [250,150,150,150,150,W-PAD*2-250-600];
@@ -4822,17 +4824,39 @@ async function luSaveImage(o, fname){
   const a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url), 5000);
 }
+// 쿼터별 라인업 이미지 4장 (배정표 없이 라인업만)
+async function luSaveImagesQ(o, base){
+  const files = [];
+  for(let q=0;q<4;q++){
+    if(!o.plan[q]) continue;
+    const blob = await luMakeImage(Object.assign({}, o, {onlyQ:q, noTable:true}));
+    files.push(new File([blob], `${base}_${q+1}Q.png`, {type:'image/png'}));
+  }
+  if(!files.length) return;
+  try{
+    if(navigator.canShare && navigator.canShare({files})){ await navigator.share({files}); return; }
+  }catch(e){ if(e&&e.name==='AbortError') return; }
+  files.forEach((f,i)=>setTimeout(()=>{
+    const url = URL.createObjectURL(f), a = document.createElement('a'); a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  }, i*400));
+}
+function luLabelBase(l){ return `라인업_${(l||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}`; }
+function luDownloadEditQ(){ luSaveImagesQ(luImgOptsEdit(), luLabelBase(LU.fixedMatch&&LU.fixedMatch.label)); }
 function luImgOptsEdit(){
   const people = {}; LU.att.forEach(p=>people[p.id]={name:p.name,number:p.number,photo:p.photo_url||null});
   return {plan:LU.plan, rec:LU.rec, label:(LU.fixedMatch&&LU.fixedMatch.label)||'', people, order:LU.att.map(p=>p.id)};
 }
 function luDownloadEdit(){ luSaveImage(luImgOptsEdit(), `라인업_${(LU.fixedMatch&&LU.fixedMatch.label||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}.png`); }
-function luDownloadView(){
+function luDownloadViewQ(){ luDownloadView(true); }
+function luDownloadView(perQ){
   const v = window._lvData; if(!v) return;
   const people = {}; const order = [];
   (v.stats||[]).filter(s=>s.attended&&s.players).forEach(s=>{ const id=s.players.id||s.player_id; people[id]={name:s.players.name,number:s.players.number,photo:s.players.photo_url||null}; order.push(id); });
   const gs = (v.data.cfg&&v.data.cfg.guests)||[]; gs.forEach(g=>{ people[g.id]={name:g.name,number:'용'}; order.push(g.id); });
-  luSaveImage({plan:v.data.plan,rec:v.rec,label:v.label||'',people,order,noTable:v.status==='finished'}, `라인업_${(v.label||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}.png`);
+  const o = {plan:v.data.plan,rec:v.rec,label:v.label||'',people,order,noTable:v.status==='finished'};
+  if(perQ===true) return luSaveImagesQ(o, luLabelBase(v.label));
+  luSaveImage(o, `${luLabelBase(v.label)}.png`);
 }
 
 /* ---------- 오버레이 열기/닫기 ---------- */
@@ -5340,6 +5364,7 @@ function luRenderPlan(){
     <table class="lu-tbl"><thead><tr><th style="text-align:left">선수</th><th>1Q</th><th>2Q</th><th>3Q</th><th>4Q</th><th>합</th></tr></thead><tbody>${rows}</tbody></table>
     <button class="lu-btn" onclick="luSavePlan()">💾 라인업 저장</button>
     <button class="lu-btn" style="background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);margin-top:8px" onclick="luDownloadEdit()">📥 4분할 + 배정표 이미지 저장</button>
+    <button class="lu-btn" style="background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);margin-top:8px" onclick="luDownloadEditQ()">🖼 쿼터별 라인업 4장 저장 (1Q·2Q·3Q·4Q)</button>
   </div>
   <div id="lu-sheet"></div>`;
 }
