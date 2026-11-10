@@ -4757,6 +4757,7 @@ async function luMakeImage(o){
     const x0 = single ? PAD : PAD + (q%2)*(CW+GAP), y0 = single ? 116 : 116 + Math.floor(q/2)*(PH+36+restH+GAP);
     ctx.fillStyle = '#1a3a6b'; ctx.textAlign='left'; ctx.font = `700 28px ${FONT}`;
     ctx.fillText(`${q+1}Q`, x0, y0+14); ctx.font = `500 22px ${FONT}`; ctx.fillStyle='#5b6b82'; ctx.fillText(e.formation, x0+64, y0+15);
+    if(o.finished && o.rec){ const r=luRecOf(o.rec,q); ctx.textAlign='right'; ctx.font=`800 30px ${FONT}`; ctx.fillStyle='#1a7abf'; ctx.fillText(luQScoreTxt(r).replace(':',' : '), x0+CW, y0+14); ctx.textAlign='left'; }
 
     const py = y0+34;
     // 필드
@@ -4839,7 +4840,8 @@ function luLabelBase(l){ return `라인업_${(l||'match').replace(/[^0-9A-Za-z�
 function luDownloadEditQ(){ luSaveImagesQ(luImgOptsEdit(), luLabelBase(LU.fixedMatch&&LU.fixedMatch.label)); }
 function luImgOptsEdit(){
   const people = {}; LU.att.forEach(p=>people[p.id]={name:p.name,number:p.number,photo:p.photo_url||null});
-  return {plan:LU.plan, rec:LU.rec, label:(LU.fixedMatch&&LU.fixedMatch.label)||'', people, order:LU.att.map(p=>p.id)};
+  const fm = (allAdminMatches||[]).find(m=>m.id===LU.matchId) || (window._cachedMatches||[]).find(m=>m.id===LU.matchId);
+  return {plan:LU.plan, rec:LU.rec, label:(LU.fixedMatch&&LU.fixedMatch.label)||'', people, order:LU.att.map(p=>p.id), finished:!!(fm&&fm.status==='finished')};
 }
 function luDownloadEdit(){ luSaveImage(luImgOptsEdit(), `라인업_${(LU.fixedMatch&&LU.fixedMatch.label||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}.png`); }
 function luDownloadViewQ(){ luDownloadView(true); }
@@ -4848,7 +4850,7 @@ function luDownloadView(perQ){
   const people = {}; const order = [];
   (v.stats||[]).filter(s=>s.attended&&s.players).forEach(s=>{ const id=s.players.id||s.player_id; people[id]={name:s.players.name,number:s.players.number,photo:s.players.photo_url||null}; order.push(id); });
   const gs = (v.data.cfg&&v.data.cfg.guests)||[]; gs.forEach(g=>{ people[g.id]={name:g.name,number:'용'}; order.push(g.id); });
-  const o = {plan:v.data.plan,rec:v.rec,label:v.label||'',people,order,noTable:v.status==='finished'};
+  const o = {plan:v.data.plan,rec:v.rec,label:v.label||'',people,order,noTable:v.status==='finished',finished:v.status==='finished'};
   if(perQ===true) return luSaveImagesQ(o, luLabelBase(v.label));
   luSaveImage(o, `${luLabelBase(v.label)}.png`);
 }
