@@ -3967,6 +3967,7 @@ function acctMenu(ev){
   m.onclick = acctMenuClose;
   m.innerHTML = `<div onclick="event.stopPropagation()" style="position:absolute;top:${Math.round(r.bottom+8)}px;right:12px;min-width:140px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.18);overflow:hidden">
     <button onclick="acctMenuClose();profileOpen()" style="display:block;width:100%;text-align:left;padding:13px 16px;background:none;border:none;border-bottom:1px solid var(--border);font:inherit;font-size:14px;cursor:pointer">프로필</button>
+    <button onclick="acctMenuClose();myRecordOpen()" style="display:block;width:100%;text-align:left;padding:13px 16px;background:none;border:none;border-bottom:1px solid var(--border);font:inherit;font-size:14px;cursor:pointer">개인기록</button>
     <button onclick="acctMenuClose();memLogout()" style="display:block;width:100%;text-align:left;padding:13px 16px;background:none;border:none;font:inherit;font-size:14px;cursor:pointer">로그아웃</button>
   </div>`;
   document.body.appendChild(m);
@@ -3978,22 +3979,25 @@ async function myRecordOpen(){
   let ov = document.getElementById('my-record');
   if(!ov){ ov = document.createElement('div'); ov.id='my-record'; ov.className='mem-ov'; ov.style.cssText='z-index:9600;background:var(--bg)'; document.body.appendChild(ov); }
   ov.innerHTML = `<div style="max-width:440px;margin:0 auto"><button onclick="document.getElementById('my-record').remove()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button><div style="padding:60px;text-align:center;color:var(--muted)">기록을 불러오는 중...</div></div>`;
-  let me = [], all = [], votes = [], pl = [];
+  let me = [], all = [], votes = [], pl = [], lu = [];
   try{
-    [me, all, votes, pl] = await Promise.all([
+    [me, all, votes, pl, lu] = await Promise.all([
       api(`match_stats?select=*,matches(id,match_date,opponent,our_score,opponent_score,result,season_id,goals_conceded,status)&player_id=eq.${pid}`),
       api('match_stats?select=player_id,attended,goals,assists,is_mom,matches(season_id,status)'),
       api(`match_votes?select=*,matches(goals_conceded,season_id)&player_id=eq.${pid}`),
-      api(`players?select=*&id=eq.${pid}`)
+      api(`players?select=*&id=eq.${pid}`),
+      api(`${LU_STORE}?select=key,data&key=like.match_*`).catch(()=>[])
     ]);
   }catch(e){}
   const p = pl[0]; if(!p){ ov.remove(); alert('선수 정보를 불러오지 못했어요.'); return; }
   const fin = r => r.matches && r.matches.status==='finished';
-  window._mr = { p, me: me.filter(fin), all: all.filter(fin), votes, scope: currentSeasonId, ranking: null };
+  const plans = {}; (lu||[]).forEach(r=>{ const m = /^match_(\d+)$/.exec(r.key); if(m && r.data && r.data.plan) plans[+m[1]] = r.data.plan; });
+  window._mr = { p, me: me.filter(fin), all: all.filter(fin), votes, plans, scope: currentSeasonId, ranking: null, showAll: false };
   mrRender();
   calcPowerRanking().then(r => { if(window._mr){ window._mr.ranking = r; mrRender(); } }).catch(()=>{});
 }
-function mrScope(v){ window._mr.scope = v==='all' ? 'all' : +v; mrRender(); }
+function mrScope(v){ window._mr.scope = v==='all' ? 'all' : +v; window._mr.showAll = false; mrRender(); }
+function mrMore(){ window._mr.showAll = true; mrRender(); }
 function mrRender(){
   const D = window._mr, ov = document.getElementById('my-record'); if(!D || !ov) return;
   const keepY = ov.scrollTop;
@@ -4030,6 +4034,18 @@ function mrRender(){
   const opp = {}; played.forEach(r=>{ if(r.goals){ opp[r.matches.opponent] = (opp[r.matches.opponent]||0)+r.goals; } });
   const fav = Object.entries(opp).sort((a,b)=>b[1]-a[1])[0];
   const chrono = [...played].reverse(); let streak=0,best=0; chrono.forEach(r=>{ if(r.goals>0||r.assists>0){ streak++; best=Math.max(best,streak);} else streak=0; });
+  // 많이 뛴 포지션 (기록된 라인업만): 쿼터 단위, 교체 출전은 0.5
+  const posQ = {}; let planGames = 0;
+  played.forEach(r=>{
+    const plan = D.plans[r.match_id]; if(!plan) return; let hit = false;
+    plan.forEach(e=>{ const fm = LU_FORMATIONS[e.formation]; if(!fm) return;
+      Object.keys(e.slots||{}).forEach(k=>{ const sl = e.slots[k], def = fm.find(x=>x[0]===k); if(!def) return; const g = def[1];
+        let w = 0; if(sl.p===D.p.id) w += (sl.s && sl.s!==sl.p) ? .5 : 1; if(sl.s===D.p.id && sl.s!==sl.p) w += .5;
+        if(w){ posQ[g] = (posQ[g]||0) + w; hit = true; } }); });
+    if(hit) planGames++;
+  });
+  const posList = Object.entries(posQ).sort((a,b)=>b[1]-a[1]), posTotal = posList.reduce((s,x)=>s+x[1],0);
+  const fq = n => (n%1? n.toFixed(1) : n)+'쿼터';
   // 함께한 기간
   let together = '';
   if(D.p.join_date){ const days = Math.floor((Date.now()-new Date(D.p.join_date))/86400000); if(days>=0) together = days>=365 ? `함께한 지 ${Math.floor(days/365)}년 ${Math.floor(days%365/30)}개월` : `함께한 지 ${days}일`; }
@@ -4069,8 +4085,12 @@ function mrRender(){
       ${fav?`<div>🎯 가장 많이 넣은 상대 <b>${luEsc(fav[0])}</b> <span style="color:var(--muted)">${fav[1]}골</span></div>`:''}
       ${best>1?`<div>🔗 연속 공격포인트 <b>${best}경기</b></div>`:''}
     </div>`) : ''}
-    ${card(`${ttl('경기별 기록')}<div style="padding-bottom:4px">${played.map(r=>{ const m=r.matches, d=new Date(m.match_date), rl=m.result==='Win'?'W':m.result==='Lose'?'L':'D', cl=m.result==='Win'?'#2e7d32':m.result==='Lose'?'#c62828':'#9e9e9e', rt=ratingOf[r.match_id];
-      return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border)"><span style="width:22px;height:22px;border-radius:6px;background:${cl};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">${rl}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${luEsc(m.opponent||'')}</div><div style="font-size:11px;color:var(--muted)">${d.getMonth()+1}월 ${d.getDate()}일 · ${m.our_score}:${m.opponent_score}</div></div><div style="font-size:12px;font-weight:700;color:var(--skyblue);text-align:right">${r.goals?'⚽'+r.goals+' ':''}${r.assists?'🅰'+r.assists+' ':''}${r.is_mom?'⭐':''}</div>${rt?`<div style="width:34px;text-align:right;font-size:13px;font-weight:800;color:${rc(rt)}">${rt.toFixed(1)}</div>`:''}</div>`; }).join('')}</div>`)}
+    ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div style="padding:6px 16px 14px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">주 포지션 <b style="color:var(--skyblue);font-size:15px">${posList[0][0]}</b></div>
+      ${posList.slice(0,5).map(([g,q],i)=>`<div style="display:flex;align-items:center;gap:10px;margin-top:7px;font-size:13px"><span style="width:34px;font-weight:800">${g}</span><div style="flex:1;height:10px;background:#eee;border-radius:5px;overflow:hidden"><div style="width:${Math.round(q/posList[0][1]*100)}%;height:100%;background:${i===0?'var(--skyblue)':'#9fc3e8'}"></div></div><span style="width:62px;text-align:right;color:var(--muted);font-size:12px">${fq(q)} · ${Math.round(q/posTotal*100)}%</span></div>`).join('')}
+      <div style="font-size:10px;color:var(--muted);margin-top:10px">라인업이 기록된 ${planGames}경기 기준이에요.</div></div>` : '<div style="padding:10px 16px 16px;font-size:13px;color:var(--muted)">집계된 라인업 기록이 아직 없어요.</div>'}`)}
+    ${card(`${ttl('경기별 기록')}<div style="padding-bottom:4px">${(D.showAll?played:played.slice(0,5)).map(r=>{ const m=r.matches, d=new Date(m.match_date), rl=m.result==='Win'?'W':m.result==='Lose'?'L':'D', cl=m.result==='Win'?'#2e7d32':m.result==='Lose'?'#c62828':'#9e9e9e', rt=ratingOf[r.match_id];
+      return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border)"><span style="width:22px;height:22px;border-radius:6px;background:${cl};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">${rl}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${luEsc(m.opponent||'')}</div><div style="font-size:11px;color:var(--muted)">${d.getMonth()+1}월 ${d.getDate()}일 · ${m.our_score}:${m.opponent_score}</div></div><div style="font-size:12px;font-weight:700;color:var(--skyblue);text-align:right">${r.goals?'⚽'+r.goals+' ':''}${r.assists?'🅰'+r.assists+' ':''}${r.is_mom?'⭐':''}</div>${rt?`<div style="width:34px;text-align:right;font-size:13px;font-weight:800;color:${rc(rt)}">${rt.toFixed(1)}</div>`:''}</div>`; }).join('')}${!D.showAll && played.length>5 ? `<button onclick="mrMore()" style="display:block;width:100%;padding:13px;background:none;border:none;border-top:1px solid var(--border);color:var(--skyblue);font:inherit;font-size:13px;font-weight:700;cursor:pointer">더보기 (${played.length-5}경기)</button>` : ''}</div>`)}
     ` : card('<div style="padding:34px 16px;text-align:center;color:var(--muted);font-size:14px">이 기간에 출전 기록이 없어요.</div>')}
     <button onclick="document.getElementById('my-record').remove();showPlayer(${D.p.id})" style="width:100%;margin-top:16px;padding:13px;background:#fff;border:1px solid var(--border);border-radius:12px;font:inherit;font-size:14px;font-weight:600;cursor:pointer">공개 선수 프로필 보기</button>
   </div>`;
@@ -4104,7 +4124,6 @@ async function profileOpen(){
       ${row('상태', p && ST[p.status||'active'])}
       ${row('카카오 닉네임', myMember.kakao_nickname)}
     </div>
-    ${p ? `<button onclick="document.getElementById('profile-page').remove();myRecordOpen()" style="width:100%;margin-top:14px;padding:14px;background:var(--skyblue);color:#fff;border:none;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer">📊 내 기록 보기</button>` : ''}
     <div style="font-size:12px;color:var(--muted);line-height:1.6;margin:12px 4px 24px">프로필 정보는 읽기 전용이에요. 수정이 필요하면 운영진에게 요청해 주세요.</div>
     <button onclick="memWithdraw()" style="width:100%;padding:13px;background:#fff;color:#c62828;border:1px solid #f0c4c4;border-radius:10px;font:inherit;font-weight:600;cursor:pointer">회원 탈퇴</button>
     <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-top:10px">탈퇴하면 카카오 연결과 생일·사진이 삭제돼요. 이름과 경기 기록은 팀 기록으로 남아요.</div>
