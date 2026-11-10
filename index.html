@@ -5002,7 +5002,8 @@ function luRenderMatch(){
         <input class="lu-sel lu-n" type="number" min="0" max="4" step="0.5" value="${lim.min??''}" placeholder="${luLimit(p,'min')}" onmousedown="luFillDef(event,this)" onkeydown="luFillDef(event,this)" onchange="luSetLim(${p.id},'min',this.value)">
         <input class="lu-sel lu-n" type="number" min="0" max="4" step="0.5" value="${lim.max??''}" placeholder="${luLimit(p,'max')}" onmousedown="luFillDef(event,this)" onkeydown="luFillDef(event,this)" onchange="luSetLim(${p.id},'max',this.value)"></div>`;
     }).join('')}
-    <button class="lu-btn" onclick="luAuto()">⚡ 자동 배정</button></div>`;
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="lu-btn" style="margin:0;flex:1" onclick="luAuto()">⚡ 자동 배정</button><button class="lu-btn" style="margin:0;flex:1;background:#fff;color:var(--skyblue);border:1.5px solid var(--skyblue)" onclick="luManual()">✋ 수동 배정</button></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px">수동 배정: 빈 라인업에서 시작해 쿼터마다 선수를 직접 골라 넣어요.</div></div>`;
 
   return h;
 }
@@ -5231,6 +5232,28 @@ function luAuto(){
   setTimeout(()=>document.getElementById('lu-plan')?.scrollIntoView({behavior:'smooth'}),50);
 }
 
+function luManual(){
+  if(LU.plan && !confirm('현재 라인업을 지우고 빈 라인업으로 수동 배정을 시작할까요?')) return;
+  LU.plan = LU.cfg.formations.map(f=>({formation:f,slots:{}}));
+  LU.q = 0; LU.autoWarn = [];
+  luRender();
+  setTimeout(()=>document.getElementById('lu-plan')?.scrollIntoView({behavior:'smooth'}),50);
+}
+function luCopyPrev(){
+  const q = LU.q; if(q<1) return;
+  const src = LU.plan[q-1], dst = LU.plan[q];
+  if(Object.keys(dst.slots).length && !confirm(`${q+1}Q 라인업을 지우고 ${q}Q 배치를 복사할까요?`)) return;
+  const ids = new Set(luSlots(dst.formation).map(s=>s.id));
+  dst.slots = {};
+  Object.entries(src.slots).forEach(([k,sl])=>{ if(ids.has(k) && sl.p && !(LU.cfg.excl[sl.p]||[]).includes(q)) dst.slots[k] = {p:sl.p, s:null}; });
+  luRender();
+}
+function luClearQ(){
+  const q = LU.q; if(!Object.keys(LU.plan[q].slots).length) return;
+  if(!confirm(`${q+1}Q 라인업을 모두 비울까요?`)) return;
+  LU.plan[q].slots = {}; luRender();
+}
+
 /* ---------- 결과 화면 ---------- */
 function luPlayer(id){ return LU.att.find(p=>p.id===id) || LU.loadedPlayers.find(p=>p.id===id); }
 // 한 쿼터에서 선수의 출전 내역: [{slot, part:'full'|'first'|'second'}] (전반→후반 순)
@@ -5306,6 +5329,10 @@ function luRenderPlan(){
   const uniq = [...new Set(warns)];
   return `<div id="lu-plan" class="lu-card" style="padding:12px 8px">
     <div style="display:flex;gap:4px;margin-bottom:10px">${tabs}</div>
+    <div style="display:flex;gap:6px;margin:0 4px 8px;justify-content:flex-end">
+      ${q>0?`<button onclick="luCopyPrev()" style="padding:6px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:12px;cursor:pointer">↩ ${q}Q 복사</button>`:''}
+      <button onclick="luClearQ()" style="padding:6px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:12px;cursor:pointer">🧹 ${q+1}Q 비우기</button>
+    </div>
     <div class="lu-pitch"><i class="lu-box t"></i><i class="lu-box b"></i>${bubbles}</div>
     <div style="font-size:10px;color:var(--muted);margin:6px 4px 0">초록 1순위 · 노랑 2·3순위 · 빨강 선호 외</div>
     <div style="margin:10px 4px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>
