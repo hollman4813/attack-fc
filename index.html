@@ -3971,6 +3971,111 @@ function acctMenu(ev){
   </div>`;
   document.body.appendChild(m);
 }
+/* ── 내 기록 (로그인 회원 전용 개인 대시보드) ── */
+async function myRecordOpen(){
+  if(!myMember || !myMember.player_id){ alert('연결된 선수 정보가 없어 개인 기록을 볼 수 없어요.'); return; }
+  const pid = myMember.player_id;
+  let ov = document.getElementById('my-record');
+  if(!ov){ ov = document.createElement('div'); ov.id='my-record'; ov.className='mem-ov'; ov.style.cssText='z-index:9600;background:var(--bg)'; document.body.appendChild(ov); }
+  ov.innerHTML = `<div style="max-width:440px;margin:0 auto"><button onclick="document.getElementById('my-record').remove()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button><div style="padding:60px;text-align:center;color:var(--muted)">기록을 불러오는 중...</div></div>`;
+  let me = [], all = [], votes = [], pl = [];
+  try{
+    [me, all, votes, pl] = await Promise.all([
+      api(`match_stats?select=*,matches(id,match_date,opponent,our_score,opponent_score,result,season_id,goals_conceded,status)&player_id=eq.${pid}`),
+      api('match_stats?select=player_id,attended,goals,assists,is_mom,matches(season_id,status)'),
+      api(`match_votes?select=*,matches(goals_conceded,season_id)&player_id=eq.${pid}`),
+      api(`players?select=*&id=eq.${pid}`)
+    ]);
+  }catch(e){}
+  const p = pl[0]; if(!p){ ov.remove(); alert('선수 정보를 불러오지 못했어요.'); return; }
+  const fin = r => r.matches && r.matches.status==='finished';
+  window._mr = { p, me: me.filter(fin), all: all.filter(fin), votes, scope: currentSeasonId, ranking: null };
+  mrRender();
+  calcPowerRanking().then(r => { if(window._mr){ window._mr.ranking = r; mrRender(); } }).catch(()=>{});
+}
+function mrScope(v){ window._mr.scope = v==='all' ? 'all' : +v; mrRender(); }
+function mrRender(){
+  const D = window._mr, ov = document.getElementById('my-record'); if(!D || !ov) return;
+  const keepY = ov.scrollTop;
+  const inScope = r => D.scope==='all' || r.matches.season_id===D.scope;
+  const mine = D.me.filter(inScope).sort((a,b)=>new Date(b.matches.match_date)-new Date(a.matches.match_date));
+  const played = mine.filter(r=>r.attended);
+  const sum = k => played.reduce((s,r)=>s+(r[k]||0),0);
+  const G = sum('goals'), A = sum('assists'), MOM = played.filter(r=>r.is_mom).length, GP = played.length;
+  // 팀 내 순위 (같은 범위)
+  const by = {};
+  D.all.filter(inScope).forEach(r=>{ const o = by[r.player_id] || (by[r.player_id] = {g:0,a:0,gp:0}); if(r.attended) o.gp++; o.g += r.goals||0; o.a += r.assists||0; });
+  const rank = f => { const mineV = f(by[D.p.id]||{g:0,a:0,gp:0}); if(!mineV) return null; return 1 + Object.values(by).filter(o=>f(o)>mineV).length; };
+  const ranks = [['득점',rank(o=>o.g),G],['도움',rank(o=>o.a),A],['공격P',rank(o=>o.g+o.a),G+A],['출전',rank(o=>o.gp),GP]];
+  // 레이팅
+  const msByMatch = {}; D.me.forEach(r=>msByMatch[r.match_id]=r);
+  const rated = D.votes.filter(v=>v.matches && (D.scope==='all'||v.matches.season_id===D.scope)).map(v=>{
+    const s = msByMatch[v.match_id] || {};
+    return { id:v.match_id, r: calcRating(v.vote_count, v.total_participants, v.matches.goals_conceded??0, v.is_defender, s.goals, s.assists, s.is_mom) };
+  });
+  const avg = rated.length ? (rated.reduce((s,x)=>s+x.r,0)/rated.length) : null;
+  const ratingOf = {}; rated.forEach(x=>ratingOf[x.id]=x.r);
+  const rc = v => v>=8?'#2e7d32':v>=6?'#f5a623':'#c62828';
+  // 어택포인트 (현재 시즌만)
+  let power = null, prank = null;
+  if(D.ranking && D.scope===currentSeasonId){ const i = D.ranking.findIndex(x=>x.id===D.p.id); if(i>=0){ power = Math.round(D.ranking[i].power); prank = i+1; } }
+  // 승무패, 골 관여율
+  const W = played.filter(r=>r.matches.result==='Win').length, Dr = played.filter(r=>r.matches.result==='Draw').length, L = played.filter(r=>r.matches.result==='Lose').length;
+  const teamGoals = played.reduce((s,r)=>s+(r.matches.our_score||0),0);
+  const involve = teamGoals ? Math.round((G+A)/teamGoals*100) : null;
+  // 최근 5경기 폼
+  const form = played.slice(0,5).reverse();
+  // 베스트
+  const bestGame = played.reduce((b,r)=>(r.goals||0)>((b&&b.goals)||0)?r:b, null);
+  const opp = {}; played.forEach(r=>{ if(r.goals){ opp[r.matches.opponent] = (opp[r.matches.opponent]||0)+r.goals; } });
+  const fav = Object.entries(opp).sort((a,b)=>b[1]-a[1])[0];
+  const chrono = [...played].reverse(); let streak=0,best=0; chrono.forEach(r=>{ if(r.goals>0||r.assists>0){ streak++; best=Math.max(best,streak);} else streak=0; });
+  // 함께한 기간
+  let together = '';
+  if(D.p.join_date){ const days = Math.floor((Date.now()-new Date(D.p.join_date))/86400000); if(days>=0) together = days>=365 ? `함께한 지 ${Math.floor(days/365)}년 ${Math.floor(days%365/30)}개월` : `함께한 지 ${days}일`; }
+  const POS = {GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수'};
+  const seasons = [...new Set(D.me.map(r=>r.matches.season_id))].sort((a,b)=>b-a);
+  const pill = (v,t) => { const on = String(D.scope)===String(v); return `<button onclick="mrScope('${v}')" style="padding:7px 14px;border-radius:20px;border:1.5px solid ${on?'var(--skyblue)':'var(--border)'};background:${on?'var(--skyblue)':'#fff'};color:${on?'#fff':'var(--text)'};font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">${t}</button>`; };
+  const card = (inner,extra) => `<div style="background:#fff;border:1px solid var(--border);border-radius:14px;margin-top:12px;overflow:hidden;${extra||''}">${inner}</div>`;
+  const ttl = t => `<div style="font-size:13px;font-weight:800;padding:14px 16px 4px">${t}</div>`;
+  const av = D.p.photo_url ? `<img src="${D.p.photo_url}" referrerpolicy="no-referrer" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.35)">` : `<div style="width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff">${luEsc((D.p.name||'?').charAt(0))}</div>`;
+  const kpi = (v,l) => `<div style="flex:1;text-align:center"><div style="font-size:30px;font-weight:800;line-height:1">${v}</div><div style="font-size:11px;opacity:.75;margin-top:6px">${l}</div></div>`;
+  const total = W+Dr+L;
+  ov.innerHTML = `<div style="max-width:440px;margin:0 auto;padding-bottom:40px">
+    <button onclick="document.getElementById('my-record').remove()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>
+    <div style="background:linear-gradient(160deg,#1a3a6b,#1e5fa3);border-radius:18px;color:#fff;padding:20px 18px 18px;margin-top:6px;box-shadow:0 8px 24px rgba(26,58,107,.25)">
+      <div style="font-size:11px;letter-spacing:2px;opacity:.7;font-weight:700">MY RECORD</div>
+      <div style="display:flex;align-items:center;gap:14px;margin:12px 0 18px">${av}<div><div style="font-size:21px;font-weight:800">${luEsc(D.p.name)}</div><div style="font-size:12px;opacity:.8;margin-top:3px">${D.p.number!=null?'#'+D.p.number+' · ':''}${POS[D.p.position]||D.p.position||''}${together?`<br>${together}`:''}</div></div></div>
+      <div style="display:flex;padding-top:14px;border-top:1px solid rgba(255,255,255,.2)">${kpi(GP,'출전')}${kpi(G,'득점')}${kpi(A,'도움')}${kpi(MOM,'MOM')}</div>
+    </div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px">${pill(currentSeasonId, currentSeasonName)}${seasons.filter(s=>s!==currentSeasonId).map(s=>pill(s,'시즌 '+s)).join('')}${pill('all','통산')}</div>
+    ${GP ? `
+    ${card(`${ttl('팀 내 순위')}<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 12px 14px">${ranks.map(([n,r,v])=>`<div style="text-align:center;background:var(--bg);border-radius:10px;padding:10px 2px"><div style="font-size:18px;font-weight:800;color:${r&&r<=3?'#f5a623':'var(--skyblue)'}">${r?r+'위':'-'}</div><div style="font-size:11px;color:var(--muted);margin-top:3px">${n} ${v}</div></div>`).join('')}</div>`)}
+    ${card(`<div style="display:flex;padding:16px">
+        <div style="flex:1"><div style="font-size:11px;color:var(--muted)">평균 레이팅</div><div style="margin-top:4px"><span style="font-size:26px;font-weight:800;color:${avg!=null?rc(avg):'var(--muted)'}">${avg!=null?avg.toFixed(1):'-'}</span><span style="font-size:12px;color:var(--muted)"> / 10</span></div></div>
+        <div style="width:1px;background:var(--border);margin:0 12px"></div>
+        <div style="flex:1"><div style="font-size:11px;color:var(--muted)">어택포인트${D.scope===currentSeasonId?'':' (시즌)'}</div><div style="margin-top:4px"><span style="font-size:26px;font-weight:800;color:var(--skyblue)">${power!=null?power:'-'}</span><span style="font-size:12px;color:var(--muted)"> ${prank?prank+'위':''}</span></div></div>
+      </div>`)}
+    ${card(`${ttl('최근 폼')}<div style="display:flex;gap:6px;padding:10px 12px 14px">${form.map(r=>{ const m=r.matches, d=new Date(m.match_date), cl = m.result==='Win'?'#2e7d32':m.result==='Lose'?'#c62828':'#9e9e9e'; const rt = ratingOf[r.match_id];
+      return `<div style="flex:1;text-align:center"><div style="height:46px;display:flex;align-items:flex-end;justify-content:center"><div style="width:70%;border-radius:6px 6px 0 0;background:${cl};opacity:.9;height:${rt?Math.max(10,Math.round(rt*4.4)):12}px"></div></div><div style="font-size:12px;font-weight:800;margin-top:5px;color:${rt?rc(rt):'var(--muted)'}">${rt?rt.toFixed(1):'-'}</div><div style="font-size:10px;color:var(--muted)">${d.getMonth()+1}/${d.getDate()}</div><div style="font-size:11px;font-weight:700;margin-top:2px;color:var(--skyblue)">${r.goals?'⚽'+r.goals:''}${r.assists?' 🅰'+r.assists:''}${r.is_mom?' ⭐':''}</div></div>`; }).join('')}</div>
+      <div style="font-size:10px;color:var(--muted);padding:0 16px 12px">막대 높이 = 경기 레이팅 · 색 = 승(초록) 무(회색) 패(빨강)</div>`)}
+    ${card(`${ttl('승부 · 기여')}<div style="padding:8px 16px 16px">
+      <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;background:#eee">${total?`<div style="width:${W/total*100}%;background:#2e7d32"></div><div style="width:${Dr/total*100}%;background:#9e9e9e"></div><div style="width:${L/total*100}%;background:#c62828"></div>`:''}</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px"><span style="color:#2e7d32;font-weight:700">${W}승</span><span style="color:#757575;font-weight:700">${Dr}무</span><span style="color:#c62828;font-weight:700">${L}패</span><span style="color:var(--muted)">승률 ${total?Math.round(W/total*100):0}%</span></div>
+      ${involve!=null?`<div style="margin-top:14px;font-size:12px;color:var(--muted)">내가 뛴 경기 팀 득점 ${teamGoals}골 중 <b style="color:var(--text)">${G+A}골에 관여</b> (득점 ${G} + 도움 ${A})</div><div style="height:8px;background:#eee;border-radius:4px;margin-top:6px;overflow:hidden"><div style="width:${Math.min(100,involve)}%;height:100%;background:var(--skyblue)"></div></div><div style="text-align:right;font-size:12px;font-weight:800;color:var(--skyblue);margin-top:4px">${involve}%</div>`:''}
+    </div>`)}
+    ${(bestGame&&bestGame.goals>0)||fav||best>1 ? card(`${ttl('하이라이트')}<div style="padding:6px 16px 14px;font-size:13px;line-height:2">
+      ${bestGame&&bestGame.goals>0?`<div>🔥 한 경기 최다 득점 <b>${bestGame.goals}골</b> <span style="color:var(--muted)">vs ${luEsc(bestGame.matches.opponent)}</span></div>`:''}
+      ${fav?`<div>🎯 가장 많이 넣은 상대 <b>${luEsc(fav[0])}</b> <span style="color:var(--muted)">${fav[1]}골</span></div>`:''}
+      ${best>1?`<div>🔗 연속 공격포인트 <b>${best}경기</b></div>`:''}
+    </div>`) : ''}
+    ${card(`${ttl('경기별 기록')}<div style="padding-bottom:4px">${played.map(r=>{ const m=r.matches, d=new Date(m.match_date), rl=m.result==='Win'?'W':m.result==='Lose'?'L':'D', cl=m.result==='Win'?'#2e7d32':m.result==='Lose'?'#c62828':'#9e9e9e', rt=ratingOf[r.match_id];
+      return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border)"><span style="width:22px;height:22px;border-radius:6px;background:${cl};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">${rl}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${luEsc(m.opponent||'')}</div><div style="font-size:11px;color:var(--muted)">${d.getMonth()+1}월 ${d.getDate()}일 · ${m.our_score}:${m.opponent_score}</div></div><div style="font-size:12px;font-weight:700;color:var(--skyblue);text-align:right">${r.goals?'⚽'+r.goals+' ':''}${r.assists?'🅰'+r.assists+' ':''}${r.is_mom?'⭐':''}</div>${rt?`<div style="width:34px;text-align:right;font-size:13px;font-weight:800;color:${rc(rt)}">${rt.toFixed(1)}</div>`:''}</div>`; }).join('')}</div>`)}
+    ` : card('<div style="padding:34px 16px;text-align:center;color:var(--muted);font-size:14px">이 기간에 출전 기록이 없어요.</div>')}
+    <button onclick="document.getElementById('my-record').remove();showPlayer(${D.p.id})" style="width:100%;margin-top:16px;padding:13px;background:#fff;border:1px solid var(--border);border-radius:12px;font:inherit;font-size:14px;font-weight:600;cursor:pointer">공개 선수 프로필 보기</button>
+  </div>`;
+  ov.scrollTop = keepY;
+}
 async function profileOpen(){
   let ov = document.getElementById('profile-page');
   if(!ov){ ov = document.createElement('div'); ov.id='profile-page'; ov.className='mem-ov'; ov.style.zIndex=9600; document.body.appendChild(ov); }
@@ -3999,7 +4104,7 @@ async function profileOpen(){
       ${row('상태', p && ST[p.status||'active'])}
       ${row('카카오 닉네임', myMember.kakao_nickname)}
     </div>
-    ${p ? `<button onclick="document.getElementById('profile-page').remove();showPlayer(${p.id})" style="width:100%;margin-top:14px;padding:14px;background:var(--skyblue);color:#fff;border:none;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer">📊 내 개인 기록·통계 보기</button>` : ''}
+    ${p ? `<button onclick="document.getElementById('profile-page').remove();myRecordOpen()" style="width:100%;margin-top:14px;padding:14px;background:var(--skyblue);color:#fff;border:none;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer">📊 내 기록 보기</button>` : ''}
     <div style="font-size:12px;color:var(--muted);line-height:1.6;margin:12px 4px 24px">프로필 정보는 읽기 전용이에요. 수정이 필요하면 운영진에게 요청해 주세요.</div>
     <button onclick="memWithdraw()" style="width:100%;padding:13px;background:#fff;color:#c62828;border:1px solid #f0c4c4;border-radius:10px;font:inherit;font-weight:600;cursor:pointer">회원 탈퇴</button>
     <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-top:10px">탈퇴하면 카카오 연결과 생일·사진이 삭제돼요. 이름과 경기 기록은 팀 기록으로 남아요.</div>
