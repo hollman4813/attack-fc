@@ -4739,7 +4739,7 @@ async function luMakeImage(o){
   const PAD = 30, GAP = 20, CW = (1080-PAD*2-GAP)/2, PH = CW*1.35, W = single ? CW+PAD*2 : 1080;
   const plan = o.plan, ids = o.order, nm = id=>o.people[id]||{name:'?',number:''};
   const ROW = 44, TH = (o.noTable||single) ? 0 : 56 + (ids.length+1)*ROW + 30;
-  const restH = 100;
+  const restH = 10;   // 이미지에는 휴식자·스코어 표시 안 함
   const H = single ? Math.round(116 + PH+36+restH + 10) : Math.round(120 + 2*(PH+36+restH) + GAP + TH - 10);
   const imgs = {};
   await Promise.all(ids.filter(id=>o.people[id]&&o.people[id].photo).map(id=>new Promise(res=>{ const im = new Image(); im.crossOrigin='anonymous'; im.onload=()=>{ imgs[id]=im; res(); }; im.onerror=()=>res(); setTimeout(res,4000); im.src=o.people[id].photo; })));
@@ -4750,14 +4750,14 @@ async function luMakeImage(o){
   ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
   ctx.font = `700 40px ${FONT}`; ctx.fillText('ATTACK F.C. 라인업', PAD, 36);
   ctx.font = `500 26px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillText(o.label||'', PAD, 72);
-  if(o.rec && !single){ let tu=0,tt=0; o.rec.forEach(x=>{ const sc=luQScore(x); tu+=sc.us; tt+=sc.them; }); ctx.textAlign='right'; ctx.font=`800 44px ${FONT}`; ctx.fillStyle='#fff'; ctx.fillText(`${tu} : ${tt}`, W-PAD, 48); ctx.textAlign='left'; }
+  if(false && o.rec && !single){ let tu=0,tt=0; o.rec.forEach(x=>{ const sc=luQScore(x); tu+=sc.us; tt+=sc.them; }); ctx.textAlign='right'; ctx.font=`800 44px ${FONT}`; ctx.fillStyle='#fff'; ctx.fillText(`${tu} : ${tt}`, W-PAD, 48); ctx.textAlign='left'; }
   for(let q=0;q<4;q++){
     const e = plan[q]; if(!e) continue;
     if(single && q!==o.onlyQ) continue;
     const x0 = single ? PAD : PAD + (q%2)*(CW+GAP), y0 = single ? 116 : 116 + Math.floor(q/2)*(PH+36+restH+GAP);
     ctx.fillStyle = '#1a3a6b'; ctx.textAlign='left'; ctx.font = `700 28px ${FONT}`;
     ctx.fillText(`${q+1}Q`, x0, y0+14); ctx.font = `500 22px ${FONT}`; ctx.fillStyle='#5b6b82'; ctx.fillText(e.formation, x0+64, y0+15);
-    if(o.rec){ const r=luRecOf(o.rec,q); ctx.textAlign='right'; ctx.font=`800 30px ${FONT}`; ctx.fillStyle='#1a7abf'; ctx.fillText(luQScoreTxt(r).replace(':',' : '), x0+CW, y0+14); ctx.textAlign='left'; }
+
     const py = y0+34;
     // 필드
     ctx.fillStyle = '#4a9e6e'; ctx.fillRect(x0, py, CW, PH);
@@ -4781,12 +4781,6 @@ async function luMakeImage(o){
       let yy = cy+R+46;
       if(sub){ const ss = sl.s?luQStat(o.rec,q,sl.s):{g:0,a:0,og:0}; ctx.font=`700 20px ${FONT}`; const t2='↻ '+sub.name+(ss.g?' ⚽'.repeat(ss.g):'')+(ss.og?' 🔴'.repeat(ss.og):'')+(ss.a?' 👟'.repeat(ss.a):''); ctx.strokeText(t2,cx,yy); ctx.fillStyle='#ffe27a'; ctx.fillText(t2,cx,yy); }
     });
-    // 휴식
-    const rest = ids.filter(id=>!used.has(id)).map(id=>nm(id).name).join(', ') || '없음';
-    ctx.textAlign='left'; ctx.font=`500 20px ${FONT}`; ctx.fillStyle='#5b6b82';
-    const lines = luWrapText(ctx,'휴식: '+rest,CW).slice(0,2);
-    lines.forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+i*26));
-    if(o.rec){ const r=luRecOf(o.rec,q); if(r.goals.length){ ctx.fillStyle='#1c2430'; ctx.font=`600 20px ${FONT}`; const gt = r.goals.map(g=>luGoalPlain(g,nm)).join('  '); luWrapText(ctx,gt,CW).slice(0,2).forEach((ln,i)=>ctx.fillText(ln,x0,py+PH+22+2*26+i*26-(lines.length>1?0:26))); } }
   }
   // 배정표
   if(!o.noTable && !single){
