@@ -390,28 +390,23 @@
   #intro{position:fixed;inset:0;z-index:10000;background:linear-gradient(180deg,#14305c,var(--team-navy-2));color:var(--on-team);overflow:hidden;animation:introOut .38s cubic-bezier(.7,0,.84,0) 2.35s forwards}
   #intro.out{transform:translateY(-100%);visibility:hidden;transition:transform .3s cubic-bezier(.7,0,.84,0),visibility .3s}
   #intro::before{content:'';position:absolute;inset:0;background:#0b1f40;animation:introDark .9s ease-out .15s both}
-  .intro-beam{position:absolute;top:-12%;width:120%;height:80%;background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,0) 82%);filter:blur(6px);transform-origin:50% 0;animation:introBeam .6s var(--ease-out) both}
-  .intro-beam.l{left:-30%;clip-path:polygon(22% 0,30% 0,78% 100%,34% 100%);animation-delay:.3s}
-  .intro-beam.r{right:-30%;clip-path:polygon(70% 0,78% 0,66% 100%,22% 100%);animation-delay:.5s}
-  .intro-lamp{position:absolute;top:env(safe-area-inset-top,0px);width:54px;height:10px;background:#fff;border-radius:0 0 6px 6px;box-shadow:0 0 24px 8px rgba(255,255,255,.7);animation:introLamp .45s linear both}
-  .intro-lamp.l{left:8%;animation-delay:.15s}
-  .intro-lamp.r{right:8%;animation-delay:.35s}
-  .intro-glow{position:absolute;left:50%;top:50%;width:420px;height:420px;margin:-210px 0 0 -210px;border-radius:50%;background:radial-gradient(circle,rgba(124,192,255,.4),transparent 62%);animation:introGlow .7s var(--ease-out) .65s both}
-  .intro-emblem{position:absolute;left:50%;top:50%;width:156px;height:156px;margin:-78px 0 0 -78px;border-radius:50%;object-fit:cover;box-shadow:0 12px 36px rgba(0,0,0,.4);animation:introPop .6s var(--ease-pop) .8s both}
-  .intro-txt{position:absolute;left:0;right:0;top:calc(50% + 112px);text-align:center}
+  /* 팀명(ATTACK)이 화면 세로 정가운데, 엠블럼은 그 위 */
+  .intro-spot{position:absolute;left:50%;top:-6%;width:170%;margin-left:-85%;height:calc(56% + 10px);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(190,225,255,.26) 62%,rgba(190,225,255,0));clip-path:polygon(47.5% 0,52.5% 0,76% 100%,24% 100%);-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent 96%);mask-image:linear-gradient(180deg,#000 55%,transparent 96%);filter:blur(12px);transform-origin:50% 0;animation:introSpot .75s linear .2s both}
+  .intro-glow{position:absolute;left:50%;top:calc(50% - 141px);width:440px;height:440px;margin:-220px 0 0 -220px;border-radius:50%;background:radial-gradient(circle,rgba(150,205,255,.42),rgba(124,192,255,.12) 42%,transparent 64%);animation:introGlow .7s var(--ease-out) .55s both}
+  .intro-emblem{position:absolute;left:50%;top:calc(50% - 141px);width:156px;height:156px;margin:-78px 0 0 -78px;border-radius:50%;object-fit:cover;box-shadow:0 12px 36px rgba(0,0,0,.4);animation:introPop .6s var(--ease-pop) .8s both}
+  .intro-txt{position:absolute;left:0;right:0;top:calc(50% - 39px);text-align:center}
   .intro-name{font-family:var(--font-display);font-size:92px;font-weight:700;line-height:.85;letter-spacing:6px;padding-left:6px}
   .intro-name,.intro-sub{animation:introRise .55s var(--ease-out) 1.1s both}
   .intro-sub{margin-top:4px;font-family:var(--font-display);font-size:25px;font-weight:600;line-height:1;letter-spacing:7px;padding-left:7px;color:var(--team-sky-soft);animation-delay:1.22s}
   .intro-by{position:absolute;right:18px;bottom:calc(14px + env(safe-area-inset-bottom,0px));font-size:12px;font-weight:500;letter-spacing:.3px;color:rgba(255,255,255,.7);animation:introFadeIn .5s ease-out 1.45s both}
   @keyframes introDark{from{opacity:.85}to{opacity:0}}
-  @keyframes introLamp{0%{opacity:0}18%{opacity:1}30%{opacity:.2}46%{opacity:1}60%{opacity:.5}100%{opacity:1}}
-  @keyframes introBeam{from{opacity:0;transform:scaleY(.2)}to{opacity:1;transform:scaleY(1)}}
+  @keyframes introSpot{0%{opacity:0}14%{opacity:.9}24%{opacity:.15}38%{opacity:1}50%{opacity:.5}100%{opacity:1}}
   @keyframes introGlow{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
   @keyframes introFadeIn{from{opacity:0}to{opacity:1}}
   @keyframes introPop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
   @keyframes introRise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
   @keyframes introOut{to{transform:translateY(-100%);visibility:hidden}}
-  @media (max-height:640px){.intro-emblem{width:120px;height:120px;margin:-60px 0 0 -60px}.intro-txt{top:calc(50% + 84px)}.intro-name{font-size:72px}.intro-sub{font-size:21px}}
+  @media (max-height:640px){.intro-emblem{width:120px;height:120px;margin:-60px 0 0 -60px;top:calc(50% - 108px)}.intro-glow{top:calc(50% - 108px)}.intro-spot{height:calc(56% + 20px)}.intro-txt{top:calc(50% - 31px)}.intro-name{font-size:72px}.intro-sub{font-size:21px}}
   @media (prefers-reduced-motion:reduce){#intro,#intro *,#intro::before{animation-duration:.01s!important;animation-delay:0s!important}#intro{animation:introFadeOut .3s linear 1.6s forwards!important}}
   @keyframes introFadeOut{to{opacity:0;visibility:hidden}}
   /* 시작 화면: 팀 컬러 배경 */
@@ -483,9 +478,8 @@
 </head>
 <body>
 <div id="intro" aria-hidden="true" onclick="this.classList.add('out')">
-  <i class="intro-beam l"></i><i class="intro-beam r"></i>
+  <i class="intro-spot"></i>
   <i class="intro-glow"></i>
-  <i class="intro-lamp l"></i><i class="intro-lamp r"></i>
   <img src="emblem_v4.png" alt="" class="intro-emblem">
   <div class="intro-txt"><div class="intro-name">ATTACK</div><div class="intro-sub">SINCE 2006</div></div>
   <div class="intro-by">made by redstone</div>
