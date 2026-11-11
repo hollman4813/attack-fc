@@ -361,7 +361,7 @@
   <button class="team-tab" onclick="switchTab('squad',this)">스쿼드</button>
   <button class="team-tab" onclick="switchTab('scorers',this)">플레이어 통계</button>
   <button class="team-tab" onclick="switchTab('teamstats',this)">팀 통계</button>
-  <button class="team-tab" onclick="openAdminTab(this)">🔒</button>
+  <button class="team-tab" id="adm-tab" onclick="openAdminTab(this)">🔒</button>
 </div>
 </div>
 
@@ -2217,8 +2217,8 @@ function admIcon(icon, onclick, title, label){
   return isAdmin ? `<button class="adm-btn" title="${title||''}" onclick="event.stopPropagation();${onclick}">${icon}${label?`<span>${label}</span>`:''}</button>` : '';
 }
 function admSetLock(){
-  const b = document.querySelectorAll('.team-tab'); const lock = b[b.length-1];
-  if(lock && /🔒|🔓/.test(lock.textContent)) lock.textContent = isAdmin ? '🔓' : '🔒';
+  const lock = document.getElementById('adm-tab');
+  if(lock) lock.textContent = isAdmin ? '관리' : '🔒';
 }
 function admReloadActive(){
   ['overview','matches','squad','scorers','teamstats'].forEach(k=>loaded[k]=false);
@@ -2236,7 +2236,7 @@ function admLogin(silent){
   const ab = document.getElementById('admin-btn'); if(ab){ ab.textContent='관리자 ✓'; ab.classList.add('active'); }
   admReloadActive();
   if(silent) return;
-  alert('관리자 모드가 켜졌어요.\n각 화면의 ✏️ / ＋ 버튼으로 바로 등록·수정할 수 있어요.\n(전체 관리 화면은 🔓 탭)');
+  alert('관리자 모드가 켜졌어요.\n각 화면의 ✏️ / ＋ 버튼으로 바로 등록·수정할 수 있어요.\n(전체 관리 화면은 맨 오른쪽 관리 탭)');
 }
 function adminLogout(){
   isAdmin = false; admSetLock();
