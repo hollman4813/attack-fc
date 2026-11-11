@@ -4191,7 +4191,7 @@ async function myRecordOpen(){
     [me, all, votes, pl, lu] = await Promise.all([
       api(`match_stats?select=*,matches(id,match_date,opponent,our_score,opponent_score,result,season_id,goals_conceded,status)&player_id=eq.${pid}`),
       api('match_stats?select=player_id,attended,goals,assists,is_mom,matches(season_id,status)'),
-      api(`match_votes?select=*,matches(goals_conceded,season_id)&player_id=eq.${pid}`),
+      api(`match_votes?select=*,matches(goals_conceded,opponent_score,season_id)&player_id=eq.${pid}`),
       api(`players?select=*&id=eq.${pid}`),
       api(`${LU_STORE}?select=key,data&key=like.match_*`).catch(()=>[])
     ]);
@@ -4222,7 +4222,10 @@ function mrRender(){
   const msByMatch = {}; D.me.forEach(r=>msByMatch[r.match_id]=r);
   const rated = D.votes.filter(v=>v.matches && (D.scope==='all'||v.matches.season_id===D.scope)).map(v=>{
     const s = msByMatch[v.match_id] || {};
-    return { id:v.match_id, r: calcRating(v.vote_count, v.total_participants, v.matches.goals_conceded??0, v.is_defender, s.goals, s.assists, s.is_mom) };
+    // 경기 상세 화면과 같은 기준: 실점 = 상대 득점, 수비수 여부는 투표 기록 우선·없으면 포지션
+    const conceded = v.matches.opponent_score ?? v.matches.goals_conceded ?? 0;
+    const isDef = v.is_defender ?? ['GK','DF'].includes(D.p.position);
+    return { id:v.match_id, r: calcRating(v.vote_count, v.total_participants, conceded, isDef, s.goals, s.assists, s.is_mom) };
   });
   const avg = rated.length ? (rated.reduce((s,x)=>s+x.r,0)/rated.length) : null;
   const ratingOf = {}; rated.forEach(x=>ratingOf[x.id]=x.r);
