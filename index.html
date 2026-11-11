@@ -299,7 +299,9 @@
   .tc{position:relative;overflow:hidden;margin-top:6px;border-radius:20px;color:var(--on-team);padding:16px;background:linear-gradient(155deg,var(--team-deep) 0%,var(--team-navy) 50%,#1e5fa3 100%);box-shadow:0 14px 34px rgba(15,40,80,.35)}
   .tc-wm{position:absolute;right:-18px;bottom:-58px;transform:rotate(-8deg);font-family:var(--font-display);font-size:330px;font-weight:700;line-height:.8;letter-spacing:-8px;color:rgba(255,255,255,.07);pointer-events:none;user-select:none;white-space:nowrap}
   .tc-top{position:relative;display:flex;justify-content:space-between;align-items:center}
-  .tc-tag{font-family:var(--font-display);font-size:22px;font-weight:600;letter-spacing:4px;line-height:1;color:var(--team-sky-soft)}
+  .tc-tag{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:3px;line-height:1;color:var(--on-team)}
+  .tc-tag img{width:26px;height:26px;border-radius:50%;flex:none;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+  .tc-tag span{position:relative;top:2px;padding-bottom:5px;background:linear-gradient(var(--team-gold),var(--team-gold)) left bottom/26px 3px no-repeat}
   .tc-scope{font-size:11px;font-weight:800;padding:4px 10px;border-radius:6px;background:#fff;color:var(--team-navy)}
   .tc-id{position:relative;display:flex;align-items:center;gap:14px;margin-top:14px}
   .tc-ph{width:92px;height:92px;flex:none;border-radius:50%;padding:3px;box-sizing:border-box;background:linear-gradient(140deg,var(--team-gold),#fff3c4 45%,#7cc0ff);box-shadow:0 8px 20px rgba(0,0,0,.35)}
@@ -4268,7 +4270,7 @@ function mrRender(){
     <button onclick="ovClose('my-record')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>
     <div class="tc">
       ${D.p.number!=null?`<div class="tc-wm" aria-hidden="true">${D.p.number}</div>`:''}
-      <div class="tc-top"><span class="tc-tag">MY RECORD</span><span class="tc-scope">${D.scope==='all'?'통산':D.scope===currentSeasonId?luEsc(currentSeasonName):'시즌 '+D.scope}</span></div>
+      <div class="tc-top"><span class="tc-tag"><img src="emblem_v4.png" alt=""><span>MY RECORD</span></span><span class="tc-scope">${D.scope==='all'?'통산':D.scope===currentSeasonId?luEsc(currentSeasonName):'시즌 '+D.scope}</span></div>
       <div class="tc-id">
         <div class="tc-ph">${D.p.photo_url?`<img src="${D.p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((D.p.name||'?').charAt(0))}</b>`}</div>
         <div class="tc-a">${D.p.number!=null?`<span class="tc-ano">${D.p.number}</span>`:''}<div class="tc-name${(D.p.name||'').length>4?' long':''}">${luEsc(D.p.name)}</div></div>
