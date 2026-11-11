@@ -224,6 +224,26 @@
   .squad-col.blue { color:var(--skyblue); font-weight:700; }
 
   /* 관리자 모드 활성화 헤더 버튼 */
+  .mini{position:relative;overflow:hidden;margin:12px 0 4px;border-radius:16px;color:#fff;cursor:pointer;
+    background:linear-gradient(155deg,#0f2850 0%,#1a3a6b 55%,#1e5fa3 100%);box-shadow:0 8px 20px rgba(15,40,80,.25)}
+  .mini::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.55;
+    background:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 22px),repeating-linear-gradient(-45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 22px)}
+  .mini-row{position:relative;display:flex;align-items:center;gap:10px;padding:12px 28px 12px 12px}
+  .mini-ph{width:50px;height:50px;flex:none;border-radius:50%;padding:2px;background:linear-gradient(140deg,#ffd54a,#fff3c4 45%,#7cc0ff)}
+  .mini-ph img,.mini-ph b{width:100%;height:100%;border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;background:#24508a;font-size:20px;font-weight:900;border:2px solid #0f2850}
+  .mini-id{flex:1;min-width:0}
+  .mini-top{display:flex;align-items:center;gap:6px;min-width:0}
+  .mini-no{flex:none;font-size:12px;font-weight:900;background:#fff;color:#0f2850;border-radius:5px;padding:2px 6px;line-height:1.2}
+  .mini-nm{font-size:19px;font-weight:900;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mini-st{margin-top:5px;font-size:12px;color:rgba(255,255,255,.75);white-space:nowrap;display:flex;align-items:center}
+  .mini-st b{color:#fff;font-weight:900;font-size:14px;margin-left:3px}
+  .mini-st i{width:1px;height:10px;background:rgba(255,255,255,.3);margin:0 7px}
+  .mini-ap{flex:none;width:58px;text-align:center;padding:6px 0 5px;border-radius:10px;background:#fff;color:#0f2850;box-shadow:inset 0 3px 0 #ffd54a}
+  .mini-ap b{display:block;font-size:19px;font-weight:900;line-height:1.1}
+  .mini-ap span{display:block;font-size:10px;color:#c98a00;font-weight:800}
+  .mini-go{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:22px;opacity:.6}
+  .mini-news{position:relative;padding:7px 14px;font-size:12px;font-weight:700;background:rgba(0,0,0,.22);border-top:1px solid rgba(255,255,255,.1)}
+  .mini-news div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.7}
   .tc{position:relative;overflow:hidden;margin-top:6px;border-radius:20px;color:#fff;padding:14px 14px 14px;min-height:300px;
     background:linear-gradient(155deg,#0f2850 0%,#1a3a6b 50%,#1e5fa3 100%);box-shadow:0 14px 34px rgba(15,40,80,.35)}
   .tc::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.55;
@@ -428,6 +448,7 @@
       <div class="loading" id="ov-loading"><div class="spinner"></div>불러오는 중...</div>
       <div id="ov-content" style="display:none">
         <div class="content-wrap">
+          <div id="my-mini"></div>
           <div id="next-match-wrap" style="display:none">
             <div class="next-match-label">다음 경기</div>
             <div class="next-match-card" id="next-match-card" style="cursor:pointer"></div>
@@ -3991,7 +4012,54 @@ function acctAvatar(size){
   let h = 0; for(const c of nm) h = (h*31 + c.codePointAt(0)) >>> 0;
   return `<span style="${base}background:${AV_COLORS[h % AV_COLORS.length]};color:#fff;font-weight:700;font-size:${Math.round(size*0.42)}px">${luEsc((nm||'?').trim().slice(0,1).toUpperCase())}</span>`;
 }
+/* ── 메인 상단 내 미니 카드 ── */
+let _myMiniSeq = 0;
+async function myMiniRender(){
+  const box = document.getElementById('my-mini'); if(!box) return;
+  const seq = ++_myMiniSeq;
+  if(!myMember || myMember.role==='pending' || !myMember.player_id){ box.innerHTML=''; return; }
+  const pid = myMember.player_id;
+  let pl=[], ms=[];
+  try{ [pl, ms] = await Promise.all([
+    api(`players?select=id,name,number,photo_url&id=eq.${pid}`),
+    api(`match_stats?select=attended,goals,assists,is_mom,matches(season_id,status,match_date,opponent)&player_id=eq.${pid}`)
+  ]); }catch(e){}
+  if(seq!==_myMiniSeq) return;
+  const p = pl[0]; if(!p){ box.innerHTML=''; return; }
+  const played = ms.filter(r=>r.attended && r.matches && r.matches.status==='finished').sort((a,b)=>new Date(b.matches.match_date)-new Date(a.matches.match_date));
+  const cur = played.filter(r=>r.matches.season_id===currentSeasonId);
+  const GP = cur.length, G = cur.reduce((a,r)=>a+(r.goals||0),0), A = cur.reduce((a,r)=>a+(r.assists||0),0);
+  // 한 줄 소식
+  const news = [];
+  const last = played[0];
+  if(last){
+    const ga = [last.goals?`${last.goals}골`:'', last.assists?`${last.assists}도움`:''].filter(Boolean).join(' ');
+    if(ga || last.is_mom) news.push(`지난 경기 vs ${luEsc(last.matches.opponent||'')} ${ga}${last.is_mom?(ga?' · ':'')+'MOM':''}`);
+  }
+  let streak = 0; for(const r of played){ if((r.goals||0)+(r.assists||0)>0) streak++; else break; }
+  if(streak>=2) news.push(`${streak}경기 연속 공격포인트`);
+  if(!news.length && GP) news.push(`이번 시즌 ${GP}경기 출전 중`);
+  const draw = power => {
+    if(seq!==_myMiniSeq) return;
+    box.innerHTML = `<div class="mini" onclick="myRecordOpen()">
+      <div class="mini-row">
+        <div class="mini-ph">${p.photo_url?`<img src="${p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((p.name||'?').charAt(0))}</b>`}</div>
+        <div class="mini-id">
+          <div class="mini-top">${p.number!=null?`<span class="mini-no">${p.number}</span>`:''}<span class="mini-nm">${luEsc(p.name)}</span></div>
+          <div class="mini-st">출전 <b>${GP}</b><i></i>득점 <b>${G}</b><i></i>도움 <b>${A}</b></div>
+        </div>
+        <div class="mini-ap"><b>${power!=null?power:'-'}</b><span>어택P</span></div>
+        <span class="mini-go">›</span>
+      </div>
+      ${news.length?`<div class="mini-news">${news.slice(0,2).map((t,i)=>`<div>${i?'⚡':'🔥'} ${t}</div>`).join('')}</div>`:''}
+    </div>`;
+  };
+  const apOf = list => { const x = (list||[]).find(x=>x.id===pid); return x ? Math.round(x.power) : null; };
+  draw(window._powerList ? apOf(window._powerList) : null);
+  if(!window._powerList){ try{ window._powerList = await calcPowerRanking(); draw(apOf(window._powerList)); }catch(e){} }
+}
 function acctRender(){
+  try{ myMiniRender(); }catch(e){}
   const bar = document.getElementById('acct-bar'); if(!bar) return;
   if(!authSession){
     bar.innerHTML = `<button class="kakao-btn" onclick="gateRender()">로그인</button>`;
