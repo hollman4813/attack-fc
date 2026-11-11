@@ -224,6 +224,32 @@
   .squad-col.blue { color:var(--skyblue); font-weight:700; }
 
   /* 관리자 모드 활성화 헤더 버튼 */
+  .tc{position:relative;overflow:hidden;margin-top:6px;border-radius:20px;color:#fff;padding:14px 14px 14px;min-height:300px;
+    background:linear-gradient(155deg,#0f2850 0%,#1a3a6b 50%,#1e5fa3 100%);box-shadow:0 14px 34px rgba(15,40,80,.35)}
+  .tc::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.55;
+    background:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 22px),repeating-linear-gradient(-45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 22px),
+    radial-gradient(70% 60% at 70% 35%,rgba(110,180,255,.45),transparent 70%)}
+  .tc-top{position:relative;display:flex;justify-content:space-between;align-items:center;z-index:2}
+  .tc-top img{width:38px;height:38px;border-radius:50%;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  .tc-scope{font-size:11px;font-weight:800;padding:4px 10px;border-radius:6px;background:#fff;color:#1a3a6b;letter-spacing:.5px}
+  .tc-rib{position:absolute;left:14px;top:66px;z-index:2;writing-mode:vertical-rl;transform:rotate(180deg);background:#ffd54a;color:#0f2850;font-weight:900;font-size:15px;letter-spacing:3px;padding:12px 6px;border-radius:4px;box-shadow:3px 3px 0 #0f2850}
+  .tc-ph{position:relative;z-index:1;width:150px;height:150px;margin:2px auto 0;border-radius:50%;padding:4px;background:linear-gradient(140deg,#ffd54a,#fff3c4 45%,#7cc0ff);box-shadow:0 10px 24px rgba(0,0,0,.35)}
+  .tc-ph img,.tc-ph b{width:100%;height:100%;border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;background:#24508a;font-size:56px;font-weight:900;border:4px solid #0f2850}
+  .tc-plate{position:relative;z-index:2;margin:14px -14px 0;padding:12px 18px 12px 18px;background:linear-gradient(90deg,#ffd54a,#ffe58a);color:#0f2850;clip-path:polygon(0 18%,100% 0,100% 100%,0 100%)}
+  .tc-name{font-size:34px;font-weight:900;line-height:1.1;letter-spacing:-1px;word-break:keep-all}
+  .tc-a{display:flex;align-items:center;gap:10px;padding-top:4px}
+  .tc-ano{font-size:20px;font-weight:900;background:#0f2850;color:#fff;border-radius:8px;padding:5px 10px;line-height:1}
+  .tc-d{display:flex;align-items:center;gap:12px;padding-top:4px}
+  .tc-dno{display:flex;flex-direction:column;align-items:center;padding-right:12px;border-right:2px solid rgba(15,40,80,.35)}
+  .tc-dno span{font-size:10px;font-weight:900;letter-spacing:2px;opacity:.7}
+  .tc-dno b{font-size:28px;font-weight:900;line-height:1}
+  .tc-stats{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,1fr) 1.35fr;gap:6px;margin-top:10px}
+  .tc-stats div{background:#fff;border-radius:10px;text-align:center;padding:7px 0 8px;color:#0f2850}
+  .tc-stats span{display:block;font-size:11px;font-weight:900;letter-spacing:.3px}
+  .tc-stats b{display:block;font-size:24px;font-weight:900;line-height:1.1;margin-top:2px}
+  .tc-stats .tc-tot{background:#0f2850;border:2px solid #ffd54a}
+  .tc-stats .tc-tot span{color:#ffd54a;font-size:10px}
+  .tc-stats .tc-tot b{color:#ffd54a}
   .mr-card{position:relative;overflow:hidden;margin-top:6px;border-radius:22px;color:#fff;padding:18px 18px 16px;
     background:radial-gradient(120% 90% at 100% 0%,#2b7fd0 0%,rgba(43,127,208,0) 55%),linear-gradient(155deg,#0f2850 0%,#1a3a6b 45%,#1e5fa3 100%);
     box-shadow:0 14px 34px rgba(15,40,80,.35),inset 0 1px 0 rgba(255,255,255,.12)}
@@ -4095,18 +4121,14 @@ function mrRender(){
   const total = W+Dr+L;
   ov.innerHTML = `<div style="max-width:440px;margin:0 auto;padding-bottom:40px">
     <button onclick="ovClose('my-record')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>
-    <div class="mr-card">
-      <img class="mr-wm" src="emblem_v4.png" alt="">
-      <div class="mr-top"><span class="mr-tag">MY RECORD</span><span class="mr-scope">${D.scope==='all'?'통산':D.scope===currentSeasonId?luEsc(currentSeasonName):'시즌 '+D.scope}</span></div>
-      <div class="mr-id">
-        <div class="mr-idl">
-          ${D.p.number!=null?`<div class="mr-no"><span>No.</span>${D.p.number}</div>`:''}
-          <div class="mr-name">${luEsc(D.p.name)}</div>
-        </div>
-        <div class="mr-ph">${D.p.photo_url?`<img src="${D.p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((D.p.name||'?').charAt(0))}</b>`}</div>
-      </div>
-      <div class="mr-ap"><span>ATTACK POINT</span><b>${power!=null?power.toLocaleString():'-'}</b></div>
-      <div class="mr-kpi">${[[GP,'출전'],[G,'득점'],[A,'도움'],[MOM,'MOM']].map(([v,l])=>`<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>
+    <div class="tc">
+      <div class="tc-top"><img src="emblem_v4.png" alt=""><span class="tc-scope">${D.scope==='all'?'통산':D.scope===currentSeasonId?luEsc(currentSeasonName):'시즌 '+D.scope}</span></div>
+      <div class="tc-rib"><span>MY RECORD</span></div>
+      <div class="tc-ph">${D.p.photo_url?`<img src="${D.p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((D.p.name||'?').charAt(0))}</b>`}</div>
+      <div class="tc-plate">${(window._mrNo||'A')==='D'
+        ? `<div class="tc-d">${D.p.number!=null?`<div class="tc-dno"><span>NO</span><b>${D.p.number}</b></div>`:''}<div class="tc-name">${luEsc(D.p.name)}</div></div>`
+        : `<div class="tc-a">${D.p.number!=null?`<span class="tc-ano">${D.p.number}</span>`:''}<div class="tc-name">${luEsc(D.p.name)}</div></div>`}</div>
+      <div class="tc-stats">${[[GP,'출전','#1a3a6b'],[G,'득점','#d1344b'],[A,'도움','#159a8c'],[MOM,'MOM','#7a4fd0']].map(([v,l,c])=>`<div><span style="color:${c}">${l}</span><b>${v}</b></div>`).join('')}<div class="tc-tot"><span>ATTACK P</span><b>${power!=null?power:'-'}</b></div></div>
     </div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px">${pill(currentSeasonId, currentSeasonName)}${seasons.filter(s=>s!==currentSeasonId).map(s=>pill(s,'시즌 '+s)).join('')}${pill('all','통산')}</div>
     ${GP ? `
