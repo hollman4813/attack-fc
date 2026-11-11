@@ -4802,7 +4802,7 @@ async function luFlushRec(){
   return ok;
 }
 function luRecBlank(){ return [0,1,2,3].map(()=>({them:0,goals:[]})); }
-function luRecOf(rec,q){ return (rec&&rec[q]) || {them:0,goals:[]}; }
+function luRecOf(rec,q){ const r = rec&&rec[q]; if(!r) return {them:0,goals:[]}; if(!Array.isArray(r.goals)) r.goals = []; return r; }
 function luQStat(rec,q,pid){ let g=0,a=0,og=0; luRecOf(rec,q).goals.forEach(x=>{ if(x.og){ if(x.s===pid) og++; } else { if(x.s===pid) g++; if(x.a===pid) a++; } }); return {g,a,og}; }
 function luQScore(r){ r = r||{goals:[],them:0}; let us=0, them=+r.them||0; (r.goals||[]).forEach(g=>{ if(g.og && g.s!=null) them++; else us++; }); return {us,them}; }
 function luQScoreTxt(r){ const s=luQScore(r); return `${s.us}:${s.them}`; }
@@ -4942,32 +4942,30 @@ async function luMakeImage(o){
   }
   return new Promise(res=>cv.toBlob(res,'image/png'));
 }
+// 모바일만 공유 시트 사용, PC는 바로 파일 다운로드
+function luIsMobile(){ const u=navigator.userAgent||''; return /Android|iPhone|iPad|iPod|Mobile/i.test(u) || (/Macintosh/.test(u) && navigator.maxTouchPoints>1); }
+function luDl(blob, name){ const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 10000); }
 async function luSaveImage(o, fname){
-  const blob = await luMakeImage(o);
+  let blob; try{ blob = await luMakeImage(o); }catch(e){ console.error(e); alert('이미지를 만들지 못했어요: '+(e&&e.message||e)); return; }
   const file = new File([blob], fname, {type:'image/png'});
   try{
-    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file]}); return; }
+    if(luIsMobile() && navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file]}); return; }
   }catch(e){ if(e&&e.name==='AbortError') return; }
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  luDl(blob, fname);
 }
 // 쿼터별 라인업 이미지 4장 (배정표 없이 라인업만)
 async function luSaveImagesQ(o, base){
   const files = [];
   for(let q=0;q<4;q++){
     if(!o.plan[q]) continue;
-    const blob = await luMakeImage(Object.assign({}, o, {onlyQ:q, noTable:true}));
+    let blob; try{ blob = await luMakeImage(Object.assign({}, o, {onlyQ:q, noTable:true})); }catch(e){ console.error(e); alert('이미지를 만들지 못했어요: '+(e&&e.message||e)); return; }
     files.push(new File([blob], `${base}_${q+1}Q.png`, {type:'image/png'}));
   }
   if(!files.length) return;
   try{
-    if(navigator.canShare && navigator.canShare({files})){ await navigator.share({files}); return; }
+    if(luIsMobile() && navigator.canShare && navigator.canShare({files})){ await navigator.share({files}); return; }
   }catch(e){ if(e&&e.name==='AbortError') return; }
-  files.forEach((f,i)=>setTimeout(()=>{
-    const url = URL.createObjectURL(f), a = document.createElement('a'); a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 5000);
-  }, i*400));
+  files.forEach((f,i)=>setTimeout(()=>luDl(f, f.name), i*500));
 }
 function luLabelBase(l){ return `라인업_${(l||'match').replace(/[^0-9A-Za-z가-힣]+/g,'_')}`; }
 function luDownloadEditQ(){ luSaveImagesQ(luImgOptsEdit(), luLabelBase(LU.fixedMatch&&LU.fixedMatch.label)); }
