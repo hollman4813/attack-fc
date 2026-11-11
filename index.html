@@ -245,10 +245,10 @@
   .tc-dno b{font-size:28px;font-weight:900;line-height:1}
   .tc-stats{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,1fr) 1.35fr;gap:6px;margin-top:10px}
   .tc-stats div{background:#fff;border-radius:10px;text-align:center;padding:7px 0 8px;color:#0f2850}
-  .tc-stats span{display:block;font-size:11px;font-weight:900;letter-spacing:.3px}
-  .tc-stats b{display:block;font-size:24px;font-weight:900;line-height:1.1;margin-top:2px}
-  .tc-stats .tc-tot{background:#0f2850;border:2px solid #ffd54a}
-  .tc-stats .tc-tot span{color:#ffd54a;font-size:10px}
+  .tc-stats span{display:block;font-size:11px;font-weight:900;letter-spacing:.3px;white-space:nowrap;line-height:14px}
+  .tc-stats b{display:block;font-size:24px;font-weight:900;line-height:28px;margin-top:2px}
+  .tc-stats .tc-tot{background:#0f2850;box-shadow:inset 0 0 0 2px #ffd54a}
+  .tc-stats .tc-tot span{color:#ffd54a}
   .tc-stats .tc-tot b{color:#ffd54a}
   .mr-card{position:relative;overflow:hidden;margin-top:6px;border-radius:22px;color:#fff;padding:18px 18px 16px;
     background:radial-gradient(120% 90% at 100% 0%,#2b7fd0 0%,rgba(43,127,208,0) 55%),linear-gradient(155deg,#0f2850 0%,#1a3a6b 45%,#1e5fa3 100%);
@@ -4128,7 +4128,7 @@ function mrRender(){
       <div class="tc-plate">${(window._mrNo||'A')==='D'
         ? `<div class="tc-d">${D.p.number!=null?`<div class="tc-dno"><span>NO</span><b>${D.p.number}</b></div>`:''}<div class="tc-name">${luEsc(D.p.name)}</div></div>`
         : `<div class="tc-a">${D.p.number!=null?`<span class="tc-ano">${D.p.number}</span>`:''}<div class="tc-name">${luEsc(D.p.name)}</div></div>`}</div>
-      <div class="tc-stats">${[[GP,'출전','#1a3a6b'],[G,'득점','#d1344b'],[A,'도움','#159a8c'],[MOM,'MOM','#7a4fd0']].map(([v,l,c])=>`<div><span style="color:${c}">${l}</span><b>${v}</b></div>`).join('')}<div class="tc-tot"><span>ATTACK P</span><b>${power!=null?power:'-'}</b></div></div>
+      <div class="tc-stats">${[[GP,'출전','#1a3a6b'],[G,'득점','#d1344b'],[A,'도움','#159a8c'],[MOM,'MOM','#7a4fd0']].map(([v,l,c])=>`<div><span style="color:${c}">${l}</span><b>${v}</b></div>`).join('')}<div class="tc-tot"><span>어택P</span><b>${power!=null?power:'-'}</b></div></div>
     </div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px">${pill(currentSeasonId, currentSeasonName)}${seasons.filter(s=>s!==currentSeasonId).map(s=>pill(s,'시즌 '+s)).join('')}${pill('all','통산')}</div>
     ${GP ? `
