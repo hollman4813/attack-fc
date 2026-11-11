@@ -341,7 +341,7 @@
 <div id="sticky-header" style="position:sticky;top:0;z-index:100">
 <div class="team-hero-header" id="team-hero-header" style="position:relative">
   <div class="hero-main" style="padding:14px 16px">
-    <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
+    <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC" onclick="admSecretTap()" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
     <div class="hero-info" style="flex:1;margin-left:12px">
       <div class="team-name" style="font-size:17px;font-weight:700;color:#fff;white-space:nowrap">ATTACK F.C.</div>
       <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px">창단 2006 · <img src="https://flagcdn.com/w40/kr.png" style="width:16px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:2px"> 대한민국</div>
@@ -361,7 +361,7 @@
   <button class="team-tab" onclick="switchTab('squad',this)">스쿼드</button>
   <button class="team-tab" onclick="switchTab('scorers',this)">플레이어 통계</button>
   <button class="team-tab" onclick="switchTab('teamstats',this)">팀 통계</button>
-  <button class="team-tab" id="adm-tab" onclick="openAdminTab(this)">🔒</button>
+  <button class="team-tab" id="adm-tab" onclick="openAdminTab(this)" style="display:none">관리</button>
 </div>
 </div>
 
@@ -2218,7 +2218,7 @@ function admIcon(icon, onclick, title, label){
 }
 function admSetLock(){
   const lock = document.getElementById('adm-tab');
-  if(lock) lock.textContent = isAdmin ? '관리' : '🔒';
+  if(lock) lock.style.display = isAdmin ? '' : 'none';
 }
 function admReloadActive(){
   ['overview','matches','squad','scorers','teamstats'].forEach(k=>loaded[k]=false);
@@ -2258,6 +2258,12 @@ function admEditMatch(id){ admOpen('a-card-editmatch', ()=>{ document.getElement
 function admAddPlayer(){ admOpen('a-card-addplayer'); }
 function admEditPlayer(id){ admOpen('a-card-editplayer', ()=>{ document.getElementById('ep-select').value = id; loadEditPlayer(); }); }
 
+// 숨은 관리자 진입: 엠블럼 5번 연속 탭 → 비밀번호
+let _admTaps = 0, _admTapT = 0;
+function admSecretTap(){
+  const now = Date.now(); _admTaps = (now - _admTapT < 600) ? _admTaps + 1 : 1; _admTapT = now;
+  if(_admTaps >= 5){ _admTaps = 0; openAdminTab(); }
+}
 function openAdminTab(btn) {
   if (isAdmin) { showAdminPage(); return; }
   const pw = prompt('관리자 비밀번호를 입력하세요:');
