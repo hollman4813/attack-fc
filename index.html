@@ -4883,7 +4883,7 @@ async function luMakeImage(o){
   ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
   ctx.font = `700 40px ${FONT}`; ctx.fillText('ATTACK F.C. 라인업', PAD, 36);
   ctx.font = `500 26px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillText(o.label||'', PAD, 72);
-  if(false && o.rec && !single){ let tu=0,tt=0; o.rec.forEach(x=>{ const sc=luQScore(x); tu+=sc.us; tt+=sc.them; }); ctx.textAlign='right'; ctx.font=`800 44px ${FONT}`; ctx.fillStyle='#fff'; ctx.fillText(`${tu} : ${tt}`, W-PAD, 48); ctx.textAlign='left'; }
+  if(o.finished && o.rec){ let tu=0,tt=0; [0,1,2,3].forEach(q=>{ if(!plan[q]) return; const x=luRecOf(o.rec,q); const sc=luQScore(x); tu+=sc.us; tt+=sc.them; }); ctx.textAlign='right'; ctx.font=`800 44px ${FONT}`; ctx.fillStyle='#fff'; ctx.fillText(`${tu} : ${tt}`, W-PAD, 48); ctx.textAlign='left'; }
   for(let q=0;q<4;q++){
     const e = plan[q]; if(!e) continue;
     if(single && q!==o.onlyQ) continue;
