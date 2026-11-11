@@ -1664,10 +1664,11 @@ function powerOf(matchAvg, attended, totalGames) {
 }
 
 async function calcPowerRanking() {
+  await ratingCtxLoad();
   const [matches, allMS, allV, players] = await Promise.all([
     api(`matches?select=id,match_date&status=eq.finished&season_id=eq.${currentSeasonId}&order=match_date.asc`),
     api('match_stats?select=player_id,match_id,attended,goals,assists,is_mom'),
-    api('match_votes?select=player_id,match_id,vote_count,total_participants,is_defender,matches(goals_conceded,opponent_score)'),
+    api('match_votes?select=player_id,match_id,vote_count,total_participants,is_defender,matches(goals_conceded,our_score,opponent_score)'),
     api('players?select=id,name,number,photo_url,position,sub_position1,sub_position2,join_date')
   ]);
   const matchIds = new Set(matches.map(m=>m.id));
@@ -1687,7 +1688,7 @@ async function calcPowerRanking() {
       streak++; attended++;
       const v = vMap[pl.id+'_'+m.id];
       const rating = v
-        ? calcRating(v.vote_count, v.total_participants, ratingConceded(v), ratingIsDef(v, pl.position), st.goals, st.assists, st.is_mom)
+        ? ratingFor(v, st, pl.id, pl.position)
         : POWER_CFG.defaultRating;
       if (v) { ratingSum += rating; ratedCnt++; }
       const streakBonus = Math.min((streak-1) * POWER_CFG.streakStep, POWER_CFG.streakMax);
@@ -1700,7 +1701,7 @@ async function calcPowerRanking() {
       const v = vMap[pl.id+'_'+m.id];
       if (!v) return;
       const st = msMap[pl.id+'_'+m.id] || {};
-      rated.push(calcRating(v.vote_count, v.total_participants, ratingConceded(v), ratingIsDef(v, pl.position), st.goals, st.assists, st.is_mom));
+      rated.push(ratingFor(v, st, pl.id, pl.position));
     });
     rows.push({ pl, attended, eligibleCnt: eligible.length, matchAvg: total / attended, avgRating: rated.length ? rated.reduce((a,b)=>a+b,0) / rated.length : null });
   });
@@ -2200,6 +2201,72 @@ function calcMatchAdjustedRate(voteCount, totalParticipants) {
 // 평점 기준 통일 (경기 상세 화면 기준): 실점 = 상대 득점, 수비수 여부는 투표 기록 우선·없으면 포지션
 function ratingConceded(v){ const m = (v && v.matches) || {}; return m.opponent_score ?? m.goals_conceded ?? 0; }
 function ratingIsDef(v, position){ return (v && v.is_defender) ?? ['GK','DF'].includes(position); }
+
+/* ── 평점 v2: 경기 결과 보정 + 쿼터별 수비 평가 ──
+   1) 결과: 승 +0.3 / 무 0 / 패 -0.3, 4골 차 이상 패배 -0.5 추가
+   2) 수비: 그 쿼터에 실제로 GK·수비 자리에 선 쿼터만 평가
+      무실점 쿼터당 +0.3 (최대 +1.0), 뛴 쿼터 실점 1골당 -0.1 (최대 -1.0)
+      쿼터 기록이 없거나 쿼터 실점 합이 최종 스코어와 다르면 예전 방식(경기 전체 실점)으로 계산 */
+const RATING_CFG = { win:0.3, lose:-0.3, bigLossDiff:4, bigLoss:-0.5, cleanQ:0.3, cleanMax:1.0, concededQ:-0.1, concededMax:-1.0 };
+const RATING_DEF_GROUPS = ['GK','CB','LB','RB'];
+let _rctx = null, _rctxAt = 0, _rctxP = null;
+async function ratingCtxLoad(force){
+  if(!force && _rctx && Date.now()-_rctxAt < 60000) return _rctx;
+  if(_rctxP) return _rctxP;
+  _rctxP = (async()=>{
+    let mrows = [], rrows = [];
+    try{ [mrows, rrows] = await Promise.all([
+      api(`${LU_STORE}?select=key,data&key=like.match_*`).catch(()=>[]),
+      api(`${LU_STORE}?select=key,data&key=like.rec_*`).catch(()=>[])
+    ]); }catch(e){}
+    const plans = {}, recs = {};
+    (mrows||[]).forEach(r=>{ const m = /^match_(\d+)$/.exec(r.key); if(!m || !r.data) return; if(r.data.plan) plans[+m[1]] = r.data.plan; if(Array.isArray(r.data.rec)) recs[+m[1]] = JSON.parse(JSON.stringify(r.data.rec)); });
+    (rrows||[]).forEach(r=>{ const m = /^rec_(\d+)_(\d)$/.exec(r.key); if(!m) return; const id=+m[1], q=+m[2]; (recs[id] = recs[id] || [null,null,null,null])[q] = {them:(r.data&&r.data.them)||0, goals:(r.data&&r.data.goals)||[]}; });
+    _rctx = { plans, recs }; _rctxAt = Date.now(); _rctxP = null; return _rctx;
+  })();
+  return _rctxP;
+}
+// 그 경기에서 이 선수가 수비 자리에 선 쿼터별 실점 (쿼터 데이터를 쓸 수 없으면 null)
+function ratingDefQuarters(matchId, pid, oppScore){
+  if(!_rctx) return null;
+  const plan = _rctx.plans[matchId], rec = _rctx.recs[matchId];
+  if(!plan || !rec) return null;
+  let sum = 0; for(let q=0;q<4;q++){ if(plan[q]) sum += luQScore(rec[q]||{goals:[],them:0}).them; }
+  if(oppScore!=null && sum !== +oppScore) return null;
+  const out = [];
+  for(let q=0;q<4;q++){
+    const e = plan[q]; if(!e || !e.slots) continue;
+    const f = (LU_FORMATIONS[e.formation]||[]);
+    for(const [sid, slot] of Object.entries(e.slots)){
+      if(!slot || (slot.p!==pid && slot.s!==pid)) continue;
+      const def = f.find(a=>a[0]===sid); if(!def || !RATING_DEF_GROUPS.includes(def[1])) continue;
+      out.push(luQScore(rec[q]||{goals:[],them:0}).them); break;
+    }
+  }
+  return out;
+}
+/* v: match_votes 행 (matches 에 our_score, opponent_score 포함), st: match_stats 행, pid, position */
+function ratingFor(v, st, pid, position){
+  st = st || {};
+  const m = (v && v.matches) || {};
+  const our = m.our_score, them = m.opponent_score ?? m.goals_conceded;
+  const adjustedRate = calcMatchAdjustedRate(v.vote_count, v.total_participants);
+  let r = 7.0 + (adjustedRate * 100 - 66.5) / 22;
+  r += (st.goals||0) * 0.2 + (st.assists||0) * 0.2 + (st.is_mom ? 0.5 : 0);
+  const c = RATING_CFG;
+  if(our!=null && them!=null){
+    if(our > them) r += c.win;
+    else if(our < them){ r += c.lose; if(them - our >= c.bigLossDiff) r += c.bigLoss; }
+  }
+  const qs = ratingDefQuarters(v.match_id, pid, them);
+  if(qs){
+    const clean = qs.filter(x=>x===0).length, conc = qs.reduce((a,b)=>a+b,0);
+    r += Math.min(clean * c.cleanQ, c.cleanMax) + Math.max(conc * c.concededQ, c.concededMax);
+  } else if(ratingIsDef(v, position)){
+    const g = them ?? 0; r += g===0 ? 1.0 : g===1 ? 0.5 : g===2 ? 0.2 : 0;
+  }
+  return Math.max(1, Math.min(10, Math.round(r * 10) / 10));
+}
 function calcRating(voteCount, totalParticipants, goalsConceded, isDefender, goals, assists, isMom) {
   const adjustedRate = calcMatchAdjustedRate(voteCount, totalParticipants);
 
@@ -2220,7 +2287,8 @@ function calcRating(voteCount, totalParticipants, goalsConceded, isDefender, goa
 }
 
 async function loadPlayerRatings(playerId) {
-  const votes = (await api(`match_votes?select=*,matches(goals_conceded,opponent_score,season_id)&player_id=eq.${playerId}`)).filter(v => v.matches?.season_id === currentSeasonId);
+  await ratingCtxLoad();
+  const votes = (await api(`match_votes?select=*,matches(goals_conceded,our_score,opponent_score,season_id)&player_id=eq.${playerId}`)).filter(v => v.matches?.season_id === currentSeasonId);
   if (!votes.length) return null;
 
   const games = votes.length;
@@ -2230,9 +2298,7 @@ async function loadPlayerRatings(playerId) {
   matchStats.forEach(s => statsMap[s.match_id] = s);
   const ratings = votes.map(v => {
     const s = statsMap[v.match_id] || {};
-    return calcRating(
-      v.vote_count, v.total_participants, ratingConceded(v), ratingIsDef(v, ((typeof allStats!=='undefined'&&allStats||[]).find(x=>x.player_id===playerId||x.id===playerId)||{}).position), s.goals, s.assists, s.is_mom
-    );
+    return ratingFor(v, s, playerId, ((typeof allStats!=='undefined'&&allStats||[]).find(x=>x.player_id===playerId||x.id===playerId)||{}).position);
   });
 
   const avgRating = ratings.reduce((s,r)=>s+r,0) / ratings.length;
@@ -3722,14 +3788,13 @@ async function showMatch(matchId, skipPushState) {
   matchVotes.forEach(v => voteMap[v.player_id] = v);
   const totalParticipants = matchVotes[0]?.total_participants || 0;
 
+  try { await ratingCtxLoad(); } catch(e) {}
   function getMatchRating(playerId, isDefender, goalsConceded, goals, assists) {
     const v = voteMap[playerId];
     if (!v || totalParticipants === 0) return null;
-    const statData = stats.find(x=>x.player_id===playerId);
-    const rating = calcRating(
-      v.vote_count, totalParticipants, goalsConceded, isDefender, goals, assists, statData?.is_mom
-    );
-    return rating.toFixed(1);
+    const statData = stats.find(x=>x.player_id===playerId) || {};
+    const vv = Object.assign({}, v, { total_participants: totalParticipants, is_defender: isDefender, matches: { our_score: m.our_score, opponent_score: m.opponent_score ?? goalsConceded } });
+    return ratingFor(vv, statData, playerId, null).toFixed(1);
   }
   // 누적 어택포인트 점수 (현재 시즌 기준)
   const powerMap = {};
@@ -4202,9 +4267,10 @@ async function myRecordOpen(){
     [me, all, votes, pl, lu] = await Promise.all([
       api(`match_stats?select=*,matches(id,match_date,opponent,our_score,opponent_score,result,season_id,goals_conceded,status)&player_id=eq.${pid}`),
       api('match_stats?select=player_id,attended,goals,assists,is_mom,matches(season_id,status)'),
-      api(`match_votes?select=*,matches(goals_conceded,opponent_score,season_id)&player_id=eq.${pid}`),
+      api(`match_votes?select=*,matches(goals_conceded,our_score,opponent_score,season_id)&player_id=eq.${pid}`),
       api(`players?select=*&id=eq.${pid}`),
-      api(`${LU_STORE}?select=key,data&key=like.match_*`).catch(()=>[])
+      api(`${LU_STORE}?select=key,data&key=like.match_*`).catch(()=>[]),
+      ratingCtxLoad()
     ]);
   }catch(e){}
   const p = pl[0]; if(!p){ ov.remove(); alert('선수 정보를 불러오지 못했어요.'); return; }
@@ -4234,7 +4300,7 @@ function mrRender(){
   const rated = D.votes.filter(v=>v.matches && (D.scope==='all'||v.matches.season_id===D.scope)).map(v=>{
     const s = msByMatch[v.match_id] || {};
     // 경기 상세 화면과 같은 기준: 실점 = 상대 득점, 수비수 여부는 투표 기록 우선·없으면 포지션
-    return { id:v.match_id, r: calcRating(v.vote_count, v.total_participants, ratingConceded(v), ratingIsDef(v, D.p.position), s.goals, s.assists, s.is_mom) };
+    return { id:v.match_id, r: ratingFor(v, s, D.p.id, D.p.position) };
   });
   const avg = rated.length ? (rated.reduce((s,x)=>s+x.r,0)/rated.length) : null;
   const ratingOf = {}; rated.forEach(x=>ratingOf[x.id]=x.r);
@@ -4708,6 +4774,7 @@ async function luPut(key, data){
     body: JSON.stringify({key, data, updated_at:new Date().toISOString()})
   });
   if(!res.ok){ try{ LU.lastErr = res.status+' '+(await res.text()).slice(0,200); }catch(e){ LU.lastErr = String(res.status); } }
+  else { _rctxAt = 0; }  // 라인업·쿼터 기록이 바뀌면 평점 계산용 캐시를 새로 읽게
   return res.ok;
 }
 
