@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="emblem_v4.png">
 <link rel="manifest" href="manifest.json">
 <title>ATTACK F.C.</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Teko:wght@500;600;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f4f5f7;
@@ -244,30 +244,49 @@
   .mini-go{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:22px;opacity:.6}
   .mini-news{position:relative;padding:7px 14px;font-size:12px;font-weight:700;background:rgba(0,0,0,.22);border-top:1px solid rgba(255,255,255,.1)}
   .mini-news div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.7}
-  .mr-sec{background:#fff;border-radius:16px;margin-top:12px;overflow:hidden;box-shadow:0 1px 2px rgba(15,40,80,.05),0 4px 14px rgba(15,40,80,.06)}
-  .mr-ttl{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;padding:15px 16px 6px;color:#0f2850}
-  .mr-ttl:before{content:'';width:4px;height:14px;border-radius:2px;background:linear-gradient(180deg,#1a7abf,#1a3a6b)}
-  .mr-rank{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 14px 16px}
-  .mr-rank>div{text-align:center;background:#f4f7fb;border-radius:12px;padding:10px 2px 9px}
-  .mr-rank span{display:block;font-size:11px;font-weight:700;color:var(--muted)}
-  .mr-rank b{display:block;font-size:22px;font-weight:900;line-height:1.2;color:#1a3a6b;margin-top:2px}
-  .mr-rank b small{font-size:12px;font-weight:800;margin-left:1px}
-  .mr-rank i{display:inline-block;font-style:normal;font-size:11px;font-weight:800;color:#51607a;background:#fff;border-radius:8px;padding:1px 8px;margin-top:4px}
-  .mr-rank>div.top{background:linear-gradient(180deg,#fff6d8,#fffdf3);box-shadow:inset 0 0 0 1px #f3d98a}
-  .mr-rank>div.top b{color:#c98a00}
-  .mr-rate{padding:16px}
-  .mr-rate>div:first-child{display:flex;align-items:baseline;gap:6px}
-  .mr-rate span{font-size:14px;font-weight:800;color:#0f2850;margin-right:auto}
-  .mr-rate b{font-size:30px;font-weight:900;line-height:1}
-  .mr-rate small{font-size:12px;color:var(--muted)}
-  .mr-gauge{height:8px;border-radius:4px;background:#edf0f5;overflow:hidden;margin-top:10px}
-  .mr-gauge i{display:block;height:100%;border-radius:4px}
-  .mr-rate em{display:block;font-style:normal;font-size:11px;color:var(--muted);margin-top:7px}
-  .mr-form{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px 14px 16px}
+  /* 개인기록: 한 장의 기록지 */
+  .rs{background:#fff;border-radius:18px;margin-top:12px;padding:0 18px;box-shadow:0 1px 2px rgba(15,40,80,.05),0 6px 18px rgba(15,40,80,.06)}
+  .rs-sec{padding:18px 0 18px}
+  .rs-sec+.rs-sec{border-top:1px solid #e6ebf2}
+  .rs-ttl{font-family:'Black Han Sans','Noto Sans KR',sans-serif;font-weight:400;font-size:17px;color:#0f2850;margin:0 0 10px;letter-spacing:-.2px}
+  .rs-note{font-size:11px;color:var(--muted);margin-top:8px}
+  .rs-rank{display:grid;grid-template-columns:repeat(4,1fr)}
+  .rs-rank>div{text-align:center;padding:2px 0}
+  .rs-rank>div+div{border-left:1px solid #e6ebf2}
+  .rs-rank span{display:block;font-size:12px;font-weight:700;color:#51607a}
+  .rs-rank b{display:block;font-family:'Teko','Noto Sans KR',sans-serif;font-size:44px;font-weight:600;line-height:.95;color:#1a3a6b;margin-top:6px}
+  .rs-rank b small{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:800;margin-left:1px}
+  .rs-rank i{display:block;font-style:normal;font-size:11px;color:var(--muted)}
+  .rs-rank>div.top b{color:#c98a00}
+  .rs-rate{display:flex;align-items:center;gap:18px}
+  .rs-rate>b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:64px;font-weight:600;line-height:.8;padding-top:8px;flex:none}
+  .rs-rule{position:relative;flex:1;padding-top:12px}
+  .rs-rule>div{height:14px;border-bottom:2px solid #1a3a6b;background:repeating-linear-gradient(90deg,#1a3a6b 0 1px,transparent 1px 10%) left bottom/100% 7px no-repeat,linear-gradient(#1a3a6b,#1a3a6b) right bottom/1px 7px no-repeat,linear-gradient(#1a3a6b,#1a3a6b) 50% bottom/1px 14px no-repeat}
+  .rs-rule>i{position:absolute;top:0;margin-left:-7px;border:7px solid transparent;border-top-width:10px;border-bottom:0}
+  .rs-rule p{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px}
+  .rs-pos{display:flex;gap:18px;align-items:center}
+  .rs-pitch{position:relative;flex:none;width:118px;aspect-ratio:5/7;border-radius:8px;background:repeating-linear-gradient(180deg,#3f9a66 0 12.5%,#48a671 12.5% 25%);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.6);overflow:hidden}
+  .rs-pitch:before{content:'';position:absolute;left:0;right:0;top:50%;border-top:1.5px solid rgba(255,255,255,.4)}
+  .rs-pitch i.b{position:absolute;left:26%;right:26%;height:13%;border:1.5px solid rgba(255,255,255,.4)}
+  .rs-pitch i.t{top:-2px}.rs-pitch i.bt{bottom:-2px}
+  .rs-pitch u{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:rgba(255,255,255,.55);color:#0f2850;text-decoration:none;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .rs-pitch u.on{background:#ffd54a;box-shadow:0 0 0 3px rgba(255,213,74,.35)}
+  .rs-plist{flex:1;min-width:0}
+  .rs-plist>div{display:flex;align-items:baseline;gap:8px;padding:6px 0;white-space:nowrap}
+  .rs-plist>div+div{border-top:1px solid #eef1f5}
+  .rs-plist b{width:38px;font-size:14px;font-weight:800;color:#51607a}
+  .rs-plist span{flex:1;font-size:12px;color:var(--muted)}
+  .rs-plist em{font-style:normal;font-family:'Teko','Noto Sans KR',sans-serif;font-size:22px;font-weight:600;line-height:1;color:#51607a}
+  .rs-plist>div.on b,.rs-plist>div.on em{color:#1a3a6b}
+  .rs-plist>div.on em{font-size:30px}
+  .rs-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid #eef1f5}
+  .rs-rt{width:38px;text-align:right;font-family:'Teko','Noto Sans KR',sans-serif;font-size:24px;font-weight:600;line-height:1;padding-top:3px}
+  .rs-more{display:block;width:100%;padding:13px 0 0;background:none;border:none;border-top:1px solid #eef1f5;color:var(--skyblue);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  .mr-form{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
   .mr-form>div{text-align:center;background:#f4f7fb;border-radius:12px;padding:10px 0 8px;min-height:92px}
   .mr-form u{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;text-decoration:none;font-size:11px;font-weight:800;color:#fff}
   .mr-form u.w{background:#2e7d32}.mr-form u.l{background:#c62828}.mr-form u.d{background:#9e9e9e}
-  .mr-form b{display:block;font-size:17px;font-weight:900;line-height:1;margin-top:7px}
+  .mr-form b{display:block;font-family:'Teko','Noto Sans KR',sans-serif;font-size:26px;font-weight:600;line-height:.9;margin-top:9px}
   .mr-form span{display:block;font-size:10px;color:var(--muted);margin-top:3px}
   .mr-form em{display:block;font-style:normal;font-size:11px;font-weight:700;color:var(--skyblue);margin-top:3px;min-height:14px;white-space:nowrap}
   .tc{position:relative;overflow:hidden;margin-top:6px;border-radius:20px;color:#fff;padding:14px 14px 14px;min-height:300px;
@@ -282,9 +301,9 @@
   .tc-ph{position:relative;z-index:1;width:150px;height:150px;margin:2px auto 0;border-radius:50%;padding:4px;background:linear-gradient(140deg,#ffd54a,#fff3c4 45%,#7cc0ff);box-shadow:0 10px 24px rgba(0,0,0,.35)}
   .tc-ph img,.tc-ph b{width:100%;height:100%;border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;background:#24508a;font-size:56px;font-weight:900;border:4px solid #0f2850}
   .tc-plate{position:relative;z-index:2;margin:14px 0 0;padding:12px 14px;border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,.22),rgba(255,255,255,.08));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.25);color:#fff}
-  .tc-name{font-size:34px;font-weight:900;line-height:1.1;letter-spacing:-1px;word-break:keep-all}
+  .tc-name{font-family:'Black Han Sans','Noto Sans KR',sans-serif;font-size:36px;font-weight:400;line-height:1.1;word-break:keep-all}
   .tc-a{display:flex;align-items:center;gap:10px}
-  .tc-ano{font-size:20px;font-weight:900;background:#fff;color:#0f2850;border-radius:8px;padding:5px 10px;line-height:1}
+  .tc-ano{font-family:'Teko','Noto Sans KR',sans-serif;font-size:28px;font-weight:600;background:#fff;color:#0f2850;border-radius:8px;padding:5px 10px 1px;line-height:1}
   .tc-d{display:flex;align-items:center;gap:12px}
   .tc-dno{display:flex;flex-direction:column;align-items:center;padding-right:12px;border-right:2px solid rgba(255,255,255,.45)}
   .tc-dno span{font-size:10px;font-weight:900;letter-spacing:2px;opacity:.7}
@@ -292,7 +311,7 @@
   .tc-stats{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,1fr) 1.35fr;gap:6px;margin-top:10px}
   .tc-stats div{background:#fff;border-radius:10px;text-align:center;padding:7px 0 8px;color:#0f2850}
   .tc-stats span{display:block;font-size:11px;font-weight:900;letter-spacing:.3px;white-space:nowrap;line-height:14px}
-  .tc-stats b{display:block;font-size:24px;font-weight:900;line-height:28px;margin-top:2px}
+  .tc-stats b{display:block;font-family:'Teko','Noto Sans KR',sans-serif;font-size:34px;font-weight:600;line-height:28px;margin-top:4px}
   .tc-stats .tc-tot{position:relative;overflow:hidden;background:linear-gradient(180deg,#fff7d6,#fff 60%)}
   .tc-stats .tc-tot::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,#f5b400,#ffd54a)}
   .tc-stats .tc-tot span{color:#c98a00}
@@ -361,14 +380,26 @@
   .mem-pick{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;margin-bottom:6px;background:#fff;border:1.5px solid var(--border);border-radius:10px;font:inherit;font-size:14px;cursor:pointer;text-align:left}
   .mem-pick.on{border-color:var(--skyblue);background:#eaf4fc;font-weight:700}
   /* 인트로 화면 */
-  #intro{position:fixed;inset:0;z-index:10000;background:linear-gradient(180deg,#1a3a6b,#1e4d8c);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;animation:introOut .6s ease 1.8s forwards}
-  #intro.out{opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
-  .intro-emblem{width:120px;height:120px;border-radius:50%;object-fit:cover;animation:introPop .9s cubic-bezier(.2,.8,.2,1) both;box-shadow:0 8px 30px rgba(0,0,0,.3)}
-  .intro-name{margin-top:22px;font-size:26px;font-weight:800;letter-spacing:3px;animation:introFade .8s ease .35s both}
-  .intro-sub{margin-top:8px;font-size:11px;letter-spacing:2px;opacity:.7;animation:introFade .8s ease .55s both}
-  @keyframes introPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
-  @keyframes introFade{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
-  @keyframes introOut{to{opacity:0;visibility:hidden}}
+  /* 인트로: 킥오프 직전의 센터서클 */
+  #intro{position:fixed;inset:0;z-index:10000;background:#0f2850;color:#fff;overflow:hidden;animation:introOut .55s cubic-bezier(.7,0,.3,1) 2s forwards}
+  #intro.out{transform:translateY(-100%);visibility:hidden;transition:transform .4s cubic-bezier(.7,0,.3,1),visibility .4s}
+  #intro::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 12.5%,transparent 12.5% 25%)}
+  .intro-line{position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:rgba(255,255,255,.55);transform:scaleX(0);animation:introLine .5s cubic-bezier(.2,.8,.2,1) .05s forwards}
+  .intro-ring{position:absolute;left:50%;top:50%;width:260px;height:260px;margin:-130px 0 0 -130px;transform:rotate(-90deg)}
+  .intro-ring circle{fill:#0f2850;stroke:rgba(255,255,255,.55);stroke-width:2;stroke-dasharray:798;stroke-dashoffset:798;animation:introRing .7s cubic-bezier(.4,0,.2,1) .3s forwards}
+  .intro-emblem{position:absolute;left:50%;top:50%;width:136px;height:136px;margin:-68px 0 0 -68px;border-radius:50%;object-fit:cover;box-shadow:0 10px 34px rgba(0,0,0,.35);animation:introPop .55s cubic-bezier(.2,1.3,.4,1) .75s both}
+  .intro-txt{position:absolute;left:0;right:0;top:calc(50% + 158px);text-align:center}
+  .intro-name{font-family:'Teko','Noto Sans KR',sans-serif;font-size:64px;font-weight:700;line-height:.9;letter-spacing:2px;overflow:hidden}
+  .intro-name,.intro-sub{animation:introRise .5s cubic-bezier(.2,.8,.2,1) 1.05s both}
+  .intro-sub{margin-top:8px;font-size:13px;font-weight:500;color:#9cc8f0;animation-delay:1.2s}
+  @keyframes introLine{to{transform:scaleX(1)}}
+  @keyframes introRing{to{stroke-dashoffset:0}}
+  @keyframes introPop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+  @keyframes introRise{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+  @keyframes introOut{to{transform:translateY(-100%);visibility:hidden}}
+  @media (max-height:640px){.intro-ring{width:200px;height:200px;margin:-100px 0 0 -100px}.intro-emblem{width:104px;height:104px;margin:-52px 0 0 -52px}.intro-txt{top:calc(50% + 122px)}.intro-name{font-size:52px}}
+  @media (prefers-reduced-motion:reduce){#intro,#intro *{animation-duration:.01s!important;animation-delay:0s!important}#intro{animation:introFadeOut .3s linear 1.6s forwards!important}}
+  @keyframes introFadeOut{to{opacity:0;visibility:hidden}}
   /* 시작 화면: 팀 컬러 배경 */
   #gate{background:linear-gradient(180deg,#1a3a6b,#1e4d8c);color:#fff;--muted:rgba(255,255,255,.72)}
   #gate .mem-pick,#gate .gate-card{--muted:#8895a7;color:var(--text)}
@@ -438,9 +469,10 @@
 </head>
 <body>
 <div id="intro" onclick="this.classList.add('out')">
+  <i class="intro-line"></i>
+  <svg class="intro-ring" viewBox="0 0 260 260" aria-hidden="true"><circle cx="130" cy="130" r="127"/></svg>
   <img src="emblem_v4.png" alt="" class="intro-emblem">
-  <div class="intro-name">ATTACK F.C.</div>
-  <div class="intro-sub">AMATEUR FOOTBALL CLUB · SINCE 2006</div>
+  <div class="intro-txt"><div class="intro-name">ATTACK F.C.</div><div class="intro-sub">2006년 창단</div></div>
 </div>
 <script>try{ if(sessionStorage.getItem('attack_intro')==='1'){ document.getElementById('intro').style.display='none'; } else { sessionStorage.setItem('attack_intro','1'); } }catch(e){}</script>
 
@@ -4215,6 +4247,8 @@ function mrRender(){
     if(hit) planGames++;
   });
   const posList = Object.entries(posQ).sort((a,b)=>b[1]-a[1]), posTotal = posList.reduce((s,x)=>s+x[1],0);
+  const posXY = {}; Object.values(LU_FORMATIONS).forEach(f=>f.forEach(a=>{ const o = posXY[a[1]] || (posXY[a[1]] = {sx:0,sy:0,n:0}); o.sx+=a[2]; o.sy+=a[3]; o.n++; })); Object.values(posXY).forEach(o=>{ o.x = Math.round(o.sx/o.n); o.y = Math.round(o.sy/o.n); });
+  // 좌우 대칭 포지션(CB·CM 등)은 평균이 가운데로 모이므로 그대로 중앙에 표시
   const fq = n => (n%1? n.toFixed(1) : n)+'쿼터';
   // 함께한 기간
   let together = '';
@@ -4222,8 +4256,8 @@ function mrRender(){
   const POS = {GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수'};
   const seasons = [...new Set(D.me.map(r=>r.matches.season_id))].sort((a,b)=>b-a);
   const pill = (v,t) => { const on = String(D.scope)===String(v); return `<button onclick="mrScope('${v}')" style="padding:7px 14px;border-radius:20px;border:1.5px solid ${on?'var(--skyblue)':'var(--border)'};background:${on?'var(--skyblue)':'#fff'};color:${on?'#fff':'var(--text)'};font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">${t}</button>`; };
-  const card = (inner,extra) => `<div class="mr-sec" style="${extra||''}">${inner}</div>`;
-  const ttl = t => `<div class="mr-ttl">${t}</div>`;
+  const card = (inner,extra) => `<section class="rs-sec" style="${extra||''}">${inner}</section>`;
+  const ttl = t => `<h3 class="rs-ttl">${t}</h3>`;
   const av = D.p.photo_url ? `<img src="${D.p.photo_url}" referrerpolicy="no-referrer" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.35)">` : `<div style="width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff">${luEsc((D.p.name||'?').charAt(0))}</div>`;
   const kpi = (v,l) => `<div style="flex:1;text-align:center"><div style="font-size:30px;font-weight:800;line-height:1">${v}</div><div style="font-size:11px;opacity:.75;margin-top:6px">${l}</div></div>`;
   const total = W+Dr+L;
@@ -4239,27 +4273,28 @@ function mrRender(){
       <div class="tc-stats">${[[GP,'출전','#1a3a6b'],[G,'득점','#d1344b'],[A,'도움','#159a8c'],[MOM,'MOM','#7a4fd0']].map(([v,l,c])=>`<div><span style="color:${c}">${l}</span><b>${v}</b></div>`).join('')}<div class="tc-tot"><span>어택P</span><b>${power!=null?power:'-'}</b></div></div>
     </div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px">${pill(currentSeasonId, currentSeasonName)}${seasons.filter(s=>s!==currentSeasonId).map(s=>pill(s,'시즌 '+s)).join('')}${pill('all','통산')}</div>
-    ${GP ? `
-    ${card(`${ttl('팀 내 순위')}<div class="mr-rank">${ranks.map(([n,r,v])=>`<div class="${r&&r<=3?'top':''}"><span>${n}</span><b>${r?r+'<small>위</small>':'-'}</b><i>${v}</i></div>`).join('')}</div>`)}
-    ${card(`<div class="mr-rate"><div><span>평균 레이팅</span><b style="color:${avg!=null?rc(avg):'var(--muted)'}">${avg!=null?avg.toFixed(1):'-'}</b><small>/ 10</small></div><div class="mr-gauge"><i style="width:${avg!=null?Math.min(100,avg*10):0}%;background:${avg!=null?rc(avg):'#ccc'}"></i></div><em>${rated.length?rated.length+'경기 평가':'평가된 경기 없음'}</em></div>`)}
+    ${GP ? `<div class="rs">
+    ${card(`${ttl('팀 내 순위')}<div class="rs-rank">${ranks.map(([n,r,v])=>`<div class="${r&&r<=3?'top':''}"><span>${n}</span><b>${r?r+'<small>위</small>':'-'}</b><i>${v}${n==='출전'?'경기':n==='득점'?'골':n==='도움'?'개':''}</i></div>`).join('')}</div>`)}
+    ${card(`${ttl('평균 레이팅')}<div class="rs-rate"><b style="color:${avg!=null?rc(avg):'var(--muted)'}">${avg!=null?avg.toFixed(1):'-'}</b><div class="rs-rule">${avg!=null?`<i style="left:${Math.min(100,avg*10)}%;border-top-color:${rc(avg)}"></i>`:''}<div></div><p><span>0</span><span>5</span><span>10</span></p></div></div><div class="rs-note">${rated.length?rated.length+'경기 평가 기준':'평가된 경기가 아직 없어요'}</div>`)}
     ${card(`${ttl('최근 폼')}<div class="mr-form">${form.map(r=>{ const m=r.matches, d=new Date(m.match_date), k = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; const rt = ratingOf[r.match_id];
       return `<div><u class="${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><b style="color:${rt?rc(rt):'var(--muted)'}">${rt?rt.toFixed(1):'-'}</b><span>${d.getMonth()+1}/${d.getDate()}</span><em>${r.goals?'⚽'+r.goals:''}${r.assists?' 🅰'+r.assists:''}${r.is_mom?' ⭐':''}</em></div>`; }).join('')}</div>`)}
-    ${card(`${ttl('승부 · 기여')}<div style="padding:8px 16px 16px">
+    ${card(`${ttl('승부와 기여')}<div style="padding:6px 0 2px">
       <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;background:#eee">${total?`<div style="width:${W/total*100}%;background:#2e7d32"></div><div style="width:${Dr/total*100}%;background:#9e9e9e"></div><div style="width:${L/total*100}%;background:#c62828"></div>`:''}</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px"><span style="color:#2e7d32;font-weight:700">${W}승</span><span style="color:#757575;font-weight:700">${Dr}무</span><span style="color:#c62828;font-weight:700">${L}패</span><span style="color:var(--muted)">승률 ${total?Math.round(W/total*100):0}%</span></div>
       ${involve!=null?`<div style="margin-top:14px;font-size:12px;color:var(--muted)">내가 뛴 경기 팀 득점 ${teamGoals}골 중 <b style="color:var(--text)">${G+A}골에 관여</b> (득점 ${G} + 도움 ${A})</div><div style="height:8px;background:#eee;border-radius:4px;margin-top:6px;overflow:hidden"><div style="width:${Math.min(100,involve)}%;height:100%;background:var(--skyblue)"></div></div><div style="text-align:right;font-size:12px;font-weight:800;color:var(--skyblue);margin-top:4px">${involve}%</div>`:''}
     </div>`)}
-    ${(bestGame&&bestGame.goals>0)||fav||best>1 ? card(`${ttl('하이라이트')}<div style="padding:6px 16px 14px;font-size:13px;line-height:2">
+    ${(bestGame&&bestGame.goals>0)||fav||best>1 ? card(`${ttl('하이라이트')}<div style="padding:2px 0 0;font-size:13px;line-height:2">
       ${bestGame&&bestGame.goals>0?`<div>🔥 한 경기 최다 득점 <b>${bestGame.goals}골</b> <span style="color:var(--muted)">vs ${luEsc(bestGame.matches.opponent)}</span></div>`:''}
       ${fav?`<div>🎯 가장 많이 넣은 상대 <b>${luEsc(fav[0])}</b> <span style="color:var(--muted)">${fav[1]}골</span></div>`:''}
       ${best>1?`<div>🔗 연속 공격포인트 <b>${best}경기</b></div>`:''}
     </div>`) : ''}
-    ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div style="padding:6px 16px 14px">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">주 포지션 <b style="color:var(--skyblue);font-size:15px">${posList[0][0]}</b></div>
-      ${posList.slice(0,5).map(([g,q],i)=>`<div style="display:flex;align-items:center;gap:10px;margin-top:7px;font-size:13px"><span style="width:34px;font-weight:800">${g}</span><div style="flex:1;height:10px;background:#eee;border-radius:5px;overflow:hidden"><div style="width:${Math.round(q/posList[0][1]*100)}%;height:100%;background:${i===0?'var(--skyblue)':'#9fc3e8'}"></div></div><span style="flex:none;min-width:84px;text-align:right;color:var(--muted);font-size:12px;white-space:nowrap">${fq(q)} · ${Math.round(q/posTotal*100)}%</span></div>`).join('')}</div>` : '<div style="padding:10px 16px 16px;font-size:13px;color:var(--muted)">집계된 라인업 기록이 아직 없어요.</div>'}`)}
+    ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div class="rs-pos">
+      <div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/posList[0][1]); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?g:''}</u>`; }).join('')}</div>
+      <div class="rs-plist">${posList.slice(0,5).map(([g,q],i)=>`<div class="${i===0?'on':''}"><b>${g}</b><span>${fq(q)}</span><em>${Math.round(q/posTotal*100)}%</em></div>`).join('')}</div>
+    </div>` : '<div style="padding:4px 0 6px;font-size:13px;color:var(--muted)">집계된 라인업 기록이 아직 없어요.</div>'}`)}
     ${card(`${ttl('경기별 기록')}<div style="padding-bottom:4px">${(D.showAll?played:played.slice(0,5)).map(r=>{ const m=r.matches, d=new Date(m.match_date), rl=m.result==='Win'?'W':m.result==='Lose'?'L':'D', cl=m.result==='Win'?'#2e7d32':m.result==='Lose'?'#c62828':'#9e9e9e', rt=ratingOf[r.match_id];
-      return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border)"><span style="width:22px;height:22px;border-radius:6px;background:${cl};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">${rl}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${luEsc(m.opponent||'')}</div><div style="font-size:11px;color:var(--muted)">${d.getMonth()+1}월 ${d.getDate()}일 · ${m.our_score}:${m.opponent_score}</div></div><div style="font-size:12px;font-weight:700;color:var(--skyblue);text-align:right">${r.goals?'⚽'+r.goals+' ':''}${r.assists?'🅰'+r.assists+' ':''}${r.is_mom?'⭐':''}</div>${rt?`<div style="width:34px;text-align:right;font-size:13px;font-weight:800;color:${rc(rt)}">${rt.toFixed(1)}</div>`:''}</div>`; }).join('')}${!D.showAll && played.length>5 ? `<button onclick="mrMore()" style="display:block;width:100%;padding:13px;background:none;border:none;border-top:1px solid var(--border);color:var(--skyblue);font:inherit;font-size:13px;font-weight:700;cursor:pointer">더보기 (${played.length-5}경기)</button>` : ''}</div>`)}
-    ` : card('<div style="padding:34px 16px;text-align:center;color:var(--muted);font-size:14px">이 기간에 출전 기록이 없어요.</div>')}
+      return `<div class="rs-row"><span style="width:22px;height:22px;border-radius:6px;background:${cl};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">${rl}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${luEsc(m.opponent||'')}</div><div style="font-size:11px;color:var(--muted)">${d.getMonth()+1}월 ${d.getDate()}일 · ${m.our_score}:${m.opponent_score}</div></div><div style="font-size:12px;font-weight:700;color:var(--skyblue);text-align:right">${r.goals?'⚽'+r.goals+' ':''}${r.assists?'🅰'+r.assists+' ':''}${r.is_mom?'⭐':''}</div>${rt?`<div class="rs-rt" style="color:${rc(rt)}">${rt.toFixed(1)}</div>`:''}</div>`; }).join('')}${!D.showAll && played.length>5 ? `<button onclick="mrMore()" class="rs-more">더보기 (${played.length-5}경기)</button>` : ''}</div>`)}
+    </div>` : '<div class="rs"><div style="padding:34px 16px;text-align:center;color:var(--muted);font-size:14px">이 기간에 출전 기록이 없어요.</div></div>'}
     <button onclick="history.replaceState({page:'home'},'');document.getElementById('my-record').remove();showPlayer(${D.p.id})" style="width:100%;margin-top:16px;padding:13px;background:#fff;border:1px solid var(--border);border-radius:12px;font:inherit;font-size:14px;font-weight:600;cursor:pointer">공개 선수 프로필 보기</button>
   </div>`;
   ov.scrollTop = keepY;
