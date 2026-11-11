@@ -244,6 +244,32 @@
   .mini-go{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:22px;opacity:.6}
   .mini-news{position:relative;padding:7px 14px;font-size:12px;font-weight:700;background:rgba(0,0,0,.22);border-top:1px solid rgba(255,255,255,.1)}
   .mini-news div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.7}
+  .mr-sec{background:#fff;border-radius:16px;margin-top:12px;overflow:hidden;box-shadow:0 1px 2px rgba(15,40,80,.05),0 4px 14px rgba(15,40,80,.06)}
+  .mr-ttl{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;padding:15px 16px 6px;color:#0f2850}
+  .mr-ttl:before{content:'';width:4px;height:14px;border-radius:2px;background:linear-gradient(180deg,#1a7abf,#1a3a6b)}
+  .mr-rank{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 14px 16px}
+  .mr-rank>div{text-align:center;background:#f4f7fb;border-radius:12px;padding:10px 2px 9px}
+  .mr-rank span{display:block;font-size:11px;font-weight:700;color:var(--muted)}
+  .mr-rank b{display:block;font-size:22px;font-weight:900;line-height:1.2;color:#1a3a6b;margin-top:2px}
+  .mr-rank b small{font-size:12px;font-weight:800;margin-left:1px}
+  .mr-rank i{display:inline-block;font-style:normal;font-size:11px;font-weight:800;color:#51607a;background:#fff;border-radius:8px;padding:1px 8px;margin-top:4px}
+  .mr-rank>div.top{background:linear-gradient(180deg,#fff6d8,#fffdf3);box-shadow:inset 0 0 0 1px #f3d98a}
+  .mr-rank>div.top b{color:#c98a00}
+  .mr-rate{padding:16px}
+  .mr-rate>div:first-child{display:flex;align-items:baseline;gap:6px}
+  .mr-rate span{font-size:14px;font-weight:800;color:#0f2850;margin-right:auto}
+  .mr-rate b{font-size:30px;font-weight:900;line-height:1}
+  .mr-rate small{font-size:12px;color:var(--muted)}
+  .mr-gauge{height:8px;border-radius:4px;background:#edf0f5;overflow:hidden;margin-top:10px}
+  .mr-gauge i{display:block;height:100%;border-radius:4px}
+  .mr-rate em{display:block;font-style:normal;font-size:11px;color:var(--muted);margin-top:7px}
+  .mr-form{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px 14px 16px}
+  .mr-form>div{text-align:center;background:#f4f7fb;border-radius:12px;padding:10px 0 8px;min-height:92px}
+  .mr-form u{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;text-decoration:none;font-size:11px;font-weight:800;color:#fff}
+  .mr-form u.w{background:#2e7d32}.mr-form u.l{background:#c62828}.mr-form u.d{background:#9e9e9e}
+  .mr-form b{display:block;font-size:17px;font-weight:900;line-height:1;margin-top:7px}
+  .mr-form span{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+  .mr-form em{display:block;font-style:normal;font-size:11px;font-weight:700;color:#1a3a6b;margin-top:3px;min-height:14px;white-space:nowrap}
   .tc{position:relative;overflow:hidden;margin-top:6px;border-radius:20px;color:#fff;padding:14px 14px 14px;min-height:300px;
     background:linear-gradient(155deg,#0f2850 0%,#1a3a6b 50%,#1e5fa3 100%);box-shadow:0 14px 34px rgba(15,40,80,.35)}
   .tc::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.55;
@@ -362,15 +388,18 @@
   @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.45}}
   .lu-grid{display:grid;grid-template-columns:1fr 38px 26px 26px 26px 26px 42px 42px;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid #f0f2f6}
   .lu-n{padding:5px 2px;text-align:center}
-  .lu-qtab{flex:1;padding:8px 2px;border:1px solid var(--border);background:#fff;border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;line-height:1.2}
-  .lu-qtab.on{background:var(--skyblue);color:#fff;border-color:var(--skyblue)}
-  .lu-pitch{position:relative;width:100%;aspect-ratio:5/7;border-radius:10px;background:#4a9e6e;border:2px solid #fff;box-shadow:0 0 0 1px #cfd6e0;overflow:hidden}
+  .lu-qtab{flex:1;padding:7px 2px 6px;border:none;background:#eef2f8;color:#51607a;border-radius:10px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;line-height:1.15;transition:background .15s}
+  .lu-qtab span{display:block;font-weight:500;font-size:10px;opacity:.75;margin-top:1px}
+  .lu-qtab div{font-size:12px!important;font-weight:800!important;margin-top:2px}
+  .lu-qtab.on{background:linear-gradient(160deg,#1a3a6b,#1e5fa3);color:#fff;box-shadow:0 4px 10px rgba(26,58,107,.28)}
+  .lu-pitch{position:relative;width:100%;aspect-ratio:5/7;border-radius:14px;background:repeating-linear-gradient(180deg,#3f9a66 0 12.5%,#48a671 12.5% 25%);box-shadow:inset 0 0 0 2px rgba(255,255,255,.55),0 6px 16px rgba(20,60,40,.18);overflow:hidden}
+  .lu-pitch:after{content:"";position:absolute;left:50%;top:50%;width:26%;aspect-ratio:1;border:2px solid rgba(255,255,255,.35);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}
   .lu-pitch:before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px solid rgba(255,255,255,.35)}
   .lu-pitch .lu-box{position:absolute;left:24%;right:24%;height:15%;border:2px solid rgba(255,255,255,.35);pointer-events:none}
   .lu-pitch .lu-box.b{bottom:-2px;border-bottom:none;border-radius:6px 6px 0 0}
   .lu-pitch .lu-box.t{top:-2px;border-top:none;border-radius:0 0 6px 6px}
-  .lu-slot{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;width:78px}
-  .lu-av{position:relative;width:46px;height:46px;border-radius:50%;margin:0 auto;background:#1a7abf;border:3px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;box-sizing:border-box}
+  .lu-slot{position:absolute;transform:translate(-50%,-56%);text-align:center;cursor:pointer;width:78px}
+  .lu-av{position:relative;width:46px;height:46px;border-radius:50%;margin:0 auto;background:linear-gradient(160deg,#2a78c8,#143a70);border:3px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;box-sizing:border-box;box-shadow:0 3px 8px rgba(0,0,0,.28)}
   .lu-av img{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:50%;object-fit:cover;background:#dfe6ee}
   .lu-av i{position:absolute;font-style:normal;min-width:22px;height:22px;border-radius:11px;background:#fff;color:#111;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.45);padding:0 0 3px;box-sizing:border-box;z-index:2}
   .lu-av .lu-bgrp{position:absolute;bottom:-4px;display:flex;z-index:2}
@@ -379,11 +408,21 @@
   .lu-av .lu-bgrp i.og{background:#e5484d}
   .lu-av .lu-bgrp.a{right:calc(100% - 13px);flex-direction:row-reverse}.lu-av .lu-bgrp.a i+i{margin-right:-13px}
   .lu-av i.lu-bsub{left:-7px;top:-4px;background:#e5484d;color:#fff}
-  .lu-nm{font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7);line-height:1.15;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lu-nm{display:inline-block;max-width:100%;font-size:11px;font-weight:700;color:#fff;line-height:1.3;margin-top:4px;padding:1px 7px;border-radius:9px;background:rgba(8,40,26,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:top}
   .lu-nm .no{opacity:.75;font-weight:500;margin-right:2px}
-  .lu-nsub{font-size:10px;font-weight:700;color:#ffe27a;text-shadow:0 1px 2px rgba(0,0,0,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .lu-ps{font-size:9px;color:rgba(255,255,255,.75)}
-  .lu-chip{background:#eef1f6;border-radius:12px;padding:3px 9px;font-size:12px}
+  .lu-nsub{font-size:10px;font-weight:700;color:#ffe27a;text-shadow:0 1px 2px rgba(0,0,0,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+  .lu-ps{font-size:9px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.7);margin-top:1px}
+  .lu-chip{background:#eef3fa;color:#1a3a6b;border-radius:12px;padding:4px 10px;font-size:12px;font-weight:600}
+  .lv-sum{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;padding:10px 14px;border-radius:12px;background:linear-gradient(160deg,#0f2850,#1e5fa3);color:#fff}
+  .lv-sum span{font-size:11px;font-weight:800;letter-spacing:2px;opacity:.8}
+  .lv-sum b{font-size:24px;font-weight:900;line-height:1}
+  .lv-sec{margin:12px 2px 0}
+  .lv-goals{margin:12px 2px 0;padding:10px 12px;border-radius:12px;background:#f5f8fc}
+  .lv-goals h4{font-size:12px;font-weight:800;color:#1a3a6b;display:flex;justify-content:space-between;align-items:center;margin:0 0 4px}
+  .lv-goals h4 em{font-style:normal;color:var(--skyblue);font-size:14px}
+  .lv-goals p{font-size:13px;line-height:1.8}
+  .lv-btn{flex:1;padding:10px 6px;background:#fff;color:#1a3a6b;border:1px solid #cfd9e8;border-radius:10px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .lv-btn.pri{background:var(--skyblue);color:#fff;border-color:var(--skyblue)}
   .lu-tbl{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px;text-align:center}
   .lu-tbl th,.lu-tbl td{padding:0 3px;height:40px;box-sizing:border-box;vertical-align:middle;white-space:nowrap;border-bottom:1px solid #eef0f4}
   .lu-tbl thead th{background:#e8eef7;color:#1a3a6b;font-weight:700;height:38px;border-bottom:2px solid #c3cfe2}
@@ -4183,8 +4222,8 @@ function mrRender(){
   const POS = {GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수'};
   const seasons = [...new Set(D.me.map(r=>r.matches.season_id))].sort((a,b)=>b-a);
   const pill = (v,t) => { const on = String(D.scope)===String(v); return `<button onclick="mrScope('${v}')" style="padding:7px 14px;border-radius:20px;border:1.5px solid ${on?'var(--skyblue)':'var(--border)'};background:${on?'var(--skyblue)':'#fff'};color:${on?'#fff':'var(--text)'};font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">${t}</button>`; };
-  const card = (inner,extra) => `<div style="background:#fff;border:1px solid var(--border);border-radius:14px;margin-top:12px;overflow:hidden;${extra||''}">${inner}</div>`;
-  const ttl = t => `<div style="font-size:13px;font-weight:800;padding:14px 16px 4px">${t}</div>`;
+  const card = (inner,extra) => `<div class="mr-sec" style="${extra||''}">${inner}</div>`;
+  const ttl = t => `<div class="mr-ttl">${t}</div>`;
   const av = D.p.photo_url ? `<img src="${D.p.photo_url}" referrerpolicy="no-referrer" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.35)">` : `<div style="width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff">${luEsc((D.p.name||'?').charAt(0))}</div>`;
   const kpi = (v,l) => `<div style="flex:1;text-align:center"><div style="font-size:30px;font-weight:800;line-height:1">${v}</div><div style="font-size:11px;opacity:.75;margin-top:6px">${l}</div></div>`;
   const total = W+Dr+L;
@@ -4201,14 +4240,10 @@ function mrRender(){
     </div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px">${pill(currentSeasonId, currentSeasonName)}${seasons.filter(s=>s!==currentSeasonId).map(s=>pill(s,'시즌 '+s)).join('')}${pill('all','통산')}</div>
     ${GP ? `
-    ${card(`${ttl('팀 내 순위')}<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 12px 14px">${ranks.map(([n,r,v])=>`<div style="text-align:center;background:var(--bg);border-radius:10px;padding:10px 2px"><div style="font-size:18px;font-weight:800;color:${r&&r<=3?'#f5a623':'var(--skyblue)'}">${r?r+'위':'-'}</div><div style="font-size:11px;color:var(--muted);margin-top:3px">${n} ${v}</div></div>`).join('')}</div>`)}
-    ${card(`<div style="display:flex;padding:16px">
-        <div style="flex:1"><div style="font-size:11px;color:var(--muted)">평균 레이팅</div><div style="margin-top:4px"><span style="font-size:26px;font-weight:800;color:${avg!=null?rc(avg):'var(--muted)'}">${avg!=null?avg.toFixed(1):'-'}</span><span style="font-size:12px;color:var(--muted)"> / 10</span></div></div>
-        <div style="width:1px;background:var(--border);margin:0 12px"></div>
-        <div style="flex:1"><div style="font-size:11px;color:var(--muted)">어택포인트${D.scope===currentSeasonId?'':' (시즌)'}</div><div style="margin-top:4px"><span style="font-size:26px;font-weight:800;color:var(--skyblue)">${power!=null?power:'-'}</span></div></div>
-      </div>`)}
-    ${card(`${ttl('최근 폼')}<div style="display:flex;gap:6px;padding:10px 12px 14px">${form.map(r=>{ const m=r.matches, d=new Date(m.match_date), cl = m.result==='Win'?'#2e7d32':m.result==='Lose'?'#c62828':'#9e9e9e'; const rt = ratingOf[r.match_id];
-      return `<div style="flex:1;text-align:center"><div style="height:46px;display:flex;align-items:flex-end;justify-content:center"><div style="width:70%;border-radius:6px 6px 0 0;background:${cl};opacity:.9;height:${rt?Math.max(10,Math.round(rt*4.4)):12}px"></div></div><div style="font-size:12px;font-weight:800;margin-top:5px;color:${rt?rc(rt):'var(--muted)'}">${rt?rt.toFixed(1):'-'}</div><div style="font-size:10px;color:var(--muted)">${d.getMonth()+1}/${d.getDate()}</div><div style="font-size:11px;font-weight:700;margin-top:2px;color:var(--skyblue)">${r.goals?'⚽'+r.goals:''}${r.assists?' 🅰'+r.assists:''}${r.is_mom?' ⭐':''}</div></div>`; }).join('')}</div>`)}
+    ${card(`${ttl('팀 내 순위')}<div class="mr-rank">${ranks.map(([n,r,v])=>`<div class="${r&&r<=3?'top':''}"><span>${n}</span><b>${r?r+'<small>위</small>':'-'}</b><i>${v}</i></div>`).join('')}</div>`)}
+    ${card(`<div class="mr-rate"><div><span>평균 레이팅</span><b style="color:${avg!=null?rc(avg):'var(--muted)'}">${avg!=null?avg.toFixed(1):'-'}</b><small>/ 10</small></div><div class="mr-gauge"><i style="width:${avg!=null?Math.min(100,avg*10):0}%;background:${avg!=null?rc(avg):'#ccc'}"></i></div><em>${rated.length?rated.length+'경기 평가':'평가된 경기 없음'}</em></div>`)}
+    ${card(`${ttl('최근 폼')}<div class="mr-form">${form.map(r=>{ const m=r.matches, d=new Date(m.match_date), k = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; const rt = ratingOf[r.match_id];
+      return `<div><u class="${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><b style="color:${rt?rc(rt):'var(--muted)'}">${rt?rt.toFixed(1):'-'}</b><span>${d.getMonth()+1}/${d.getDate()}</span><em>${r.goals?'⚽'+r.goals:''}${r.assists?' 👟'+r.assists:''}${r.is_mom?' ⭐':''}</em></div>`; }).join('')}</div>`)}
     ${card(`${ttl('승부 · 기여')}<div style="padding:8px 16px 16px">
       <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;background:#eee">${total?`<div style="width:${W/total*100}%;background:#2e7d32"></div><div style="width:${Dr/total*100}%;background:#9e9e9e"></div><div style="width:${L/total*100}%;background:#c62828"></div>`:''}</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px"><span style="color:#2e7d32;font-weight:700">${W}승</span><span style="color:#757575;font-weight:700">${Dr}무</span><span style="color:#c62828;font-weight:700">${L}패</span><span style="color:var(--muted)">승률 ${total?Math.round(W/total*100):0}%</span></div>
@@ -4223,7 +4258,7 @@ function mrRender(){
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px">주 포지션 <b style="color:var(--skyblue);font-size:15px">${posList[0][0]}</b></div>
       ${posList.slice(0,5).map(([g,q],i)=>`<div style="display:flex;align-items:center;gap:10px;margin-top:7px;font-size:13px"><span style="width:34px;font-weight:800">${g}</span><div style="flex:1;height:10px;background:#eee;border-radius:5px;overflow:hidden"><div style="width:${Math.round(q/posList[0][1]*100)}%;height:100%;background:${i===0?'var(--skyblue)':'#9fc3e8'}"></div></div><span style="flex:none;min-width:84px;text-align:right;color:var(--muted);font-size:12px;white-space:nowrap">${fq(q)} · ${Math.round(q/posTotal*100)}%</span></div>`).join('')}</div>` : '<div style="padding:10px 16px 16px;font-size:13px;color:var(--muted)">집계된 라인업 기록이 아직 없어요.</div>'}`)}
     ${card(`${ttl('경기별 기록')}<div style="padding-bottom:4px">${(D.showAll?played:played.slice(0,5)).map(r=>{ const m=r.matches, d=new Date(m.match_date), rl=m.result==='Win'?'W':m.result==='Lose'?'L':'D', cl=m.result==='Win'?'#2e7d32':m.result==='Lose'?'#c62828':'#9e9e9e', rt=ratingOf[r.match_id];
-      return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border)"><span style="width:22px;height:22px;border-radius:6px;background:${cl};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">${rl}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${luEsc(m.opponent||'')}</div><div style="font-size:11px;color:var(--muted)">${d.getMonth()+1}월 ${d.getDate()}일 · ${m.our_score}:${m.opponent_score}</div></div><div style="font-size:12px;font-weight:700;color:var(--skyblue);text-align:right">${r.goals?'⚽'+r.goals+' ':''}${r.assists?'🅰'+r.assists+' ':''}${r.is_mom?'⭐':''}</div>${rt?`<div style="width:34px;text-align:right;font-size:13px;font-weight:800;color:${rc(rt)}">${rt.toFixed(1)}</div>`:''}</div>`; }).join('')}${!D.showAll && played.length>5 ? `<button onclick="mrMore()" style="display:block;width:100%;padding:13px;background:none;border:none;border-top:1px solid var(--border);color:var(--skyblue);font:inherit;font-size:13px;font-weight:700;cursor:pointer">더보기 (${played.length-5}경기)</button>` : ''}</div>`)}
+      return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border)"><span style="width:22px;height:22px;border-radius:6px;background:${cl};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">${rl}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${luEsc(m.opponent||'')}</div><div style="font-size:11px;color:var(--muted)">${d.getMonth()+1}월 ${d.getDate()}일 · ${m.our_score}:${m.opponent_score}</div></div><div style="font-size:12px;font-weight:700;color:var(--skyblue);text-align:right">${r.goals?'⚽'+r.goals+' ':''}${r.assists?'👟'+r.assists+' ':''}${r.is_mom?'⭐':''}</div>${rt?`<div style="width:34px;text-align:right;font-size:13px;font-weight:800;color:${rc(rt)}">${rt.toFixed(1)}</div>`:''}</div>`; }).join('')}${!D.showAll && played.length>5 ? `<button onclick="mrMore()" style="display:block;width:100%;padding:13px;background:none;border:none;border-top:1px solid var(--border);color:var(--skyblue);font:inherit;font-size:13px;font-weight:700;cursor:pointer">더보기 (${played.length-5}경기)</button>` : ''}</div>`)}
     ` : card('<div style="padding:34px 16px;text-align:center;color:var(--muted);font-size:14px">이 기간에 출전 기록이 없어요.</div>')}
     <button onclick="history.replaceState({page:'home'},'');document.getElementById('my-record').remove();showPlayer(${D.p.id})" style="width:100%;margin-top:16px;padding:13px;background:#fff;border:1px solid var(--border);border-radius:12px;font:inherit;font-size:14px;font-weight:600;cursor:pointer">공개 선수 프로필 보기</button>
   </div>`;
@@ -4674,7 +4709,7 @@ function luViewRefresh(){ const el=document.getElementById('lv-wrap'); if(el) el
 function luViewInner(){
   const v = window._lvData, data = v.data, rec = v.rec, plan = data.plan, q = v.q;
   const nm = id => v.info[id] || {name:'?',number:''};
-  const tabs = plan.map((e,i)=>`<button class="lu-qtab ${i===q?'on':''}" onclick="luViewQ(${i})">${i+1}Q <span style="font-weight:400;font-size:10px">${luEsc(e.formation)}</span>${rec?`<div style="font-size:10px;font-weight:700">${luQScoreTxt(luRecOf(rec,i))}</div>`:''}</button>`).join('');
+  const tabs = plan.map((e,i)=>`<button class="lu-qtab ${i===q?'on':''}" onclick="luViewQ(${i})">${i+1}Q <span>${luEsc(e.formation)}</span>${rec?`<div style="font-size:10px;font-weight:700">${luQScoreTxt(luRecOf(rec,i))}</div>`:''}</button>`).join('');
   const e = plan[q]; const used = new Set();
   const bubbles = luSlots(e.formation).map(s=>{
     const x = e.slots[s.id]||{}; const pl = x.p ? nm(x.p) : null; const sub = x.s ? nm(x.s) : null;
@@ -4687,12 +4722,15 @@ function luViewInner(){
   const rest = restNames.map(n=>`<span class="lu-chip">${luEsc(n)}</span>`).join('') || '<span style="color:var(--muted);font-size:12px">없음</span>';
   let tu=0, tt=0; if(rec) rec.forEach(x=>{ const sc=luQScore(x); tu+=sc.us; tt+=sc.them; });
   const np = !!data.noPlan;
-  return `<div style="display:flex;gap:4px;margin-bottom:10px">${np?tabs.replace(/<span[^>]*>.*?<\/span>/g,''):tabs}</div>
+  const btn2 = v.status==='finished' ? `<button class="lv-btn" onclick="luGoEditResult(${v.matchId})">✏️ 경기 결과 수정</button>` : rec && (v.canEdit||tu||tt) ? `<button class="lv-btn pri" onclick="luSyncStats()">📊 모든 경기 종료 (스코어 합산)</button>` : '';
+  return `${rec&&(tu||tt||v.status==='finished')?`<div class="lv-sum"><span>TOTAL</span><b>${tu} : ${tt}</b></div>`:''}
+    <div style="display:flex;gap:5px;margin-bottom:10px">${np?tabs.replace(/<span[^>]*>.*?<\/span>/g,''):tabs}</div>
     ${np?'':`<div class="lu-pitch"><i class="lu-box t"></i><i class="lu-box b"></i>${bubbles}</div>
-    <div style="margin:10px 2px 0"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:4px">${rest}</div></div>`}
+    <div style="font-size:10px;color:var(--muted);margin:6px 4px 0;text-align:right">↻ 후반 교체</div>
+    <div class="lv-sec" style="margin-top:4px"><div class="lu-lb">${q+1}Q 휴식</div><div style="display:flex;flex-wrap:wrap;gap:5px">${rest}</div></div>`}
     ${v.canEdit ? luViewEditHtml(q, used) : luGoalLine(rec,q,nm)}
-    ${v.status==='finished' ? `<button onclick="luGoEditResult(${v.matchId})" style="width:100%;margin-top:10px;padding:10px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">✏️ 경기 결과 수정</button>` : rec && (v.canEdit||tu||tt) ? `<button onclick="luSyncStats()" style="width:100%;margin-top:10px;padding:10px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer">📊 모든 경기 종료 (스코어 합산)</button>` : ''}
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 4px 0"><span style="font-size:11px;color:var(--muted)">${rec?`전체 ${tu} : ${tt}`:''}${np?'':`${rec?' · ':''}↻ 후반 교체`}</span>${np?'':`<span style="display:flex;gap:6px"><button onclick="luDownloadView()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">📥 이미지 저장</button><button onclick="luDownloadViewQ()" style="padding:7px 12px;background:#fff;color:var(--skyblue);border:1px solid var(--skyblue);border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer">🖼 쿼터별 4장</button></span>`}</div>`;
+    ${np?'':`<div style="display:flex;gap:6px;margin:12px 2px 0"><button class="lv-btn" onclick="luDownloadView()">📥 이미지 저장</button><button class="lv-btn" onclick="luDownloadViewQ()">🖼 쿼터별 4장</button></div>`}
+    ${btn2?`<div style="display:flex;margin:6px 2px 0">${btn2}</div>`:''}`;
 }
 function luViewEditHtml(q, used){
   const v = window._lvData, nm = id => v.info[id] || {name:'?'};
@@ -4754,7 +4792,7 @@ function luViewThem(q,d){ luRecMutate(q, c=>{ c.them = Math.max(0,(c.them||0)+d)
 function luGoalLine(rec,q,nm){
   const r = luRecOf(rec,q); if(!rec || (!r.goals.length && !r.them)) return '';
   const gl = r.goals.map(g=>luEsc(luGoalPlain(g,nm)).replace(' 👟','&nbsp;&nbsp;👟')).join('<br>');
-  return `<div style="margin:10px 2px 0;font-size:13px"><b style="color:var(--skyblue)">${q+1}Q ${luQScore(r).us} : ${luQScore(r).them}</b><div style="margin-top:4px;line-height:1.6">${gl}</div></div>`;
+  return `<div class="lv-goals"><h4><span>${q+1}Q 기록</span><em>${luQScore(r).us} : ${luQScore(r).them}</em></h4>${gl?`<p>${gl}</p>`:''}</div>`;
 }
 function luIsLive(m){
   if(!m || m.status!=='upcoming' || !m.match_date || !m.match_time) return false;
@@ -4784,7 +4822,7 @@ function luBubble(o){
   return `<div class="lu-slot" style="left:${o.x}%;top:${o.y}%;${o.click?'':'cursor:default'}" ${o.click?`onclick="${o.click}"`:''}>
     <div class="lu-av" style="${o.ring?`border-color:${o.ring};`:''}${o.empty?'background:#9aa4b2':''}"><span>${luEsc(o.number??'')}</span>${o.photo?`<img src="${luEsc(o.photo)}" alt="" onerror="this.remove()">`:''}
       ${o.sub?'<i class="lu-bsub">↻</i>':''}${a?`<span class="lu-bgrp a">${'<i>👟</i>'.repeat(Math.min(a,5))}</span>`:''}${(g||og)?`<span class="lu-bgrp g">${'<i>⚽</i>'.repeat(Math.min(g,5))}${'<i class="og">⚽</i>'.repeat(Math.min(og,5))}</span>`:''}</div>
-    <div class="lu-nm">${o.empty?'':`<span class="no">${luEsc(o.number??'')}</span>`}${luEsc(o.name)}</div>
+    <div class="lu-nm"${o.empty?' style="background:none;opacity:.8"':''}>${(o.empty||!o.photo)?'':`<span class="no">${luEsc(o.number??'')}</span>`}${luEsc(o.name)}</div>
     ${o.sub?`<div class="lu-nsub">↻ ${luEsc(o.sub.name)}${o.sub.tag||''}</div>`:''}
     <div class="lu-ps">${luEsc(o.slot||'')}</div></div>`;
 }
@@ -5428,7 +5466,7 @@ function luAppearText(plan,pid,q){
 }
 function luRenderPlan(){
   const plan = LU.plan, q = LU.q;
-  const tabs = [0,1,2,3].map(i=>`<button class="lu-qtab ${i===q?'on':''}" onclick="LU.q=${i};luRender()">${i+1}Q <span style="font-weight:400;font-size:10px">${luEsc(plan[i].formation)}</span><div style="font-size:10px;font-weight:700">${luQScoreTxt(luRecOf(LU.rec,i))}</div></button>`).join('');
+  const tabs = [0,1,2,3].map(i=>`<button class="lu-qtab ${i===q?'on':''}" onclick="LU.q=${i};luRender()">${i+1}Q <span>${luEsc(plan[i].formation)}</span><div style="font-size:10px;font-weight:700">${luQScoreTxt(luRecOf(LU.rec,i))}</div></button>`).join('');
   const slots = luSlots(plan[q].formation);
   const bubbles = slots.map(s=>{
     const e = plan[q].slots[s.id]; const pl = e&&luPlayer(e.p); const sub = e&&e.s&&luPlayer(e.s);
