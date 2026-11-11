@@ -2157,6 +2157,8 @@ function ovClose(id){ const el=document.getElementById(id); if(el) el.remove(); 
 window.addEventListener('popstate', (e) => {
   const state = e.state;
   const _ovs = ['my-record','profile-page'].map(i=>document.getElementById(i)).filter(Boolean);
+  const _nw = document.getElementById('news-overlay');
+  if(_nw && _nw.style.display==='block'){ newsHide(); if(!_ovs.length) return; }
   if(_ovs.length){ _ovs.forEach(el=>el.remove()); return; }
   if(state && state.page==='ov') return;
   if (!state || state.page === 'home') {
@@ -4357,9 +4359,12 @@ function newsOpen(i, b){
   ov.innerHTML = `<div style="position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center"><button onclick="newsClose()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">← 닫기</button><span style="margin-left:auto">${admIcon('✏️',`newsClose();newsEdit(${i},true,'${b}')`,'수정','수정')}</span></div>
     ${p.photo?`<div style="padding:14px 16px 0"><img src="${p.photo}" referrerpolicy="no-referrer" onerror="this.parentNode.remove()" style="max-width:100%;width:auto;height:auto;max-height:55vh;display:block;margin:0 auto;border-radius:10px" alt=""></div>`:''}
     <div style="padding:18px 16px 60px"><div style="font-size:19px;font-weight:800;line-height:1.35;color:var(--text)">${luEsc(p.title)}</div><div style="font-size:12px;color:var(--muted);margin:6px 0 16px">${newsDateTxt(p.date)}</div><div style="font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap">${newsLinkify(p.body)}</div>${(p.link&&/^https?:\/\//.test(p.link))?`<a href="${luEsc(p.link)}" target="_blank" rel="noopener noreferrer" onclick="return newsGo(this)" style="display:block;margin-top:22px;padding:13px;text-align:center;background:var(--skyblue);color:#fff;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">원문 보기 ↗ ${luEsc(p.source||'')}</a>`:''}</div>`;
+  const wasOpen = ov.style.display==='block';
   ov.style.display='block'; ov.scrollTop=0; document.body.style.overflow='hidden';
+  if(!wasOpen) ovPush('news-overlay');
 }
-function newsClose(){ const ov=document.getElementById('news-overlay'); if(ov) ov.style.display='none'; document.body.style.overflow=''; }
+function newsHide(){ const ov=document.getElementById('news-overlay'); if(ov) ov.style.display='none'; document.body.style.overflow=''; }
+function newsClose(){ newsHide(); if(history.state&&history.state.page==='ov') history.back(); }
 
 // 관리자: 목록 / 편집
 async function newsAdminLoad(){
