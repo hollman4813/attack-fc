@@ -254,6 +254,46 @@
   .rs{background:#fff;border-radius:18px;margin-top:12px;padding:0 18px;box-shadow:0 1px 2px rgba(15,40,80,.05),0 6px 18px rgba(15,40,80,.06)}
   .rs-sec{padding:18px 0 18px}
   .rs-sec+.rs-sec{border-top:1px solid #e6ebf2}
+  /* 내 기록: 자세한 통계 */
+  .mr-vs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .mr-vs>div{background:#f4f7fb;border-radius:12px;padding:12px 12px 10px;text-align:center}
+  .mr-vs>div.on{background:#1a3a6b;color:#fff}
+  .mr-vs span{display:block;font-size:12px;font-weight:700;color:#51607a}
+  .mr-vs .on span,.mr-vs .on i,.mr-vs .on em{color:var(--team-sky-soft)}
+  .mr-vs b{display:block;font-family:'Teko','Noto Sans KR',sans-serif;font-size:44px;font-weight:600;line-height:.95;margin-top:6px;color:#1a3a6b}
+  .mr-vs .on b{color:var(--team-gold)}
+  .mr-vs b small{font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:800}
+  .mr-vs i{display:block;font-style:normal;font-size:11px;color:var(--muted)}
+  .mr-vs em{display:block;font-style:normal;font-size:11px;color:var(--muted);margin-top:6px}
+  .mr-bars{display:flex;gap:6px;align-items:flex-end;height:130px}
+  .mr-bars>div{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;height:100%}
+  .mr-bars em{font-style:normal;font-family:'Teko','Noto Sans KR',sans-serif;font-size:18px;font-weight:600;line-height:1;color:#1a3a6b;height:18px}
+  .mr-bars p{flex:1;width:100%;max-width:28px;display:flex;flex-direction:column-reverse;margin:2px 0 4px;background:#f4f7fb;border-radius:6px;overflow:hidden}
+  .mr-bars p i{display:block}
+  .mr-bars i.g,.mr-leg i.g{background:#1a3a6b}.mr-bars i.a,.mr-leg i.a{background:#7fb6ea}
+  .mr-bars span{font-size:11px;color:var(--muted);white-space:nowrap}
+  .mr-leg{display:flex;gap:14px;justify-content:flex-end;margin-top:8px;font-size:11px;color:var(--muted)}
+  .mr-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+  .mr-q{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .mr-q>div{background:#f4f7fb;border-radius:12px;text-align:center;padding:10px 0 8px}
+  .mr-q>div.on{background:var(--team-gold)}
+  .mr-q span{display:block;font-size:12px;font-weight:800;color:#51607a}
+  .mr-q b{display:block;font-family:'Teko','Noto Sans KR',sans-serif;font-size:38px;font-weight:600;line-height:.95;margin-top:4px;color:#1a3a6b}
+  .mr-q i{display:block;font-style:normal;font-size:10px;color:var(--muted);white-space:nowrap}
+  .mr-q .on span,.mr-q .on i{color:#0f2850}
+  .mr-combo{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .mr-combo span{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px}
+  .mr-combo p{display:flex;align-items:baseline;justify-content:space-between;padding:6px 0;border-top:1px solid #eef1f5;margin:0}
+  .mr-combo p b{font-size:14px;font-weight:700;color:#51607a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mr-combo p em{font-style:normal;font-family:'Teko','Noto Sans KR',sans-serif;font-size:22px;font-weight:600;line-height:1;color:#51607a}
+  .mr-combo p.on b,.mr-combo p.on em{color:#1a3a6b}
+  .mr-combo p i{font-style:normal;color:var(--muted)}
+  .mr-opp-p{font-size:13px;font-weight:700;color:#1a3a6b;white-space:nowrap}
+  .mr-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .mr-tiles>div{background:#f4f7fb;border-radius:12px;padding:11px 12px 10px;min-width:0}
+  .mr-tiles span{display:block;font-size:11px;font-weight:700;color:#51607a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mr-tiles b{display:block;font-size:20px;font-weight:800;color:#1a3a6b;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mr-tiles i{display:block;font-style:normal;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:15px}
   /* 선수 상세: 개인기록 카드 + 기록지 */
   .pd-bar{display:flex;justify-content:space-between;align-items:center;margin:0 2px 10px;min-height:32px}
   .pd-bar>button{background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:6px 0}
@@ -3483,7 +3523,6 @@ async function showPlayer(playerId) {
   pdRender();
   // 어택포인트·출석은 따로 계산되는 대로 채운다
   getPower().then(list => { if(!window._pd || window._pd.p.id!==p.id) return; const x = (list||[]).find(r=>r.id===p.id); window._pd.power = x ? Math.round(x.power) : null; pdRender(); }).catch(()=>{});
-  api(`view_player_attendance?select=*&id=eq.${playerId}`).then(a => { if(!window._pd || window._pd.p.id!==p.id) return; window._pd.attend = a[0] || null; pdRender(); }).catch(()=>{});
 }
 function pdMore(){ if(window._pd){ window._pd.showAll = true; pdRender(); } }
 function pdRender(){
@@ -3498,8 +3537,6 @@ function pdRender(){
   const msBy = {}; D.matchStats.forEach(r=>msBy[r.match_id]=r);
   const ratingOf = {};
   D.votes.forEach(v=>{ if(!v.matches) return; ratingOf[v.match_id] = ratingFor(v, msBy[v.match_id]||{}, p.id, p.position); });
-  const seasonRated = D.votes.filter(v=>v.matches && v.matches.season_id===currentSeasonId).map(v=>ratingOf[v.match_id]);
-  const avg = seasonRated.length ? seasonRated.reduce((t,x)=>t+x,0)/seasonRated.length : null;
   const rc = v => v>=8?'#2e7d32':v>=6?'#f5a623':'#c62828';
   // 프로필
   let age = '-';
@@ -3512,8 +3549,6 @@ function pdRender(){
   const posLine = [posMap[p.position]||p.position, ...subPos].filter(Boolean).join(' · ');
   const stTag = st==='injured' ? ' <span class="sq-tag hurt">부상</span>' : st==='resting' ? ' <span class="sq-tag rest">휴식</span>' : '';
   const nick = p.nickname ? ` <span class="sq-tag role">${luEsc(p.nickname)}</span>` : '';
-  // 승무패
-  const W = played.filter(r=>r.matches.result==='Win').length, Dr = played.filter(r=>r.matches.result==='Draw').length, L = played.filter(r=>r.matches.result==='Lose').length;
   // 포지션: 라인업 기록(쿼터 단위) 우선, 없으면 등록된 세부 포지션
   const plans = (_rctx && _rctx.plans) || {};
   const posQ = {};
@@ -3536,9 +3571,6 @@ function pdRender(){
     posHtml = `<div class="rs-pos"><div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${subPos.map((sp,i)=>{ const c = subXY[sp]||[50,50]; return `<u class="${i===0?'on':''}" style="left:${c[0]}%;top:${c[1]}%;width:${i?24:32}px;height:${i?24:32}px">${sp}</u>`; }).join('')}</div>
       <div class="rs-plist">${subPos.map((sp,i)=>`<div class="${i===0?'on':''}"><b>${sp}</b><span>${subName[sp]||''}</span><em style="font-family:inherit;font-size:12px;font-weight:700">${i===0?'주':'부'}</em></div>`).join('')}</div></div>`;
   } else posHtml = '<div style="font-size:13px;color:var(--muted)">등록된 포지션이 없어요.</div>';
-  // 출석
-  const at = D.attend;
-  const attendHtml = at ? `<div class="rs-rank pd-att">${[['참석',at.참석경기,`/ ${at.총경기}경기`],['참석률',`${at.참석률}<small>%</small>`,''],['경기당 득점',at.경기당골,''],['경기당 도움',at.경기당어시스트,'']].map(([l,v,s])=>`<div><span>${l}</span><b>${v??'-'}</b><i>${s}</i></div>`).join('')}</div>` : '<div style="font-size:13px;color:var(--muted)">집계 중...</div>';
   // 경기별 기록
   const list = D.showAll ? fin : fin.slice(0,5);
   const rows = list.map(r=>{ const m = r.matches, d = new Date(m.match_date), k = m.result==='Win'?'w':m.result==='Lose'?'l':'d', rt = ratingOf[r.match_id];
@@ -3559,10 +3591,7 @@ function pdRender(){
         <div class="tc-stats">${[[GP,'출전'],[G,'득점'],[A,'도움'],[MOM,'MOM']].map(([v,l])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}<div class="tc-tot"><span>어택P</span><b>${D.power!=null?D.power:'-'}</b></div></div>
       </div>
       <div class="rs">
-        ${sec('평균 레이팅', `<div class="rs-rate"><b style="color:${avg!=null?rc(avg):'var(--muted)'}">${avg!=null?avg.toFixed(1):'-'}</b><div class="rs-rule">${avg!=null?`<i style="left:${Math.min(100,avg*10)}%;border-top-color:${rc(avg)}"></i>`:''}<div></div><p><span>0</span><span>5</span><span>10</span></p></div></div><div class="rs-note">${seasonRated.length?seasonRated.length+'경기 평가 기준':'평가된 경기가 아직 없어요'}</div>`)}
         ${sec('포지션', posHtml)}
-        ${sec('출석', attendHtml)}
-        ${GP ? sec('승부', `<div class="pd-wdl"><i style="flex:${W||0};background:#2e7d32"></i><i style="flex:${Dr||0};background:#9e9e9e"></i><i style="flex:${L||0};background:#c62828"></i></div><div class="pd-wdl-l"><span style="color:#2e7d32">${W}승</span><span style="color:#757575">${Dr}무</span><span style="color:#c62828">${L}패</span><span class="r">승률 ${Math.round(W/GP*100)}%</span></div>`) : ''}
         ${sec('경기별 기록', (rows || '<div style="font-size:13px;color:var(--muted);padding:6px 0">출전 기록이 없어요.</div>') + (!D.showAll && fin.length>5 ? `<button class="rs-more" onclick="pdMore()">더보기 (${fin.length-5}경기)</button>` : ''))}
       </div>
     </div>`;
@@ -4085,21 +4114,23 @@ async function myRecordOpen(){
   let ov = document.getElementById('my-record');
   if(!ov){ ov = document.createElement('div'); ov.id='my-record'; ov.className='mem-ov'; ov.style.cssText='z-index:9600;background:var(--bg)'; document.body.appendChild(ov); ovPush('my-record'); }
   ov.innerHTML = `<div style="max-width:440px;margin:0 auto"><button onclick="ovClose('my-record')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button><div style="padding:60px;text-align:center;color:var(--muted)">기록을 불러오는 중...</div></div>`;
-  let me = [], all = [], votes = [], pl = [], lu = [];
+  let me = [], all = [], votes = [], pl = [], lu = [], mt = [], pn = [];
   try{
-    [me, all, votes, pl, lu] = await Promise.all([
+    [me, all, votes, pl, lu, , mt, pn] = await Promise.all([
       api(`match_stats?select=*,matches(id,match_date,opponent,our_score,opponent_score,result,season_id,goals_conceded,status)&player_id=eq.${pid}`),
-      api('match_stats?select=player_id,attended,goals,assists,is_mom,matches(season_id,status)'),
+      api('match_stats?select=player_id,match_id,attended,goals,assists,is_mom,matches(season_id,status)'),
       api(`match_votes?select=*,matches(goals_conceded,our_score,opponent_score,season_id)&player_id=eq.${pid}`),
       api(`players?select=*&id=eq.${pid}`),
       api(`${LU_STORE}?select=key,data&key=like.match_*`).catch(()=>[]),
-      ratingCtxLoad()
+      ratingCtxLoad(),
+      api('matches?select=id,match_date,opponent,result,season_id,status,our_score,opponent_score').catch(()=>[]),
+      api('players?select=id,name').catch(()=>[])
     ]);
   }catch(e){}
   const p = pl[0]; if(!p){ ov.remove(); alert('선수 정보를 불러오지 못했어요.'); return; }
   const fin = r => r.matches && r.matches.status==='finished';
   const plans = {}; (lu||[]).forEach(r=>{ const m = /^match_(\d+)$/.exec(r.key); if(m && r.data && r.data.plan) plans[+m[1]] = r.data.plan; });
-  window._mr = { p, me: me.filter(fin), all: all.filter(fin), votes, plans, scope: currentSeasonId, ranking: null, showAll: false };
+  window._mr = { p, me: me.filter(fin), all: all.filter(fin), votes, plans, matches: (mt||[]).filter(m=>m.status==='finished'), names: Object.fromEntries((pn||[]).map(x=>[x.id,x.name])), scope: currentSeasonId, ranking: null, showAll: false };
   mrRender();
   calcPowerRanking().then(r => { if(window._mr){ window._mr.ranking = r; mrRender(); } }).catch(()=>{});
 }
@@ -4159,6 +4190,37 @@ function mrRender(){
   // 함께한 기간
   let together = '';
   if(D.p.join_date){ const days = Math.floor((Date.now()-new Date(D.p.join_date))/86400000); if(days>=0) together = days>=365 ? `함께한 지 ${Math.floor(days/365)}년 ${Math.floor(days%365/30)}개월` : `함께한 지 ${days}일`; }
+  // ── 더 자세한 기록 ──
+  const byDate = (a,b)=>new Date(a.match_date)-new Date(b.match_date);
+  const teamM = (D.matches||[]).filter(m=>D.scope==='all'||m.season_id===D.scope).sort(byDate);
+  const playedIds = new Set(played.map(r=>r.match_id));
+  const TM = teamM.length, attRate = TM ? Math.round(GP/TM*100) : null;
+  let cs = 0, bestAtt = 0; teamM.forEach(m=>{ if(playedIds.has(m.id)){ cs++; bestAtt = Math.max(bestAtt,cs); } else cs = 0; });
+  const curAtt = cs;
+  const without = teamM.filter(m=>!playedIds.has(m.id)), withM = teamM.filter(m=>playedIds.has(m.id));
+  const tstat = arr => arr.length ? { n:arr.length, wr:Math.round(arr.filter(m=>m.result==='Win').length/arr.length*100), gf:(arr.reduce((t,m)=>t+(m.our_score||0),0)/arr.length).toFixed(1), ga:(arr.reduce((t,m)=>t+(m.opponent_score||0),0)/arr.length).toFixed(1) } : null;
+  const tWith = tstat(withM), tWo = tstat(without);
+  // 흐름: 시즌이면 월별, 통산이면 시즌별
+  const flow = {}; [...played].reverse().forEach(r=>{ const d = new Date(r.matches.match_date); const k = D.scope==='all' ? String(r.matches.season_id) : String(d.getMonth()+1); const o = flow[k] || (flow[k] = {g:0,a:0,n:0}); o.g += r.goals||0; o.a += r.assists||0; o.n++; });
+  const flowL = Object.entries(flow), flowMax = Math.max(1, ...flowL.map(([,o])=>o.g+o.a));
+  // 쿼터별 공격포인트 · 득점 콤비 (쿼터 기록이 있는 경기만)
+  const recs = (_rctx && _rctx.recs) || {};
+  const qs = [0,0,0,0].map(()=>({g:0,a:0})), helpedMe = {}, iHelped = {}; let recGames = 0;
+  played.forEach(r=>{ const rec = recs[r.match_id]; if(!rec) return; recGames++;
+    for(let q=0;q<4;q++){ const x = luQStat(rec,q,D.p.id); qs[q].g += x.g; qs[q].a += x.a;
+      luRecOf(rec,q).goals.forEach(g=>{ if(g.og) return; if(g.s===D.p.id && g.a!=null) helpedMe[g.a] = (helpedMe[g.a]||0)+1; if(g.a===D.p.id && g.s!=null) iHelped[g.s] = (iHelped[g.s]||0)+1; }); } });
+  const qMax = Math.max(0, ...qs.map(x=>x.g+x.a)), qBest = qMax ? qs.findIndex(x=>x.g+x.a===qMax) : -1;
+  const topOf = o => Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([id,n])=>[D.names[id]||luNm(+id),n]);
+  const combo1 = topOf(helpedMe), combo2 = topOf(iHelped);
+  // 상대팀별
+  const vsT = {}; played.forEach(r=>{ const m = r.matches, o = vsT[m.opponent] || (vsT[m.opponent] = {n:0,w:0,d:0,l:0,g:0,a:0}); o.n++; if(m.result==='Win') o.w++; else if(m.result==='Lose') o.l++; else o.d++; o.g += r.goals||0; o.a += r.assists||0; });
+  const vsL = Object.entries(vsT).sort((a,b)=>b[1].n-a[1].n || (b[1].g+b[1].a)-(a[1].g+a[1].a)).slice(0,5);
+  // 기록실
+  const hat = played.filter(r=>(r.goals||0)>=3).length, multi = played.filter(r=>(r.goals||0)>=2).length;
+  let ub = 0, ubBest = 0; chrono.forEach(r=>{ if(r.matches.result!=='Lose'){ ub++; ubBest = Math.max(ubBest,ub); } else ub = 0; });
+  const topRated = rated.length ? rated.reduce((b,x)=>x.r>b.r?x:b) : null;
+  const topRatedM = topRated ? (D.me.find(r=>r.match_id===topRated.id)||{}).matches : null;
+  const firstG = chrono.find(r=>r.goals>0);
   const POS = {GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수'};
   const seasons = [...new Set(D.me.map(r=>r.matches.season_id))].sort((a,b)=>b-a);
   const pill = (v,t) => { const on = String(D.scope)===String(v); return `<button onclick="mrScope('${v}')" style="padding:7px 14px;border-radius:20px;border:1.5px solid ${on?'var(--skyblue)':'var(--border)'};background:${on?'var(--skyblue)':'#fff'};color:${on?'#fff':'var(--text)'};font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">${t}</button>`; };
@@ -4189,11 +4251,21 @@ function mrRender(){
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px"><span style="color:#2e7d32;font-weight:700">${W}승</span><span style="color:#757575;font-weight:700">${Dr}무</span><span style="color:#c62828;font-weight:700">${L}패</span><span style="color:var(--muted)">승률 ${total?Math.round(W/total*100):0}%</span></div>
       ${involve!=null?`<div style="margin-top:14px;font-size:12px;color:var(--muted)">내가 뛴 경기 팀 득점 ${teamGoals}골 중 <b style="color:var(--text)">${G+A}골에 관여</b> (득점 ${G} + 도움 ${A})</div><div style="height:8px;background:#eee;border-radius:4px;margin-top:6px;overflow:hidden"><div style="width:${Math.min(100,involve)}%;height:100%;background:var(--skyblue)"></div></div><div style="text-align:right;font-size:12px;font-weight:800;color:var(--skyblue);margin-top:4px">${involve}%</div>`:''}
     </div>`)}
-    ${(bestGame&&bestGame.goals>0)||fav||best>1 ? card(`${ttl('하이라이트')}<div style="padding:2px 0 0;font-size:13px;line-height:2">
-      ${bestGame&&bestGame.goals>0?`<div>🔥 한 경기 최다 득점 <b>${bestGame.goals}골</b> <span style="color:var(--muted)">vs ${luEsc(bestGame.matches.opponent)}</span></div>`:''}
-      ${fav?`<div>🎯 가장 많이 넣은 상대 <b>${luEsc(fav[0])}</b> <span style="color:var(--muted)">${fav[1]}골</span></div>`:''}
-      ${best>1?`<div>🔗 연속 공격포인트 <b>${best}경기</b></div>`:''}
-    </div>`) : ''}
+    ${TM ? card(`${ttl('출석')}<div class="rs-rank">${[['참석',GP,`/ ${TM}경기`],['참석률',`${attRate}<small>%</small>`,''],['연속 출석',`${curAtt}<small>경기</small>`,'지금'],['최장 연속',`${bestAtt}<small>경기</small>`,'']].map(([l,v,x])=>`<div><span>${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`) : ''}
+    ${tWith && tWo ? card(`${ttl('내가 뛸 때 vs 안 뛸 때')}<div class="mr-vs"><div class="on"><span>내가 뛴 ${tWith.n}경기</span><b>${tWith.wr}<small>%</small></b><i>승률</i><em>경기당 ${tWith.gf}득 ${tWith.ga}실</em></div><div><span>안 뛴 ${tWo.n}경기</span><b>${tWo.wr}<small>%</small></b><i>승률</i><em>경기당 ${tWo.gf}득 ${tWo.ga}실</em></div></div><div class="rs-note">${tWith.wr>tWo.wr?`내가 뛰면 승률이 <b style="color:#2e7d32">${tWith.wr-tWo.wr}%p</b> 올라가요 💪`:tWith.wr<tWo.wr?`승률 차이 ${tWo.wr-tWith.wr}%p · 다음 경기에서 뒤집어 봐요`:'뛰든 안 뛰든 승률이 같아요'}</div>`) : ''}
+    ${flowL.length>1 ? card(`${ttl(D.scope==='all'?'시즌별 공격포인트':'월별 공격포인트')}<div class="mr-bars">${flowL.map(([k,o])=>`<div><em>${o.g+o.a||''}</em><p><i class="a" style="height:${o.a/flowMax*100}%"></i><i class="g" style="height:${o.g/flowMax*100}%"></i></p><span>${D.scope==='all'?k:k+'월'}</span></div>`).join('')}</div><div class="mr-leg"><span><i class="g"></i>득점</span><span><i class="a"></i>도움</span></div>`) : ''}
+    ${qMax ? card(`${ttl('쿼터별 공격포인트')}<div class="mr-q">${qs.map((x,i)=>`<div class="${i===qBest?'on':''}"><span>${i+1}Q</span><b>${x.g+x.a}</b><i>⚽${x.g} 🅰${x.a}</i></div>`).join('')}</div><div class="rs-note"><b style="color:var(--text)">${qBest+1}쿼터의 사나이</b> · 쿼터 기록이 있는 ${recGames}경기 기준</div>`) : ''}
+    ${combo1.length||combo2.length ? card(`${ttl('득점 콤비')}<div class="mr-combo"><div><span>내 골을 도운 선수</span>${combo1.length?combo1.map(([n,c],i)=>`<p class="${i?'':'on'}"><b>${luEsc(n)}</b><em>${c}</em></p>`).join(''):'<p><i>-</i></p>'}</div><div><span>내가 도운 선수</span>${combo2.length?combo2.map(([n,c],i)=>`<p class="${i?'':'on'}"><b>${luEsc(n)}</b><em>${c}</em></p>`).join(''):'<p><i>-</i></p>'}</div></div>`) : ''}
+    ${vsL.length ? card(`${ttl('상대팀별 기록')}${vsL.map(([n,o])=>`<div class="rs-row mr-opp"><div style="flex:1;min-width:0"><div class="pd-opp">${luEsc(n)}</div><div class="pd-sub">${o.n}전 ${o.w}승 ${o.d}무 ${o.l}패</div></div><div class="mr-opp-p">${o.g?'⚽'+o.g:''}${o.a?' 🅰'+o.a:''}${!o.g&&!o.a?'-':''}</div></div>`).join('')}`) : ''}
+    ${card(`${ttl('기록실')}<div class="mr-tiles">${[
+      topRated ? ['🏅','최고 평점',topRated.r.toFixed(1),topRatedM?'vs '+luEsc(topRatedM.opponent||''):''] : null,
+      bestGame && bestGame.goals>0 ? ['🔥','한 경기 최다 득점',bestGame.goals+'골','vs '+luEsc(bestGame.matches.opponent||'')] : null,
+      ['🎩','해트트릭',hat+'회',multi?`멀티골 ${multi}회`:''],
+      ['🔗','연속 공격포인트',best+'경기','최장 기록'],
+      ['🛡️','무패 행진',ubBest+'경기','내가 뛴 경기 기준'],
+      fav ? ['🎯','가장 많이 넣은 상대',luEsc(fav[0]),fav[1]+'골'] : null,
+      firstG ? ['⚽','이 기간 첫 골',(d=>`${d.getMonth()+1}/${d.getDate()}`)(new Date(firstG.matches.match_date)),'vs '+luEsc(firstG.matches.opponent||'')] : null
+    ].filter(Boolean).map(([ic,l,v,x])=>`<div><span>${ic} ${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`)}
     ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div class="rs-pos">
       <div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/posList[0][1]); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?g:''}</u>`; }).join('')}</div>
       <div class="rs-plist">${posList.slice(0,5).map(([g,q],i)=>`<div class="${i===0?'on':''}"><b>${g}</b><span>${fq(q)}</span><em>${Math.round(q/posTotal*100)}%</em></div>`).join('')}</div>
