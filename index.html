@@ -4244,6 +4244,10 @@ function mrRender(){
     ${GP ? `<div class="rs">
     ${TM ? card(`${ttl('출석')}<div class="rs-rank">${[['참석',GP,`/ ${TM}경기`],['참석률',`${attRate}<small>%</small>`,''],['연속 출석',`${curAtt}<small>경기</small>`,'지금'],['최장 연속',`${bestAtt}<small>경기</small>`,'']].map(([l,v,x])=>`<div><span>${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`) : ''}
     ${card(`${ttl('팀 내 순위')}<div class="rs-rank">${ranks.map(([n,r,v])=>`<div class="${r&&r<=3?'top':''}"><span>${n}</span><b>${r?r+'<small>위</small>':'-'}</b><i>${v}${n==='출전'?'경기':n==='득점'?'골':n==='도움'?'개':''}</i></div>`).join('')}</div>`)}
+    ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div class="rs-pos">
+      <div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/posList[0][1]); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?g:''}</u>`; }).join('')}</div>
+      <div class="rs-plist">${posList.slice(0,5).map(([g,q],i)=>`<div class="${i===0?'on':''}"><b>${g}</b><span>${fq(q)}</span><em>${Math.round(q/posTotal*100)}%</em></div>`).join('')}</div>
+    </div>` : '<div style="padding:4px 0 6px;font-size:13px;color:var(--muted)">집계된 라인업 기록이 아직 없어요.</div>'}`)}
     ${card(`${ttl('평균 레이팅')}<div class="rs-rate"><b style="color:${avg!=null?rc(avg):'var(--muted)'}">${avg!=null?avg.toFixed(1):'-'}</b><div class="rs-rule">${avg!=null?`<i style="left:${Math.min(100,avg*10)}%;border-top-color:${rc(avg)}"></i>`:''}<div></div><p><span>0</span><span>5</span><span>10</span></p></div></div><div class="rs-note">${rated.length?rated.length+'경기 평가 기준':'평가된 경기가 아직 없어요'}</div>`)}
     ${card(`${ttl('커리어 하이')}<div class="mr-tiles">${[
       topRated ? ['🏅','최고 평점',topRated.r.toFixed(1),topRatedM?'vs '+luEsc(topRatedM.opponent||''):''] : null,
@@ -4256,10 +4260,6 @@ function mrRender(){
     ].filter(Boolean).map(([ic,l,v,x])=>`<div><span>${ic} ${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`)}
     ${card(`${ttl('최근 폼')}<div class="mr-form">${form.map(r=>{ const m=r.matches, d=new Date(m.match_date), k = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; const rt = ratingOf[r.match_id];
       return `<div><u class="${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><b style="color:${rt?rc(rt):'var(--muted)'}">${rt?rt.toFixed(1):'-'}</b><span>${d.getMonth()+1}/${d.getDate()}</span><em>${r.goals?'⚽'+r.goals:''}${r.assists?' 🅰'+r.assists:''}${r.is_mom?' ⭐':''}</em></div>`; }).join('')}</div>`)}
-    ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div class="rs-pos">
-      <div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/posList[0][1]); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?g:''}</u>`; }).join('')}</div>
-      <div class="rs-plist">${posList.slice(0,5).map(([g,q],i)=>`<div class="${i===0?'on':''}"><b>${g}</b><span>${fq(q)}</span><em>${Math.round(q/posTotal*100)}%</em></div>`).join('')}</div>
-    </div>` : '<div style="padding:4px 0 6px;font-size:13px;color:var(--muted)">집계된 라인업 기록이 아직 없어요.</div>'}`)}
     ${card(`${ttl('승부와 기여')}<div style="padding:6px 0 2px">
       <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;background:#eee">${total?`<div style="width:${W/total*100}%;background:#2e7d32"></div><div style="width:${Dr/total*100}%;background:#9e9e9e"></div><div style="width:${L/total*100}%;background:#c62828"></div>`:''}</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px"><span style="color:#2e7d32;font-weight:700">${W}승</span><span style="color:#757575;font-weight:700">${Dr}무</span><span style="color:#c62828;font-weight:700">${L}패</span><span style="color:var(--muted)">승률 ${total?Math.round(W/total*100):0}%</span></div>
