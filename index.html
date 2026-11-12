@@ -254,6 +254,26 @@
   .rs{background:#fff;border-radius:18px;margin-top:12px;padding:0 18px;box-shadow:0 1px 2px rgba(15,40,80,.05),0 6px 18px rgba(15,40,80,.06)}
   .rs-sec{padding:18px 0 18px}
   .rs-sec+.rs-sec{border-top:1px solid #e6ebf2}
+  /* 선수 상세: 개인기록 카드 + 기록지 */
+  .pd-bar{display:flex;justify-content:space-between;align-items:center;margin:0 2px 10px;min-height:32px}
+  .pd-bar>button{background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:6px 0}
+  .pd-pos{position:relative;font-size:12px;color:var(--team-sky-soft);margin-top:8px;line-height:1.5}
+  .pd-info{position:relative;display:grid;grid-template-columns:repeat(4,1fr);margin-top:14px;padding:10px 0;border-top:1px solid rgba(255,255,255,.14);border-bottom:1px solid rgba(255,255,255,.14)}
+  .pd-info div{text-align:center;min-width:0}
+  .pd-info span{display:block;font-size:10px;color:var(--team-sky-soft)}
+  .pd-info b{display:block;font-size:13px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pd-res{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;flex:none;text-decoration:none;color:#fff;font-size:11px;font-weight:800}
+  .pd-res.w{background:#2e7d32}.pd-res.l{background:#c62828}.pd-res.d{background:#9e9e9e}
+  .pd-opp{font-size:14px;font-weight:700;color:var(--team-deep,#0f2850);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pd-opp span{color:var(--muted);font-weight:500}
+  .pd-sub{font-size:11px;color:var(--muted);margin-top:1px}
+  .pd-wdl{display:flex;height:12px;border-radius:6px;overflow:hidden;background:#edf0f5}
+  .pd-wdl i{display:block}
+  .pd-wdl-l{display:flex;justify-content:space-between;margin-top:8px;font-size:14px;font-weight:800}
+  .pd-wdl-l .r{color:var(--muted);font-weight:500}
+  #player-detail .rs{margin-top:12px}
+  .rs-rank.pd-att b{font-size:clamp(28px,9vw,40px)}
+  .rs-rank.pd-att span{white-space:nowrap;font-size:11px}
   /* 스쿼드: 개인기록 기록지와 같은 시트 */
   .sq-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:2px 2px 10px}
   .sq-cnt{font-size:12px;color:var(--muted);margin-top:3px}
@@ -3446,316 +3466,106 @@ async function showPlayer(playerId) {
   document.getElementById('player-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   window.scrollTo(0, 0);   // 목록 스크롤 위치가 남아 뒤로 버튼이 가려지지 않게
 
-  let players = [], stats = [], matchStats = [];
+  let players = [], matchStats = [], votes = [];
   try {
-    [players, stats, matchStats] = await Promise.all([
+    [players, matchStats, votes] = await Promise.all([
       api(`players?select=*&id=eq.${playerId}`),
-      api('view_season_stats?select=*'),
-      api(`match_stats?select=*,matches(match_date,opponent,our_score,opponent_score,result)&player_id=eq.${playerId}&order=matches(match_date).desc`)
+      api(`match_stats?select=*,matches(id,match_date,opponent,our_score,opponent_score,result,season_id,status)&player_id=eq.${playerId}`),
+      api(`match_votes?select=*,matches(goals_conceded,our_score,opponent_score,season_id)&player_id=eq.${playerId}`),
+      ratingCtxLoad().catch(()=>null)
     ]);
   } catch(e) {
     console.error('선수 상세 로드 실패:', e);
   }
-
   const p = players[0];
   if (!p) return;
-  const s = stats.find(s=>s.name===p.name) || {};
-
-  // 나이 계산
+  window._pd = { p, matchStats, votes, showAll: false, power: null, attend: null };
+  pdRender();
+  // 어택포인트·출석은 따로 계산되는 대로 채운다
+  getPower().then(list => { if(!window._pd || window._pd.p.id!==p.id) return; const x = (list||[]).find(r=>r.id===p.id); window._pd.power = x ? Math.round(x.power) : null; pdRender(); }).catch(()=>{});
+  api(`view_player_attendance?select=*&id=eq.${playerId}`).then(a => { if(!window._pd || window._pd.p.id!==p.id) return; window._pd.attend = a[0] || null; pdRender(); }).catch(()=>{});
+}
+function pdMore(){ if(window._pd){ window._pd.showAll = true; pdRender(); } }
+function pdRender(){
+  const D = window._pd; if(!D) return;
+  const p = D.p;
+  const el = document.getElementById('player-detail-content'); if(!el) return;
+  const fin = D.matchStats.filter(r=>r.matches && r.matches.status==='finished' && r.attended)
+    .sort((a,b)=>new Date(b.matches.match_date)-new Date(a.matches.match_date));
+  const played = fin.filter(r=>r.matches.season_id===currentSeasonId);
+  const GP = played.length, G = played.reduce((t,r)=>t+(r.goals||0),0), A = played.reduce((t,r)=>t+(r.assists||0),0), MOM = played.filter(r=>r.is_mom).length;
+  // 평점 (경기 상세와 같은 기준)
+  const msBy = {}; D.matchStats.forEach(r=>msBy[r.match_id]=r);
+  const ratingOf = {};
+  D.votes.forEach(v=>{ if(!v.matches) return; ratingOf[v.match_id] = ratingFor(v, msBy[v.match_id]||{}, p.id, p.position); });
+  const seasonRated = D.votes.filter(v=>v.matches && v.matches.season_id===currentSeasonId).map(v=>ratingOf[v.match_id]);
+  const avg = seasonRated.length ? seasonRated.reduce((t,x)=>t+x,0)/seasonRated.length : null;
+  const rc = v => v>=8?'#2e7d32':v>=6?'#f5a623':'#c62828';
+  // 프로필
   let age = '-';
-  if (p.birth_date) {
-    const today = new Date(), birth = new Date(p.birth_date);
-    age = today.getFullYear() - birth.getFullYear();
-    if (today.getMonth() < birth.getMonth() || (today.getMonth()===birth.getMonth() && today.getDate()<birth.getDate())) age--;
-  }
-
-  const photoEl = p.photo_url
-    ? `<img src="${p.photo_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.3)">`
-    : `<div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff;border:3px solid rgba(255,255,255,0.3)">${p.name.slice(0,1)}</div>`;
-
-  const stMap = {active:'정상', injured:'부상', resting:'휴식'};
-  const stColor = (p.status||'active')==='injured'?'var(--lose)':(p.status||'active')==='resting'?'var(--draw)':'var(--win)';
+  if (p.birth_date) { const t = new Date(), b = new Date(p.birth_date); age = t.getFullYear()-b.getFullYear(); if (t.getMonth()<b.getMonth() || (t.getMonth()===b.getMonth() && t.getDate()<b.getDate())) age--; age += '세'; }
   const footMap = {left:'왼발', right:'오른발', both:'양발'};
   const posMap = {GK:'골키퍼', DF:'수비수', MF:'미드필더', FW:'공격수'};
-
+  const jd = p.join_date ? new Date(p.join_date) : null;
+  const subPos = [p.sub_position1, p.sub_position2].filter(Boolean);
+  const st = p.status||'active';
+  const posLine = [posMap[p.position]||p.position, ...subPos].filter(Boolean).join(' · ');
+  const stTag = st==='injured' ? ' <span class="sq-tag hurt">부상</span>' : st==='resting' ? ' <span class="sq-tag rest">휴식</span>' : '';
+  const nick = p.nickname ? ` <span class="sq-tag role">${luEsc(p.nickname)}</span>` : '';
+  // 승무패
+  const W = played.filter(r=>r.matches.result==='Win').length, Dr = played.filter(r=>r.matches.result==='Draw').length, L = played.filter(r=>r.matches.result==='Lose').length;
+  // 포지션: 라인업 기록(쿼터 단위) 우선, 없으면 등록된 세부 포지션
+  const plans = (_rctx && _rctx.plans) || {};
+  const posQ = {};
+  played.forEach(r=>{ const plan = plans[r.match_id]; if(!plan) return;
+    plan.forEach(e=>{ const fm = e && LU_FORMATIONS[e.formation]; if(!fm) return;
+      Object.keys(e.slots||{}).forEach(k=>{ const sl = e.slots[k], def = fm.find(x=>x[0]===k); if(!sl || !def) return;
+        let w = 0; if(sl.p===p.id) w += (sl.s && sl.s!==sl.p) ? .5 : 1; if(sl.s===p.id && sl.s!==sl.p) w += .5;
+        if(w) posQ[def[1]] = (posQ[def[1]]||0) + w; }); }); });
+  const posList = Object.entries(posQ).sort((a,b)=>b[1]-a[1]);
+  const posXY = {}; Object.values(LU_FORMATIONS).forEach(f=>f.forEach(a=>{ const o = posXY[a[1]] || (posXY[a[1]] = {sx:0,sy:0,n:0}); o.sx+=a[2]; o.sy+=a[3]; o.n++; })); Object.values(posXY).forEach(o=>{ o.x = Math.round(o.sx/o.n); o.y = Math.round(o.sy/o.n); });
+  const subXY = {GK:[50,88],CB:[50,72],FB:[18,68],CDM:[50,58],CM:[50,46],CAM:[50,34],CF:[50,16],WF:[20,22]};
+  const subName = {GK:'골키퍼',CB:'중앙 수비수',FB:'측면 수비수',CDM:'수비형 미드필더',CM:'중앙 미드필더',CAM:'공격형 미드필더',CF:'중앙 공격수',WF:'측면 공격수'};
+  const fq = n => (n%1? n.toFixed(1) : n)+'Q';
+  let posHtml;
+  if (posList.length) {
+    const top = posList[0][1];
+    posHtml = `<div class="rs-pos"><div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/top); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?g:''}</u>`; }).join('')}</div>
+      <div class="rs-plist">${posList.slice(0,4).map(([g,q],i)=>`<div class="${i===0?'on':''}"><b>${g}</b><span>${i===0?'가장 많이 뜀':'라인업 기록'}</span><em>${fq(q)}</em></div>`).join('')}</div></div>`;
+  } else if (subPos.length) {
+    posHtml = `<div class="rs-pos"><div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${subPos.map((sp,i)=>{ const c = subXY[sp]||[50,50]; return `<u class="${i===0?'on':''}" style="left:${c[0]}%;top:${c[1]}%;width:${i?24:32}px;height:${i?24:32}px">${sp}</u>`; }).join('')}</div>
+      <div class="rs-plist">${subPos.map((sp,i)=>`<div class="${i===0?'on':''}"><b>${sp}</b><span>${subName[sp]||''}</span><em style="font-family:inherit;font-size:12px;font-weight:700">${i===0?'주':'부'}</em></div>`).join('')}</div></div>`;
+  } else posHtml = '<div style="font-size:13px;color:var(--muted)">등록된 포지션이 없어요.</div>';
+  // 출석
+  const at = D.attend;
+  const attendHtml = at ? `<div class="rs-rank pd-att">${[['참석',at.참석경기,`/ ${at.총경기}경기`],['참석률',`${at.참석률}<small>%</small>`,''],['경기당 득점',at.경기당골,''],['경기당 도움',at.경기당어시스트,'']].map(([l,v,s])=>`<div><span>${l}</span><b>${v??'-'}</b><i>${s}</i></div>`).join('')}</div>` : '<div style="font-size:13px;color:var(--muted)">집계 중...</div>';
   // 경기별 기록
-  const matchRows = matchStats.map(ms => {
-    if (!ms.matches) return '';
-    const m = ms.matches;
-    const rc = m.result==='Win'?'win':m.result==='Lose'?'lose':'draw';
-    const rl = m.result==='Win'?'W':m.result==='Lose'?'L':'D';
-    const d = new Date(m.match_date);
-    const hasStat = ms.goals>0||ms.assists>0||ms.is_mom;
-    return `<div style="display:grid;grid-template-columns:1fr 44px 36px 36px 44px;gap:8px;padding:12px 16px;border-top:1px solid var(--border);align-items:center">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text)">${m.opponent}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px">${d.getMonth()+1}월 ${d.getDate()}일</div>
+  const list = D.showAll ? fin : fin.slice(0,5);
+  const rows = list.map(r=>{ const m = r.matches, d = new Date(m.match_date), k = m.result==='Win'?'w':m.result==='Lose'?'l':'d', rt = ratingOf[r.match_id];
+    return `<div class="rs-row"><u class="pd-res ${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><div style="flex:1;min-width:0"><div class="pd-opp">${luEsc(m.opponent||'')} <span>${m.our_score??'-'}:${m.opponent_score??'-'}</span></div><div class="pd-sub">${d.getFullYear()!==new Date().getFullYear()?d.getFullYear()+'. ':''}${d.getMonth()+1}/${d.getDate()}${r.goals?' · ⚽'+r.goals:''}${r.assists?' · 🅰'+r.assists:''}${r.is_mom?' · ⭐MOM':''}</div></div><div class="rs-rt" style="color:${rt?rc(rt):'var(--muted)'}">${rt?rt.toFixed(1):'-'}</div></div>`; }).join('');
+  const sec = (t, inner) => `<section class="rs-sec"><h3 class="rs-ttl">${t}</h3>${inner}</section>`;
+  el.innerHTML = `
+    <div style="max-width:440px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 30px">
+      <div class="pd-bar"><button onclick="backFromPlayer()">← 뒤로</button>${admIcon('✏️',`admEditPlayer(${p.id})`,'선수 수정','선수 수정')}</div>
+      <div class="tc">
+        ${p.number!=null?`<div class="tc-wm" aria-hidden="true">${p.number}</div>`:''}
+        <div class="tc-top"><span class="tc-tag"><img src="emblem_v4.png" alt=""><span>PLAYER</span></span><span class="tc-scope">${luEsc(currentSeasonName||'')}</span></div>
+        <div class="tc-id">
+          <div class="tc-ph">${p.photo_url?`<img src="${p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((p.name||'?').charAt(0))}</b>`}</div>
+          <div style="min-width:0"><div class="tc-a">${p.number!=null?`<span class="tc-ano">${p.number}</span>`:''}<div class="tc-name${(p.name||'').length>4?' long':''}">${luEsc(p.name)}</div></div>
+          <div class="pd-pos">${luEsc(posLine)}${nick}${stTag}</div></div>
+        </div>
+        <div class="pd-info">${[['나이',age],['주발',footMap[p.dominant_foot]||'-'],['입단',jd?`${jd.getFullYear()}.${jd.getMonth()+1}`:'-'],['국가',p.nationality||'-']].map(([l,v])=>`<div><span>${l}</span><b>${luEsc(String(v))}</b></div>`).join('')}</div>
+        <div class="tc-stats">${[[GP,'출전'],[G,'득점'],[A,'도움'],[MOM,'MOM']].map(([v,l])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}<div class="tc-tot"><span>어택P</span><b>${D.power!=null?D.power:'-'}</b></div></div>
       </div>
-      <div style="text-align:center">
-        <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${rc==='win'?'#e8f5e9':rc==='lose'?'#ffebee':'#f5f5f5'};color:${rc==='win'?'#2e7d32':rc==='lose'?'#c62828':'#616161'}">${rl}</span>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px">${m.our_score}:${m.opponent_score}</div>
+      <div class="rs">
+        ${sec('평균 레이팅', `<div class="rs-rate"><b style="color:${avg!=null?rc(avg):'var(--muted)'}">${avg!=null?avg.toFixed(1):'-'}</b><div class="rs-rule">${avg!=null?`<i style="left:${Math.min(100,avg*10)}%;border-top-color:${rc(avg)}"></i>`:''}<div></div><p><span>0</span><span>5</span><span>10</span></p></div></div><div class="rs-note">${seasonRated.length?seasonRated.length+'경기 평가 기준':'평가된 경기가 아직 없어요'}</div>`)}
+        ${sec('포지션', posHtml)}
+        ${sec('출석', attendHtml)}
+        ${GP ? sec('승부', `<div class="pd-wdl"><i style="flex:${W||0};background:#2e7d32"></i><i style="flex:${Dr||0};background:#9e9e9e"></i><i style="flex:${L||0};background:#c62828"></i></div><div class="pd-wdl-l"><span style="color:#2e7d32">${W}승</span><span style="color:#757575">${Dr}무</span><span style="color:#c62828">${L}패</span><span class="r">승률 ${Math.round(W/GP*100)}%</span></div>`) : ''}
+        ${sec('경기별 기록', (rows || '<div style="font-size:13px;color:var(--muted);padding:6px 0">출전 기록이 없어요.</div>') + (!D.showAll && fin.length>5 ? `<button class="rs-more" onclick="pdMore()">더보기 (${fin.length-5}경기)</button>` : ''))}
       </div>
-      <div style="text-align:center;font-size:15px;font-weight:700;color:${ms.goals>0?'var(--skyblue)':'var(--muted)'}">${ms.goals}</div>
-      <div style="text-align:center;font-size:15px;font-weight:700;color:${ms.assists>0?'var(--skyblue)':'var(--muted)'}">${ms.assists}</div>
-      <div style="text-align:center">${ms.is_mom?'<span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;background:#fff8e1;color:#f5a623">MOM</span>':'-'}</div>
     </div>`;
-  }).join('');
-
-  // 참석 통계 로드 (비동기)
-  api(`view_player_attendance?select=*&id=eq.${playerId}`).then(attend => {
-    const el = document.getElementById(`player-attend-stats-${playerId}`);
-    if (!el) return;
-    const a = attend[0];
-    if (a) {
-      el.innerHTML = `
-        <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
-          <div style="font-size:18px;font-weight:700;color:var(--text)">${a.참석경기}/${a.총경기}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">참석</div>
-        </div>
-        <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
-          <div style="font-size:18px;font-weight:700;color:${a.참석률>=70?'var(--win)':a.참석률>=50?'var(--draw)':'var(--lose)'}">${a.참석률}%</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">참석률</div>
-        </div>
-        <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
-          <div style="font-size:18px;font-weight:700;color:var(--skyblue)">${a.경기당골}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당득점</div>
-        </div>
-        <div style="padding:12px 8px;text-align:center">
-          <div style="font-size:18px;font-weight:700;color:var(--skyblue)">${a.경기당어시스트}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당도움</div>
-        </div>`;
-    }
-  });
-
-  // 레이팅 로드
-  Promise.all([loadPlayerRatings(playerId), calcPowerRanking().catch(() => [])]).then(([rating, ranking]) => {
-    const el = document.getElementById(`player-rating-${playerId}`);
-    if (!el) return;
-    const idx = ranking.findIndex(x => x.id === playerId);
-    const power = idx >= 0 ? Math.round(ranking[idx].power) : null;
-    if (!rating && power == null) { el.innerHTML = '<div style="color:var(--muted);font-size:13px">기록 없음</div>'; return; }
-    const color = !rating ? 'var(--muted)' : rating.avgRating >= 8 ? '#2e7d32' : rating.avgRating >= 6 ? '#f5a623' : '#c62828';
-    el.innerHTML = `
-      <div style="flex:1">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:2px">평균 레이팅</div>
-        <span style="font-size:22px;font-weight:800;color:${color}">${rating ? rating.avgRating : '-'}</span><span style="font-size:12px;color:var(--muted);margin-left:4px">/ 10</span>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px">${rating ? rating.games + '경기 평균' : ''}</div>
-      </div>
-      <div style="width:1px;align-self:stretch;background:var(--border)"></div>
-      <div style="flex:1">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:2px">어택포인트</div>
-        <span style="font-size:22px;font-weight:800;color:var(--skyblue)">${power != null ? power : '-'}</span><span style="font-size:12px;color:var(--muted);margin-left:4px">/ 1000</span>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px">${idx >= 0 ? (idx+1) + '위' : ''}</div>
-      </div>`;
-  });
-
-  // 승무패 통계 로드
-  api(`match_stats?select=attended,matches(result)&player_id=eq.${playerId}&attended=eq.true`).then(attended => {
-    const el = document.getElementById(`player-wdl-${playerId}`);
-    if (!el) return;
-    const w = attended.filter(x=>x.matches?.result==='Win').length;
-    const d = attended.filter(x=>x.matches?.result==='Draw').length;
-    const l = attended.filter(x=>x.matches?.result==='Lose').length;
-    const total = w+d+l;
-    if (total === 0) return;
-    const circ = 238.8;
-    const wp = w/total*circ, dp = d/total*circ, lp = l/total*circ;
-    el.innerHTML = `
-      <div style="display:flex;align-items:center;gap:14px;padding:14px 16px">
-        <div style="position:relative;width:72px;height:72px;flex-shrink:0">
-          <svg viewBox="0 0 100 100" style="width:100%;height:100%;transform:rotate(-90deg)">
-            <circle cx="50" cy="50" r="38" fill="none" stroke="#eee" stroke-width="14"/>
-            <circle cx="50" cy="50" r="38" fill="none" stroke="#2e7d32" stroke-width="14" stroke-dasharray="${wp-1} ${circ}" stroke-dashoffset="0"/>
-            <circle cx="50" cy="50" r="38" fill="none" stroke="#9e9e9e" stroke-width="14" stroke-dasharray="${dp-1} ${circ}" stroke-dashoffset="${-wp}"/>
-            <circle cx="50" cy="50" r="38" fill="none" stroke="#c62828" stroke-width="14" stroke-dasharray="${lp-1} ${circ}" stroke-dashoffset="${-(wp+dp)}"/>
-          </svg>
-          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
-            <div style="font-size:12px;font-weight:700;color:var(--text)">${Math.round(w/total*100)}%</div>
-            <div style="font-size:9px;color:var(--muted)">승률</div>
-          </div>
-        </div>
-        <div style="display:flex;flex:1;justify-content:space-around">
-          <div style="text-align:center">
-            <div style="font-size:22px;font-weight:700;color:#2e7d32">${w}</div>
-            <div style="display:flex;align-items:center;justify-content:center;gap:3px;margin-top:4px">
-              <span style="width:7px;height:7px;border-radius:2px;background:#2e7d32;display:inline-block"></span>
-              <span style="font-size:11px;color:var(--muted)">승</span>
-            </div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-size:22px;font-weight:700;color:#9e9e9e">${d}</div>
-            <div style="display:flex;align-items:center;justify-content:center;gap:3px;margin-top:4px">
-              <span style="width:7px;height:7px;border-radius:2px;background:#9e9e9e;display:inline-block"></span>
-              <span style="font-size:11px;color:var(--muted)">무</span>
-            </div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-size:22px;font-weight:700;color:#c62828">${l}</div>
-            <div style="display:flex;align-items:center;justify-content:center;gap:3px;margin-top:4px">
-              <span style="width:7px;height:7px;border-radius:2px;background:#c62828;display:inline-block"></span>
-              <span style="font-size:11px;color:var(--muted)">패</span>
-            </div>
-          </div>
-        </div>
-      </div>`;
-  });
-
-  document.getElementById('player-detail-content').innerHTML = `
-    <!-- 헤더 -->
-    <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:calc(20px + env(safe-area-inset-top, 0px)) 16px 24px;position:relative">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><button onclick="backFromPlayer()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;font-family:inherit">← 뒤로</button>${admIcon('✏️',`admEditPlayer(${p.id})`,'선수 수정','선수 수정')}</div>
-      <div style="display:flex;align-items:center;gap:16px">
-        ${photoEl}
-        <div>
-          <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
-            <div style="font-size:22px;font-weight:700;color:#fff;line-height:1.2">${p.name}</div>
-            ${p.nickname ? `<div style="font-size:14px;color:rgba(255,255,255,0.55)">${p.nickname}</div>` : ''}
-          </div>
-          <div style="display:flex;align-items:center;gap:5px;margin-top:8px">
-            <img src="emblem_v4.png" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0">
-            <span style="font-size:12px;color:rgba(255,255,255,0.9);font-weight:600">ATTACK F.C.</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 기본 정보 - FOTMOB 스타일 -->
-    <div style="background:#fff;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr">
-      <!-- 왼쪽 -->
-      <div style="border-right:1px solid var(--border)">
-        <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
-          <div style="font-size:15px;font-weight:700;color:var(--text)">${age !== '-' ? age + '세' : '-'}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">${p.birth_date ? new Date(p.birth_date).toLocaleDateString('ko-KR') : '-'}</div>
-        </div>
-        <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
-          <div style="font-size:15px;font-weight:700;color:var(--text)">#${p.number}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">등번호</div>
-        </div>
-        <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
-          <div style="font-size:15px;font-weight:700;color:var(--text)">${footMap[p.dominant_foot]||'-'}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">주발</div>
-        </div>
-        <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
-          <div style="display:flex;align-items:center;gap:6px">
-            ${p.nationality ? `<img src="https://flagcdn.com/w20/kr.png" style="width:18px;height:13px;border-radius:2px;flex-shrink:0">` : ''}
-            <span style="font-size:15px;font-weight:700;color:var(--text)">${p.nationality||'-'}</span>
-          </div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">국가</div>
-        </div>
-        <div style="padding:14px 16px">
-          <div style="font-size:15px;font-weight:700;color:var(--text)">${p.join_date ? new Date(p.join_date).toLocaleDateString('ko-KR') : '-'}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">입단일</div>
-        </div>
-      </div>
-      <!-- 오른쪽: 포지션 -->
-      <div style="padding:14px 16px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600">포지션</div>
-        ${p.sub_position1 ? `
-        <div style="font-size:10px;font-weight:700;color:var(--skyblue);margin-bottom:2px">기본</div>
-        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:10px">${{GK:'골키퍼',CB:'중앙 수비수',FB:'측면 수비수',CDM:'수비형 미드필더',CM:'중앙 미드필더',CAM:'공격형 미드필더',CF:'중앙 공격수',WF:'측면 공격수'}[p.sub_position1]||p.sub_position1}</div>
-        ` : ''}
-        ${p.sub_position2 ? `
-        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:2px">기타</div>
-        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:10px">${{GK:'골키퍼',CB:'중앙 수비수',FB:'측면 수비수',CDM:'수비형 미드필더',CM:'중앙 미드필더',CAM:'공격형 미드필더',CF:'중앙 공격수',WF:'측면 공격수'}[p.sub_position2]||p.sub_position2}</div>
-        ` : ''}
-        <!-- 축구장 -->
-        <div style="position:relative;width:100%;aspect-ratio:3/4;background:#e8e8e8;border-radius:8px;overflow:hidden;border:1px solid var(--border)">
-          <div style="position:absolute;inset:6px;border:1.5px solid #ccc;border-radius:2px"></div>
-          <div style="position:absolute;left:6px;right:6px;height:1.5px;background:#ccc;top:50%"></div>
-          <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:28%;padding-bottom:28%;border:1.5px solid #ccc;border-radius:50%"></div>
-          <div style="position:absolute;left:25%;right:25%;height:18%;border:1.5px solid #ccc;top:6px;border-top:none"></div>
-          <div style="position:absolute;left:25%;right:25%;height:18%;border:1.5px solid #ccc;bottom:6px;border-bottom:none"></div>
-          ${(()=>{
-            const coords = {
-              GK:  [{t:'82%',l:'50%'}],
-              CB:  [{t:'67%',l:'50%'}],
-              FB:  [{t:'67%',l:'25%'},{t:'67%',l:'75%'}],
-              CDM: [{t:'54%',l:'50%'}],
-              CM:  [{t:'43%',l:'30%'},{t:'43%',l:'70%'}],
-              CAM: [{t:'32%',l:'50%'}],
-              CF:  [{t:'18%',l:'50%'}],
-              WF:  [{t:'18%',l:'22%'},{t:'18%',l:'78%'}],
-            };
-            const subs = [p.sub_position1, p.sub_position2].filter(Boolean);
-            return subs.map((sp,i) => {
-              const pts = coords[sp]||[{t:'50%',l:'50%'}];
-              const isPrimary = i === 0;
-              const bg = isPrimary ? '#1a3a6b' : '#9e9e9e';
-              return pts.map(pt =>
-                `<div style="position:absolute;top:${pt.t};left:${pt.l};transform:translate(-50%,-50%);background:${bg};color:#fff;font-size:9px;font-weight:800;padding:3px 7px;border-radius:12px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.25)">${sp}</div>`
-              ).join('');
-            }).join('');
-          })()}
-        </div>
-      </div>
-    </div>
-
-    <!-- 레이팅 -->
-    <div style="padding:0 12px;margin-top:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">시즌 평균 레이팅 · 어택포인트</div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px" id="player-rating-${p.id}">
-        <div style="color:var(--muted);font-size:13px">집계 중...</div>
-      </div>
-    </div>
-
-    <!-- 시즌 통계 -->
-    <div style="padding:0 12px;margin-top:20px">
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">${currentSeasonName} 통계</div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)">
-          <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
-            <div style="font-size:24px;font-weight:800;color:var(--skyblue)">${s['총골']||0}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px">득점</div>
-          </div>
-          <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
-            <div style="font-size:24px;font-weight:800;color:var(--skyblue)">${s['총어시스트']||0}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px">도움</div>
-          </div>
-          <div style="padding:14px;text-align:center">
-            <div style="font-size:24px;font-weight:800;color:#f5a623">${s['mom횟수']||0}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px">MOM</div>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr)" id="player-attend-stats-${p.id}">
-          <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
-            <div style="font-size:18px;font-weight:700;color:var(--text)">-</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:3px">참석</div>
-          </div>
-          <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
-            <div style="font-size:18px;font-weight:700;color:var(--text)">-</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:3px">참석률</div>
-          </div>
-          <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
-            <div style="font-size:18px;font-weight:700;color:var(--skyblue)">-</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당득점</div>
-          </div>
-          <div style="padding:12px 8px;text-align:center">
-            <div style="font-size:18px;font-weight:700;color:var(--skyblue)">-</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당도움</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 승무패 -->
-    <div style="padding:0 12px;margin-top:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">참석 경기 승무패</div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden" id="player-wdl-${p.id}">
-        <div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">참석 데이터 로딩 중...</div>
-      </div>
-    </div>
-
-    <!-- 경기별 기록 -->
-    <div style="padding:0 12px;margin-top:20px;padding-bottom:20px">
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">경기 기록</div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
-        <div style="display:grid;grid-template-columns:1fr 44px 36px 36px 44px;gap:8px;padding:10px 16px;background:var(--bg3);font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
-          <div>상대팀</div><div style="text-align:center">결과</div><div style="text-align:center">G</div><div style="text-align:center">A</div><div style="text-align:center">MOM</div>
-        </div>
-        ${matchRows || '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">기록 없음</div>'}
-      </div>
-    </div>
-  `;
 }
 
 /* ── 경기 상세 페이지 ── */
