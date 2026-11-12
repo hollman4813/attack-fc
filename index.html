@@ -4242,8 +4242,18 @@ function mrRender(){
     </div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px">${pill(currentSeasonId, currentSeasonName)}${seasons.filter(s=>s!==currentSeasonId).map(s=>pill(s,'시즌 '+s)).join('')}${pill('all','통산')}</div>
     ${GP ? `<div class="rs">
+    ${TM ? card(`${ttl('출석')}<div class="rs-rank">${[['참석',GP,`/ ${TM}경기`],['참석률',`${attRate}<small>%</small>`,''],['연속 출석',`${curAtt}<small>경기</small>`,'지금'],['최장 연속',`${bestAtt}<small>경기</small>`,'']].map(([l,v,x])=>`<div><span>${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`) : ''}
     ${card(`${ttl('팀 내 순위')}<div class="rs-rank">${ranks.map(([n,r,v])=>`<div class="${r&&r<=3?'top':''}"><span>${n}</span><b>${r?r+'<small>위</small>':'-'}</b><i>${v}${n==='출전'?'경기':n==='득점'?'골':n==='도움'?'개':''}</i></div>`).join('')}</div>`)}
     ${card(`${ttl('평균 레이팅')}<div class="rs-rate"><b style="color:${avg!=null?rc(avg):'var(--muted)'}">${avg!=null?avg.toFixed(1):'-'}</b><div class="rs-rule">${avg!=null?`<i style="left:${Math.min(100,avg*10)}%;border-top-color:${rc(avg)}"></i>`:''}<div></div><p><span>0</span><span>5</span><span>10</span></p></div></div><div class="rs-note">${rated.length?rated.length+'경기 평가 기준':'평가된 경기가 아직 없어요'}</div>`)}
+    ${card(`${ttl('커리어 하이')}<div class="mr-tiles">${[
+      topRated ? ['🏅','최고 평점',topRated.r.toFixed(1),topRatedM?'vs '+luEsc(topRatedM.opponent||''):''] : null,
+      bestGame && bestGame.goals>0 ? ['🔥','한 경기 최다 득점',bestGame.goals+'골','vs '+luEsc(bestGame.matches.opponent||'')] : null,
+      ['🎩','해트트릭',hat+'회',multi?`멀티골 ${multi}회`:''],
+      ['🔗','연속 공격포인트',best+'경기','최장 기록'],
+      ['🛡️','무패 행진',ubBest+'경기','내가 뛴 경기 기준'],
+      fav ? ['🎯','가장 많이 넣은 상대',luEsc(fav[0]),fav[1]+'골'] : null,
+      firstG ? ['⚽','이 기간 첫 골',(d=>`${d.getMonth()+1}/${d.getDate()}`)(new Date(firstG.matches.match_date)),'vs '+luEsc(firstG.matches.opponent||'')] : null
+    ].filter(Boolean).map(([ic,l,v,x])=>`<div><span>${ic} ${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`)}
     ${card(`${ttl('최근 폼')}<div class="mr-form">${form.map(r=>{ const m=r.matches, d=new Date(m.match_date), k = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; const rt = ratingOf[r.match_id];
       return `<div><u class="${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><b style="color:${rt?rc(rt):'var(--muted)'}">${rt?rt.toFixed(1):'-'}</b><span>${d.getMonth()+1}/${d.getDate()}</span><em>${r.goals?'⚽'+r.goals:''}${r.assists?' 🅰'+r.assists:''}${r.is_mom?' ⭐':''}</em></div>`; }).join('')}</div>`)}
     ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div class="rs-pos">
@@ -4255,21 +4265,11 @@ function mrRender(){
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px"><span style="color:#2e7d32;font-weight:700">${W}승</span><span style="color:#757575;font-weight:700">${Dr}무</span><span style="color:#c62828;font-weight:700">${L}패</span><span style="color:var(--muted)">승률 ${total?Math.round(W/total*100):0}%</span></div>
       ${involve!=null?`<div style="margin-top:14px;font-size:12px;color:var(--muted)">내가 뛴 경기 팀 득점 ${teamGoals}골 중 <b style="color:var(--text)">${G+A}골에 관여</b> (득점 ${G} + 도움 ${A})</div><div style="height:8px;background:#eee;border-radius:4px;margin-top:6px;overflow:hidden"><div style="width:${Math.min(100,involve)}%;height:100%;background:var(--skyblue)"></div></div><div style="text-align:right;font-size:12px;font-weight:800;color:var(--skyblue);margin-top:4px">${involve}%</div>`:''}
     </div>`)}
-    ${TM ? card(`${ttl('출석')}<div class="rs-rank">${[['참석',GP,`/ ${TM}경기`],['참석률',`${attRate}<small>%</small>`,''],['연속 출석',`${curAtt}<small>경기</small>`,'지금'],['최장 연속',`${bestAtt}<small>경기</small>`,'']].map(([l,v,x])=>`<div><span>${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`) : ''}
     ${tWith && tWo ? card(`${ttl('내가 뛸 때 vs 안 뛸 때')}<div class="mr-vs"><div class="on"><span>내가 뛴 ${tWith.n}경기</span><b>${tWith.wr}<small>%</small></b><i>승률</i><em>경기당 ${tWith.gf}득 ${tWith.ga}실</em></div><div><span>안 뛴 ${tWo.n}경기</span><b>${tWo.wr}<small>%</small></b><i>승률</i><em>경기당 ${tWo.gf}득 ${tWo.ga}실</em></div></div><div class="rs-note">${tWith.wr>tWo.wr?`내가 뛰면 승률이 <b style="color:#2e7d32">${tWith.wr-tWo.wr}%p</b> 올라가요 💪`:tWith.wr<tWo.wr?`승률 차이 ${tWo.wr-tWith.wr}%p · 다음 경기에서 뒤집어 봐요`:'뛰든 안 뛰든 승률이 같아요'}</div>`) : ''}
     ${flowL.length>1 ? card(`${ttl(D.scope==='all'?'시즌별 공격포인트':'월별 공격포인트')}<div class="mr-bars">${flowL.map(([k,o])=>`<div><em>${o.g+o.a||''}</em><p><i class="a" style="height:${o.a/flowMax*100}%"></i><i class="g" style="height:${o.g/flowMax*100}%"></i></p><span>${D.scope==='all'?k:k+'월'}</span></div>`).join('')}</div><div class="mr-leg"><span><i class="g"></i>득점</span><span><i class="a"></i>도움</span></div>`) : ''}
     ${qMax ? card(`${ttl('쿼터별 공격포인트')}<div class="mr-q">${qs.map((x,i)=>`<div class="${i===qBest?'on':''}"><span>${i+1}Q</span><b>${x.g+x.a}</b><i>⚽${x.g} 🅰${x.a}</i></div>`).join('')}</div><div class="rs-note"><b style="color:var(--text)">${qBest+1}쿼터의 사나이</b> · 쿼터 기록이 있는 ${recGames}경기 기준</div>`) : ''}
     ${combo1.length||combo2.length ? card(`${ttl('득점 콤비')}<div class="mr-combo"><div><span>내 골을 도운 선수</span>${combo1.length?combo1.map(([n,c],i)=>`<p class="${i?'':'on'}"><b>${luEsc(n)}</b><em>${c}</em></p>`).join(''):'<p><i>-</i></p>'}</div><div><span>내가 도운 선수</span>${combo2.length?combo2.map(([n,c],i)=>`<p class="${i?'':'on'}"><b>${luEsc(n)}</b><em>${c}</em></p>`).join(''):'<p><i>-</i></p>'}</div></div>`) : ''}
     ${vsL.length ? card(`${ttl('상대팀별 기록')}${vsL.map(([n,o])=>`<div class="rs-row mr-opp"><div style="flex:1;min-width:0"><div class="pd-opp">${luEsc(n)}</div><div class="pd-sub">${o.n}전 ${o.w}승 ${o.d}무 ${o.l}패</div></div><div class="mr-opp-p">${o.g?'⚽'+o.g:''}${o.a?' 🅰'+o.a:''}${!o.g&&!o.a?'-':''}</div></div>`).join('')}`) : ''}
-    ${card(`${ttl('기록실')}<div class="mr-tiles">${[
-      topRated ? ['🏅','최고 평점',topRated.r.toFixed(1),topRatedM?'vs '+luEsc(topRatedM.opponent||''):''] : null,
-      bestGame && bestGame.goals>0 ? ['🔥','한 경기 최다 득점',bestGame.goals+'골','vs '+luEsc(bestGame.matches.opponent||'')] : null,
-      ['🎩','해트트릭',hat+'회',multi?`멀티골 ${multi}회`:''],
-      ['🔗','연속 공격포인트',best+'경기','최장 기록'],
-      ['🛡️','무패 행진',ubBest+'경기','내가 뛴 경기 기준'],
-      fav ? ['🎯','가장 많이 넣은 상대',luEsc(fav[0]),fav[1]+'골'] : null,
-      firstG ? ['⚽','이 기간 첫 골',(d=>`${d.getMonth()+1}/${d.getDate()}`)(new Date(firstG.matches.match_date)),'vs '+luEsc(firstG.matches.opponent||'')] : null
-    ].filter(Boolean).map(([ic,l,v,x])=>`<div><span>${ic} ${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`)}
     ${card(`${ttl('경기별 기록')}<div style="padding-bottom:4px">${(D.showAll?played:played.slice(0,5)).map(r=>{ const m=r.matches, d=new Date(m.match_date), rl=m.result==='Win'?'W':m.result==='Lose'?'L':'D', cl=m.result==='Win'?'#2e7d32':m.result==='Lose'?'#c62828':'#9e9e9e', rt=ratingOf[r.match_id];
       return `<div class="rs-row"><span style="width:22px;height:22px;border-radius:6px;background:${cl};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">${rl}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${luEsc(m.opponent||'')}</div><div style="font-size:11px;color:var(--muted)">${d.getMonth()+1}월 ${d.getDate()}일 · ${m.our_score}:${m.opponent_score}</div></div><div style="font-size:12px;font-weight:700;color:var(--skyblue);text-align:right">${r.goals?'⚽'+r.goals+' ':''}${r.assists?'🅰'+r.assists+' ':''}${r.is_mom?'⭐':''}</div>${rt?`<div class="rs-rt" style="color:${rc(rt)}">${rt.toFixed(1)}</div>`:''}</div>`; }).join('')}${!D.showAll && played.length>5 ? `<button onclick="mrMore()" class="rs-more">더보기 (${played.length-5}경기)</button>` : ''}</div>`)}
     </div>` : '<div class="rs"><div style="padding:34px 16px;text-align:center;color:var(--muted);font-size:14px">이 기간에 출전 기록이 없어요.</div></div>'}
