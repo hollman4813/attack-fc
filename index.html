@@ -311,7 +311,9 @@
   .nm-c b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:22px;font-weight:600;color:var(--team-navy);line-height:1;margin-left:2px}
   .nm-c b.w{color:#2e7d32}.nm-c b.l{color:#c62828}
   .nm-c i{font-style:normal;color:var(--muted);margin-left:6px}
-  @media (max-width:360px){.nm-c i{display:none}}
+  .nm-h2h-last{flex:none;display:flex;align-items:center;gap:5px}
+  .nm-h2h-last i{margin:0}.nm-h2h-last .pd-res{width:20px;height:20px;font-size:10px}.nm-h2h-last b{margin:0}
+  @media (max-width:360px){.nm-h2h-last i{display:none}}
   .nm-h2h-f{flex:none;display:flex;gap:3px}.nm-h2h-f .pd-res{width:20px;height:20px;font-size:10px}
   .ov-rs{margin:12px 0 4px}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
@@ -1522,7 +1524,7 @@ async function ovH2H(u){
   rows = (rows||[]).filter(m=>m.result);
   if(!rows.length){ box.innerHTML = '<span class="nm-h2h-l">상대전적</span><span>첫 맞대결이에요 ⚔️</span>'; return; }
   const W = rows.filter(m=>m.result==='Win').length, D = rows.filter(m=>m.result==='Draw').length, L = rows.filter(m=>m.result==='Lose').length;
-  box.innerHTML = `<span class="nm-h2h-l">상대전적</span><span class="nm-h2h-r"><b>${rows.length}</b>전 <b class="w">${W}</b>승 <b>${D}</b>무 <b class="l">${L}</b>패</span>`;
+  box.innerHTML = `<span class="nm-h2h-l">상대전적</span><span class="nm-h2h-r"><b>${rows.length}</b>전 <b class="w">${W}</b>승 <b>${D}</b>무 <b class="l">${L}</b>패</span>${(()=>{ const m = rows[0], k = m.result==='Win'?'w':m.result==='Lose'?'l':'d', d = new Date(m.match_date); return `<span class="nm-h2h-last"><i>최근 ${d.getFullYear()!==new Date().getFullYear()?String(d.getFullYear()).slice(2)+'.':''}${d.getMonth()+1}/${d.getDate()}</i><u class="pd-res ${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><b>${m.our_score??'-'}:${m.opponent_score??'-'}</b></span>`; })()}`;
 }
 /* ── 경기 ── */
 async function loadMatches() {
