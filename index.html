@@ -312,14 +312,17 @@
   .nm-c b.w{color:#2e7d32}.nm-c b.l{color:#c62828}
   .nm-c i{font-style:normal;color:var(--muted);margin-left:6px}
   .nm-h2h-last{flex:none;display:flex;align-items:center;gap:3px}
-  .nm-h2h-last i{margin:0}.nm-h2h-last .pd-res{width:20px;height:20px;font-size:10px}.nm-h2h-last b{margin:0}
-  @media (max-width:360px){.nm-c{gap:6px}.nm-c b{font-size:19px}.nm-h2h-last{gap:2px}.nm-h2h-last .pd-res{width:18px;height:18px;font-size:9px}}
+  .nm-h2h-last i{margin:0}.nm-h2h-t{font-style:normal;font-size:11px;font-weight:700;color:var(--muted);margin-right:3px!important}.nm-h2h-last .pd-res{width:20px;height:20px;font-size:10px}.nm-h2h-last b{margin:0}
+  @media (max-width:360px){.nm-h2h-t span{display:none}.nm-c{gap:6px}.nm-c b{font-size:19px}.nm-h2h-last{gap:2px}.nm-h2h-last .pd-res{width:18px;height:18px;font-size:9px}}
   .nm-h2h-f{flex:none;display:flex;gap:3px}.nm-h2h-f .pd-res{width:20px;height:20px;font-size:10px}
   .ov-rs{margin:12px 0 4px}
+  .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
+  #ov-loading:not([style*="none"])~.ov-copy{display:none}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
   .ov-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:14px;background:#edf0f5}.ov-bar i{display:block}
   .ov-bl{display:flex;justify-content:space-between;margin-top:7px;font-size:13px;font-weight:800}.ov-bl .r{color:var(--muted);font-weight:500;font-size:12px}
+  .ov-sc.w{color:#2e7d32}.ov-sc.l{color:#c62828}.ov-sc.d{color:#757575}
   .ov-sc{font-family:'Teko','Noto Sans KR',sans-serif;font-size:26px;font-weight:600;color:var(--team-deep);line-height:1;padding-top:3px;white-space:nowrap}
   /* 경기별 기록 표 (공통) */
   .rt-hd,.rt-row{display:grid;grid-template-columns:24px minmax(0,1fr) 30px 30px 40px;align-items:center;column-gap:8px}
@@ -339,7 +342,7 @@
   .pd-info div{text-align:center;min-width:0}
   .pd-info span{display:block;font-size:10px;color:var(--team-sky-soft)}
   .pd-info b{display:block;font-size:13px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pd-res{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;flex:none;text-decoration:none;color:#fff;font-size:11px;font-weight:800}
+  .pd-res{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;flex:none;text-decoration:none;color:#fff;font-size:11px;font-weight:800;line-height:1;padding:0;box-sizing:border-box;text-align:center;font-family:'Noto Sans KR',sans-serif}
   .pd-res.w{background:#2e7d32}.pd-res.l{background:#c62828}.pd-res.d{background:#9e9e9e}
   .pd-opp{font-size:14px;font-weight:700;color:var(--team-deep,#0f2850);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pd-opp span{color:var(--muted);font-weight:500}
@@ -674,6 +677,7 @@
           </div>
         </div>
       </div>
+      <footer class="ov-copy">© Copyright 2026 ATTACK F.C.</footer>
     </div>
 
     <!-- 경기 -->
@@ -1481,7 +1485,7 @@ async function loadOverview() {
     const fin = matches.filter(m=>m.result != null).slice(0,5);
     document.getElementById('form-strip').innerHTML = fin.length ? fin.map(m=>{
       const k = m.result==='Win'?'w':m.result==='Lose'?'l':'d', d = new Date(m.match_date);
-      return `<div class="rs-row" onclick="showMatch(${m.id})" style="cursor:pointer"><u class="pd-res ${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><div style="flex:1;min-width:0"><div class="pd-opp">${luEsc(m.opponents?.name||m.opponent||'')}</div><div class="pd-sub">${d.getMonth()+1}/${d.getDate()}${m.grounds?.name?' · '+luEsc(m.grounds.name):''}</div></div><div class="ov-sc">${m.our_score??'-'} : ${m.opponent_score??'-'}</div></div>`;
+      return `<div class="rs-row" onclick="showMatch(${m.id})" style="cursor:pointer"><u class="pd-res ${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><div style="flex:1;min-width:0"><div class="pd-opp">${luEsc(m.opponents?.name||m.opponent||'')}</div><div class="pd-sub">${d.getMonth()+1}/${d.getDate()}${m.grounds?.name?' · '+luEsc(m.grounds.name):''}</div></div><div class="ov-sc ${k}">${m.our_score??'-'} : ${m.opponent_score??'-'}</div></div>`;
     }).join('') : '<div style="font-size:13px;color:var(--muted);padding:4px 0">아직 끝난 경기가 없어요.</div>';
   }
 
@@ -1534,7 +1538,7 @@ async function ovH2H(u){
   rows = (rows||[]).filter(m=>m.result);
   if(!rows.length){ box.innerHTML = '<span class="nm-h2h-l">상대전적</span><span>첫 맞대결이에요 ⚔️</span>'; return; }
   const W = rows.filter(m=>m.result==='Win').length, D = rows.filter(m=>m.result==='Draw').length, L = rows.filter(m=>m.result==='Lose').length;
-  box.innerHTML = `<span class="nm-h2h-l">상대전적</span><span class="nm-h2h-r"><b>${rows.length}</b>전 <b class="w">${W}</b>승 <b>${D}</b>무 <b class="l">${L}</b>패</span><span class="nm-h2h-last">${rows.slice(0,5).reverse().map(m=>{ const k = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; return `<u class="pd-res ${k}">${k==='w'?'승':k==='l'?'패':'무'}</u>`; }).join('')}</span>`;
+  box.innerHTML = `<span class="nm-h2h-l">상대전적</span><span class="nm-h2h-r"><b class="w">${W}</b>승 <b>${D}</b>무 <b class="l">${L}</b>패</span><span class="nm-h2h-last"><i class="nm-h2h-t">최근<span> 전적</span></i>${rows.slice(0,5).map(m=>{ const k = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; return `<u class="pd-res ${k}">${k==='w'?'승':k==='l'?'패':'무'}</u>`; }).join('')}</span>`;
 }
 /* ── 경기 ── */
 async function loadMatches() {
