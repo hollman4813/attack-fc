@@ -473,7 +473,9 @@
   .kakao-btn{display:inline-flex;align-items:center;gap:6px;background:#FEE500;color:#191919;border:none;border-radius:18px;height:34px;padding:0 14px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
   .acct-chip{display:inline-flex;align-items:center;gap:5px;max-width:132px;white-space:nowrap;background:rgba(255,255,255,0.14);color:#fff;border:none;border-radius:18px;padding:6px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
   .acct-st{font-size:10px;padding:2px 7px;border-radius:9px;background:#FEE500;color:#191919;font-weight:700}
-  .mem-ov{position:fixed;inset:0;z-index:9500;background:var(--bg);overflow-y:auto;padding:calc(env(safe-area-inset-top) + 14px) 16px 40px}
+  /* 전체화면 패널이 열려 있으면 뒤 페이지 스크롤을 막아 스크롤바가 두 개 생기지 않게 */
+  html:has(body>.mem-ov),body:has(>.mem-ov){overflow:hidden}
+  .mem-ov{position:fixed;inset:0;z-index:9500;background:var(--bg);overflow-y:auto;overscroll-behavior:contain;padding:calc(env(safe-area-inset-top) + 14px) 16px 40px}
   .mem-pick{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;margin-bottom:6px;background:#fff;border:1.5px solid var(--border);border-radius:10px;font:inherit;font-size:14px;cursor:pointer;text-align:left}
   .mem-pick.on{border-color:var(--skyblue);background:#eaf4fc;font-weight:700}
   /* 인트로 화면 */
