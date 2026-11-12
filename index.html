@@ -1522,9 +1522,7 @@ async function ovH2H(u){
   rows = (rows||[]).filter(m=>m.result);
   if(!rows.length){ box.innerHTML = '<span class="nm-h2h-l">상대전적</span><span>첫 맞대결이에요 ⚔️</span>'; return; }
   const W = rows.filter(m=>m.result==='Win').length, D = rows.filter(m=>m.result==='Draw').length, L = rows.filter(m=>m.result==='Lose').length;
-  const gf = rows.reduce((t,m)=>t+(m.our_score||0),0), ga = rows.reduce((t,m)=>t+(m.opponent_score||0),0);
-  const dots = rows.slice(0,5).reverse().map(m=>{ const k = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; return `<u class="pd-res ${k}">${k==='w'?'승':k==='l'?'패':'무'}</u>`; }).join('');
-  box.innerHTML = `<span class="nm-h2h-l">상대전적</span><span class="nm-h2h-r"><b>${rows.length}</b>전 <b class="w">${W}</b>승 <b>${D}</b>무 <b class="l">${L}</b>패<i>득실 ${gf}:${ga}</i></span><span class="nm-h2h-f">${dots}</span>`;
+  box.innerHTML = `<span class="nm-h2h-l">상대전적</span><span class="nm-h2h-r"><b>${rows.length}</b>전 <b class="w">${W}</b>승 <b>${D}</b>무 <b class="l">${L}</b>패</span>`;
 }
 /* ── 경기 ── */
 async function loadMatches() {
