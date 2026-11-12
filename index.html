@@ -305,7 +305,14 @@
   .nm-b p{margin:2px 0 0;font-size:12px;color:#51607a;line-height:1.5}
   .nm-go{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:20px;color:#b8c2d0}
   .nm-c{margin-top:12px;padding-top:10px;border-top:1px solid #eef1f5;font-size:12px;color:#51607a}
+  .nm-c{display:flex;align-items:center;gap:8px;white-space:nowrap}
+  .nm-h2h-l{flex:none;font-weight:800;color:#51607a}
+  .nm-h2h-r{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
   .nm-c b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:22px;font-weight:600;color:var(--team-navy);line-height:1;margin-left:2px}
+  .nm-c b.w{color:#2e7d32}.nm-c b.l{color:#c62828}
+  .nm-c i{font-style:normal;color:var(--muted);margin-left:6px}
+  @media (max-width:360px){.nm-c i{display:none}}
+  .nm-h2h-f{flex:none;display:flex;gap:3px}.nm-h2h-f .pd-res{width:20px;height:20px;font-size:10px}
   .ov-rs{margin:12px 0 4px}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
@@ -1441,9 +1448,10 @@ async function loadOverview() {
     document.getElementById('next-match-card').innerHTML = `
       <div class="nm-a"><span>다음 경기 · ${d.getMonth()+1}월 ${d.getDate()}일 (${wd})${u.match_time?' '+String(u.match_time).slice(0,5):''}</span><b class="nm-dd" id="nm-dd"></b></div>
       <div class="nm-b"><div class="nm-o">⚽</div><div style="min-width:0"><h4>vs ${luEsc(u.opponents?.name || u.opponent || '')}</h4><p>📍 ${luEsc(u.grounds?.name || u.ground || '미정')}${wx?` · ${wx.emoji} ${wx.tMax}°/${wx.tMin}°${wx.rain!=null?` · 강수 ${wx.rain}%`:''}`:''}</p></div><span class="nm-go">›</span></div>
-      <div class="nm-c" id="nm-cd"></div>`;
+      <div class="nm-c" id="nm-h2h"><span class="nm-h2h-l">상대전적</span><span style="color:var(--muted)">불러오는 중...</span></div>`;
     document.getElementById('next-match-card').onclick = () => showMatch(u.id);
     ovCountdown();
+    ovH2H(u);
     if(!window._nmTimer) window._nmTimer = setInterval(ovCountdown, 30000);
     document.getElementById('next-match-wrap').style.display = 'block';
   }
@@ -1493,17 +1501,30 @@ async function loadOverview() {
 }
 
 function ovCountdown(){
-  const u = window._nextMatch, cd = document.getElementById('nm-cd'), dd = document.getElementById('nm-dd'); if(!u || !cd) return;
-  const day = String(u.match_date).slice(0,10), t = u.match_time ? String(u.match_time).slice(0,5) : '';
+  const u = window._nextMatch, dd = document.getElementById('nm-dd'); if(!u || !dd) return;
+  const day = String(u.match_date).slice(0,10);
   const today = new Date(Date.now()+9*3600*1000).toISOString().slice(0,10);
   const dn = Math.round((new Date(day+'T00:00:00+09:00') - new Date(today+'T00:00:00+09:00'))/86400000);
-  if(luIsLive(u)){ dd.textContent='LIVE'; dd.className='nm-dd live'; cd.innerHTML='<span class="live-badge">● LIVE</span> 경기 진행 중 · 탭해서 기록 보기'; return; }
-  if(luIsOver(u)){ dd.textContent='종료'; dd.className='nm-dd over'; cd.innerHTML='🏁 경기 종료 · 결과 정리 중'; return; }
+  if(luIsLive(u)){ dd.textContent='● LIVE'; dd.className='nm-dd live'; return; }
+  if(luIsOver(u)){ dd.textContent='경기 종료'; dd.className='nm-dd over'; return; }
   dd.className='nm-dd'; dd.textContent = dn>0 ? 'D-'+dn : 'D-DAY';
-  if(!/^\d\d:\d\d$/.test(t)){ cd.innerHTML = dn>0 ? `⏱ 경기까지 <b>${dn}</b>일` : '⏱ 오늘 경기'; return; }
-  let ms = new Date(`${day}T${t}:00+09:00`).getTime() - Date.now(); if(ms<0) ms = 0;
-  const D = Math.floor(ms/86400000), Hh = Math.floor(ms%86400000/3600000), M = Math.floor(ms%3600000/60000);
-  cd.innerHTML = '⏱ 킥오프까지 ' + (D?`<b>${D}</b>일 `:'') + ((D||Hh)?`<b>${Hh}</b>시간 `:'') + `<b>${M}</b>분`;
+}
+// 다음 상대와의 통산 상대전적
+async function ovH2H(u){
+  const box = document.getElementById('nm-h2h'); if(!box) return;
+  const nm = u.opponents?.name || u.opponent || '';
+  let rows = [];
+  try{
+    const f = u.opponent_id ? `opponent_id=eq.${u.opponent_id}` : `opponent=eq.${encodeURIComponent(nm)}`;
+    rows = await api(`matches?select=id,match_date,result,our_score,opponent_score&status=eq.finished&${f}&order=match_date.desc`);
+  }catch(e){}
+  if(window._nextMatch!==u) return;
+  rows = (rows||[]).filter(m=>m.result);
+  if(!rows.length){ box.innerHTML = '<span class="nm-h2h-l">상대전적</span><span>첫 맞대결이에요 ⚔️</span>'; return; }
+  const W = rows.filter(m=>m.result==='Win').length, D = rows.filter(m=>m.result==='Draw').length, L = rows.filter(m=>m.result==='Lose').length;
+  const gf = rows.reduce((t,m)=>t+(m.our_score||0),0), ga = rows.reduce((t,m)=>t+(m.opponent_score||0),0);
+  const dots = rows.slice(0,5).reverse().map(m=>{ const k = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; return `<u class="pd-res ${k}">${k==='w'?'승':k==='l'?'패':'무'}</u>`; }).join('');
+  box.innerHTML = `<span class="nm-h2h-l">상대전적</span><span class="nm-h2h-r"><b>${rows.length}</b>전 <b class="w">${W}</b>승 <b>${D}</b>무 <b class="l">${L}</b>패<i>득실 ${gf}:${ga}</i></span><span class="nm-h2h-f">${dots}</span>`;
 }
 /* ── 경기 ── */
 async function loadMatches() {
