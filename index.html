@@ -317,7 +317,6 @@
   .nm-h2h-f{flex:none;display:flex;gap:3px}.nm-h2h-f .pd-res{width:20px;height:20px;font-size:10px}
   .ov-rs{margin:12px 0 4px}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
-  #ov-loading:not([style*="none"])~.ov-copy{display:none}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
   .ov-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:14px;background:#edf0f5}.ov-bar i{display:block}
@@ -677,7 +676,6 @@
           </div>
         </div>
       </div>
-      <footer class="ov-copy">© Copyright 2026 ATTACK F.C.</footer>
     </div>
 
     <!-- 경기 -->
@@ -712,10 +710,12 @@
       <div id="teamstats-content" style="display:none;padding:0 12px 16px"></div>
     </div>
 
+    <footer class="ov-copy">© Copyright 2026 ATTACK F.C.</footer>
   </div>
   <!-- 경기 상세 페이지 -->
   <div class="section" id="match-detail">
     <div id="match-detail-content"></div>
+    <footer class="ov-copy">© Copyright 2026 ATTACK F.C.</footer>
   </div>
 
 
@@ -1332,6 +1332,7 @@
   <!-- 선수 상세 페이지 -->
   <div class="section" id="player-detail">
     <div id="player-detail-content"></div>
+    <footer class="ov-copy">© Copyright 2026 ATTACK F.C.</footer>
   </div>
 
 </main>
@@ -1516,6 +1517,7 @@ async function loadOverview() {
   loadNews();
 }
 
+const COPY_HTML = '<footer class="ov-copy">© Copyright 2026 ATTACK F.C.</footer>';
 function ovCountdown(){
   const u = window._nextMatch, dd = document.getElementById('nm-dd'); if(!u || !dd) return;
   const day = String(u.match_date).slice(0,10);
@@ -4251,6 +4253,7 @@ function mrRender(){
     </div>` : '<div class="rs"><div style="padding:34px 16px;text-align:center;color:var(--muted);font-size:14px">이 기간에 출전 기록이 없어요.</div></div>'}
     <button onclick="history.replaceState({page:'home'},'');document.getElementById('my-record').remove();showPlayer(${D.p.id})" style="width:100%;margin-top:16px;padding:13px;background:#fff;border:1px solid var(--border);border-radius:12px;font:inherit;font-size:14px;font-weight:600;cursor:pointer">공개 선수 프로필 보기</button>
   </div>`;
+  ov.insertAdjacentHTML('beforeend', COPY_HTML);
   ov.scrollTop = keepY;
 }
 async function profileOpen(){
@@ -4278,6 +4281,7 @@ async function profileOpen(){
     </div>
     <div style="font-size:12px;color:var(--muted);line-height:1.6;margin:12px 4px 24px">프로필 정보는 읽기 전용이에요. 수정이 필요하면 운영진에게 요청해 주세요.</div>
   </div>`;
+  ov.insertAdjacentHTML('beforeend', COPY_HTML);
 }
 function acctSheet(){
   const ov = document.createElement('div'); ov.className='mem-ov'; ov.id='acct-sheet';
