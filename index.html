@@ -327,6 +327,9 @@
   .f-teko .ovr-sc{line-height:.9;padding-top:4px}
   .ovr-c.w .ovr-sc{color:#2e7d32}.ovr-c.l .ovr-sc{color:#d32f2f}
   @media (min-width:600px){.ovr-c{width:116px}}
+  .ovr-dots{display:flex;justify-content:center;gap:5px;margin-top:12px;min-height:6px}
+  .ovr-dots i{width:6px;height:6px;border-radius:3px;background:#c6cfdb;cursor:pointer;transition:width .2s,background .2s}
+  .ovr-dots i.on{width:16px;background:var(--team-navy)}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
@@ -683,7 +686,7 @@
           <div id="next-match-wrap" style="display:none"><div class="nm-card" id="next-match-card"></div></div>
           <div class="rs ov-rs">
             <section class="rs-sec"><h3 class="rs-ttl ov-hd"><span id="ov-season-title">2026 시즌</span><a onclick="switchTab('teamstats',document.querySelectorAll('.team-tab')[4])">팀 통계 ›</a></h3><div id="ov-season"></div></section>
-            <section class="rs-sec"><h3 class="rs-ttl ov-hd"><span>최근 10경기</span><a onclick="switchTab('matches',document.querySelectorAll('.team-tab')[1])">전체 ›</a></h3><div id="form-strip" class="ovr-scroll"></div></section>
+            <section class="rs-sec"><h3 class="rs-ttl ov-hd"><span>최근 10경기</span><a onclick="switchTab('matches',document.querySelectorAll('.team-tab')[1])">전체 ›</a></h3><div id="form-strip" class="ovr-scroll"></div><div class="ovr-dots" id="ovr-dots"></div></section>
           </div>
         </div>
       </div>
@@ -1500,6 +1503,7 @@ async function loadOverview() {
       return `<div class="ovr-c ${k}" onclick="showMatch(${m.id})"><div class="ovr-nm">${luEsc(m.opponents?.name||m.opponent||'')}</div><div class="ovr-sc">${m.our_score??'-'}:${m.opponent_score??'-'}</div></div>`;
     }).join('') : '<div style="font-size:13px;color:var(--muted);padding:4px 0">아직 끝난 경기가 없어요.</div>';
     ovDragScroll(document.getElementById('form-strip'));
+    ovDots();
   }
 
   // TOP3
@@ -1537,6 +1541,23 @@ function ovDragScroll(el){
   window.addEventListener('pointermove', e => { if(!down) return; const dx = e.clientX - x0; if(Math.abs(dx)>4){ moved = true; el.classList.add('drag'); } if(moved) el.scrollLeft = s0 - dx; });
   window.addEventListener('pointerup', () => { if(!down) return; down = false; setTimeout(()=>el.classList.remove('drag'), 0); });
   el.addEventListener('click', e => { if(moved){ e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+}
+// 최근 경기 페이지 점: 한 화면에 보이는 만큼을 한 페이지로
+function ovDots(){
+  const el = document.getElementById('form-strip'), box = document.getElementById('ovr-dots'); if(!el || !box) return;
+  const draw = () => {
+    const n = el.clientWidth ? Math.ceil((el.scrollWidth - 4) / el.clientWidth) : 1;
+    if(n < 2){ box.innerHTML = ''; return; }
+    const max = el.scrollWidth - el.clientWidth, cur = max > 0 ? Math.round(el.scrollLeft / max * (n-1)) : 0;
+    if(box.childElementCount !== n) box.innerHTML = Array.from({length:n}, (_,i)=>`<i data-i="${i}"></i>`).join('');
+    [...box.children].forEach((d,i)=>d.classList.toggle('on', i===cur));
+  };
+  if(!el._dots){ el._dots = true;
+    el.addEventListener('scroll', () => requestAnimationFrame(draw), {passive:true});
+    window.addEventListener('resize', draw);
+    box.addEventListener('click', e => { const i = e.target.dataset && e.target.dataset.i; if(i==null) return; const n = box.childElementCount; el.scrollTo({left: (el.scrollWidth - el.clientWidth) * (+i) / Math.max(1,n-1), behavior:'smooth'}); });
+  }
+  requestAnimationFrame(draw);
 }
 const COPY_HTML = '<footer class="ov-copy">© Copyright 2026 ATTACK F.C.</footer>';
 function ovCountdown(){
