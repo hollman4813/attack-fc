@@ -254,6 +254,38 @@
   .rs{background:#fff;border-radius:18px;margin-top:12px;padding:0 18px;box-shadow:0 1px 2px rgba(15,40,80,.05),0 6px 18px rgba(15,40,80,.06)}
   .rs-sec{padding:18px 0 18px}
   .rs-sec+.rs-sec{border-top:1px solid #e6ebf2}
+  /* 스쿼드: 개인기록 기록지와 같은 시트 */
+  .sq-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:2px 2px 10px}
+  .sq-cnt{font-size:12px;color:var(--muted);margin-top:3px}
+  .sq-chips{display:flex;gap:6px;margin:0 2px 12px}
+  .sq-chip{flex:1;font:inherit;font-size:13px;font-weight:700;padding:6px 0;border-radius:16px;border:none;background:#fff;color:#51607a;box-shadow:inset 0 0 0 1px #dde4ee;cursor:pointer;min-height:32px}
+  .sq-chip.on{background:var(--team-deep,#0f2850);color:#fff;box-shadow:none}
+  .rs.sq{margin-top:0}
+  .sq-sec{padding:16px 0 6px}
+  .sq-sec+.sq-sec{border-top:1px solid #e6ebf2}
+  .sq-hd{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .sq-hd .rs-ttl{margin:0}
+  .sq-hd span{font-size:12px;font-weight:700;color:var(--muted)}
+  .sq-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #f0f3f7;cursor:pointer}
+  .sq-row:first-of-type{border-top:none}
+  .sq-row:active{background:#f6f9fc}
+  .sq-no{width:28px;flex:none;text-align:center;font-family:var(--font-display);font-size:26px;font-weight:600;line-height:1;color:var(--team-navy,#1a3a6b);padding-top:3px}
+  .sq-ph{width:40px;height:40px;flex:none;border-radius:50%;padding:2px;box-sizing:border-box;background:linear-gradient(140deg,#ffd54a,#fff3c4 45%,#7cc0ff)}
+  .sq-ph img,.sq-ph b{width:100%;height:100%;box-sizing:border-box;border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;background:#24508a;color:#fff;font-size:15px;font-weight:800;border:2px solid #fff}
+  .sq-id{flex:1;min-width:0}
+  .sq-nm{font-size:15px;font-weight:800;color:var(--team-deep,#0f2850);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sq-pos{font-size:12px;color:var(--muted);margin-top:1px;line-height:1.45}
+  .sq-tag{display:inline-block;font-size:10px;font-weight:800;border-radius:4px;padding:0 5px;margin-left:5px;vertical-align:1px}
+  .sq-tag.role{color:#c98a00;background:#fff6d8}
+  .sq-tag.hurt{color:#c62828;background:#ffebee}
+  .sq-tag.rest{color:#8a6d00;background:#fff8e1}
+  .sq-st{display:flex;gap:2px;flex:none;text-align:center}
+  .sq-st>div{width:32px}
+  .sq-st>div.ap{width:40px;margin-left:2px;border-radius:8px;background:linear-gradient(180deg,#fff7d6,#fff 70%);box-shadow:inset 0 2px 0 #ffd54a;padding-top:2px}
+  .sq-st b{display:block;font-family:var(--font-display);font-size:21px;font-weight:600;line-height:.95;color:var(--team-navy,#1a3a6b)}
+  .sq-st span{display:block;font-size:10px;color:var(--muted);white-space:nowrap}
+  .sq-st .ap span{color:#c98a00;font-weight:800}
+  @media (max-width:360px){.sq-st>div{width:27px}.sq-st>div.ap{width:36px}.sq-st b{font-size:19px}.sq-no{width:22px;font-size:22px}}
   .rs-ttl{font-family:'Noto Sans KR',sans-serif;font-weight:800;font-size:16px;line-height:1.3;color:var(--team-deep,#0f2850);margin:0 0 12px;letter-spacing:-.3px}
   .rs-note{font-size:11px;color:var(--muted);margin-top:8px}
   .rs-rank{display:grid;grid-template-columns:repeat(4,1fr)}
@@ -624,7 +656,7 @@
       <div class="loading" id="squad-loading"><div class="spinner"></div>불러오는 중...</div>
       <div id="squad-content" style="display:none">
         <div class="content-wrap" style="padding-top:12px">
-          <div class="squad-wrap" id="squad-list"></div>
+          <div id="squad-list"></div>
         </div>
       </div>
     </div>
@@ -1771,72 +1803,53 @@ function statGo(tab) {
 async function loadSquad() {
   const players = await api('players?select=*&order=number.asc');
   if (!allStats.length) allStats = await api('view_season_stats?select=*');
-  const sm = {};
-  allStats.forEach(s=>sm[s.name]=s);
-
-  const posOrder = ['GK','DF','MF','FW'];
-  const posLabel = {GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수'};
-
-  // 정상/부상/휴식 분리
-  const active = players.filter(p=>!p.status || p.status==='active');
-  const inactive = players.filter(p=>p.status==='injured'||p.status==='resting');
-
-  const groups = {GK:[],DF:[],MF:[],FW:[],etc:[]};
-  active.forEach(p=>(p.position&&groups[p.position]?groups[p.position]:groups.etc).push(p));
-  Object.values(groups).forEach(arr=>arr.sort((a,b)=>a.name.localeCompare(b.name,'ko')));
-
-  const row = p => {
-    const s = sm[p.name]||{};
-    const st = p.status||'active';
-    const stMap = {active:'정상',injured:'부상',resting:'휴식'};
-    const dot = st!=='active'?`<span class="squad-status-dot ${st}"></span>`:'';
-    // 나이 계산
-    let age = '-';
-    if (p.birth_date) {
-      const today = new Date();
-      const birth = new Date(p.birth_date);
-      age = today.getFullYear() - birth.getFullYear();
-      if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) age--;
-    }
-    const photoEl = p.photo_url
-      ? `<img src="${p.photo_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`
-      : `<div style="width:36px;height:36px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--skyblue)">${p.name.slice(0,1)}</div>`;
-    const stColor = st==='injured'?'var(--lose)':st==='resting'?'var(--draw)':'var(--win)';
-    const stBg = st==='injured'?'#ffebee':st==='resting'?'#fff8e1':'#e8f5e9';
-    const stPill = `<span style="font-size:9px;font-weight:700;padding:2px 5px;border-radius:10px;background:${stBg};color:${stColor};white-space:nowrap">${stMap[st]}</span>`;
-    const footMap = {right:'R', left:'L', both:'B'};
-    const foot = footMap[p.dominant_foot] || '-';
-    return `<div class="squad-row" onclick="showPlayer(${p.id})" style="cursor:pointer;border-radius:10px">
-      <div style="display:flex;align-items:center;justify-content:center">${photoEl}</div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px">
-          ${dot}<span style="font-size:13px;font-weight:700;color:var(--muted);min-width:18px">${p.number||'-'}</span> ${p.name}
-        </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${[p.sub_position1,p.sub_position2].filter(Boolean).join(' · ')||{GK:'GK',DF:'DF',MF:'MF',FW:'FW'}[p.position]||p.position||'-'}${p.region?` · ${p.region}`:''}</div>
-      </div>
-      <div class="squad-col" style="font-size:11px;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nickname||''}</div>
-      <div class="squad-col" style="font-size:12px;text-align:center;color:var(--muted)">${age}</div>
-    </div>`;
-  };
-
-  const header = `<div class="squad-table-header"><div></div><div>이름</div><div style="text-align:center">역할</div><div style="text-align:center">나이</div></div>`;
-  let html = header;
-  posOrder.forEach(pos=>{
-    if(!groups[pos].length) return;
-    html += `<div class="squad-group-title">${posLabel[pos]}</div>${groups[pos].map(row).join('')}`;
-  });
-  if (groups.etc.length) html += `<div class="squad-group-title">기타</div>${groups.etc.map(row).join('')}`;
-
-  // 부상/휴식 섹션
-  if (inactive.length) {
-    html += `<div class="squad-group-title" style="margin-top:16px;color:var(--lose)">⚠️ 부상/휴식</div>`;
-    html += header;
-    html += inactive.sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(row).join('');
-  }
-
-  document.getElementById('squad-list').innerHTML = (isAdmin?`<div class="adm-bar" style="padding:0 0 10px">${admIcon('＋','admAddPlayer()','선수 등록','선수 등록')}</div>`:'') + html;
+  window._sqPlayers = players;
+  squadRender();
   document.getElementById('squad-loading').style.display = 'none';
   document.getElementById('squad-content').style.display = 'block';
+  // 어택포인트·출전은 계산이 끝나면 다시 그린다
+  getPower().then(()=>squadRender()).catch(()=>{});
+}
+function squadFilter(pos){ window._sqPos = pos; squadRender(); }
+function squadRender(){
+  const players = window._sqPlayers || [];
+  const sm = {}; allStats.forEach(s=>sm[s.name]=s);
+  const pw = {}; (window._powerList||[]).forEach(x=>pw[x.id]=x);
+  const posOrder = ['GK','DF','MF','FW'];
+  const posLabel = {GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수',etc:'기타'};
+  const cur = window._sqPos || 'all';
+  const active = players.filter(p=>!p.status || p.status==='active');
+  const inactive = players.filter(p=>p.status==='injured'||p.status==='resting');
+  const groups = {GK:[],DF:[],MF:[],FW:[],etc:[]};
+  active.forEach(p=>(p.position&&groups[p.position]?groups[p.position]:groups.etc).push(p));
+  Object.values(groups).forEach(arr=>arr.sort((a,b)=>(a.number??999)-(b.number??999) || a.name.localeCompare(b.name,'ko')));
+  const num = v => (v==null||v==='') ? '-' : v;
+  const row = p => {
+    const s = sm[p.name]||{}, x = pw[p.id]||{};
+    const st = p.status||'active';
+    const stTag = st==='injured' ? '<span class="sq-tag hurt">부상</span>' : st==='resting' ? '<span class="sq-tag rest">휴식</span>' : '';
+    const role = p.nickname ? `<span class="sq-tag role">${luEsc(p.nickname)}</span>` : '';
+    const sub = [p.sub_position1,p.sub_position2].filter(Boolean).join(' · ') || p.position || '-';
+    const photo = p.photo_url ? `<img src="${p.photo_url}" referrerpolicy="no-referrer" alt="">` : `<b>${luEsc(p.name.slice(0,1))}</b>`;
+    return `<div class="sq-row" onclick="showPlayer(${p.id})">
+      <span class="sq-no">${p.number ?? '-'}</span>
+      <div class="sq-ph">${photo}</div>
+      <div class="sq-id"><div class="sq-nm">${luEsc(p.name)}</div><div class="sq-pos">${luEsc(sub)}${role}${stTag}</div></div>
+      <div class="sq-st"><div><b>${num(x.attended)}</b><span>출전</span></div><div><b>${num(s.총골||0)}</b><span>득점</span></div><div><b>${num(s.총어시스트||0)}</b><span>도움</span></div><div class="ap"><b>${x.power!=null?Math.round(x.power):'-'}</b><span>어택P</span></div></div>
+    </div>`;
+  };
+  const sec = (key, arr, extra) => `<section class="sq-sec"><div class="sq-hd"><h3 class="rs-ttl">${extra||posLabel[key]}</h3><span>${arr.length}</span></div>${arr.map(row).join('')}</section>`;
+  let html = '';
+  const keys = cur==='all' ? [...posOrder,'etc'] : [cur];
+  keys.forEach(k=>{ if(groups[k] && groups[k].length) html += sec(k, groups[k]); });
+  const inact = inactive.filter(p=>cur==='all' || p.position===cur).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  if (inact.length) html += sec('x', inact, '부상 · 휴식');
+  const total = players.length;
+  const chips = ['all',...posOrder].map(k=>`<button class="sq-chip${cur===k?' on':''}" onclick="squadFilter('${k}')">${k==='all'?'전체':k}</button>`).join('');
+  document.getElementById('squad-list').innerHTML =
+    (isAdmin?`<div class="adm-bar" style="padding:0 0 10px">${admIcon('＋','admAddPlayer()','선수 등록','선수 등록')}</div>`:'') +
+    `<div class="sq-top"><h2 class="rs-ttl" style="font-size:20px;margin:0">스쿼드</h2><div class="sq-cnt">${luEsc(currentSeasonName||'')} · ${total}명</div></div><div class="sq-chips">${chips}</div>
+     <div class="rs sq">${html || '<div style="padding:30px 0;text-align:center;color:var(--muted);font-size:14px">해당 포지션 선수가 없어요.</div>'}</div>`;
 }
 
 /* ── 탭 전환 ── */
