@@ -297,7 +297,7 @@
   /* 메인: 다음 경기 카드 + 기록지 */
   .nm-card{background:#fff;border-radius:18px;padding:14px 16px;margin-top:12px;cursor:pointer;box-shadow:0 1px 2px rgba(15,40,80,.05),0 6px 18px rgba(15,40,80,.06)}
   .nm-a{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;font-weight:800;color:#51607a}
-  .nm-dd{flex:none;background:var(--team-gold);color:var(--team-deep);font-size:12px;font-weight:800;border-radius:6px;padding:3px 8px}
+  .nm-dd{flex:none;display:inline-flex;align-items:center;justify-content:center;height:22px;line-height:1;background:var(--team-gold);color:var(--team-deep);font-size:12px;font-weight:800;border-radius:6px;padding:0 8px}
   .nm-dd.live{background:#c62828;color:#fff}.nm-dd.over{background:#e6ebf2;color:#51607a}
   .nm-b{position:relative;display:flex;align-items:center;gap:12px;margin-top:10px;padding-right:16px}
   .nm-o{width:46px;height:46px;border-radius:50%;background:#f1f5fa;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
@@ -323,7 +323,15 @@
   .ovm-g{display:grid;grid-template-columns:minmax(0,1fr) 50px minmax(0,1fr);align-items:center;column-gap:12px;margin-top:7px}
   .ovm-h{text-align:right;font-size:15px;font-weight:800;color:var(--team-deep);white-space:nowrap}
   .ovm-a{font-size:15px;font-weight:700;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ovm-sc{height:23px;border-radius:6px;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Teko','Noto Sans KR',sans-serif;font-size:19px;font-weight:600;line-height:1;padding-top:3px;letter-spacing:1px}
+  .ovm-sc{height:23px;border-radius:6px;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Teko','Noto Sans KR',sans-serif;font-size:19px;font-weight:600;line-height:1;padding:0 0 0 1px;letter-spacing:1px;white-space:nowrap}
+  .f-teko .ovm-sc{padding-top:3px}
+  @media (min-width:600px){
+    .ovm-g{grid-template-columns:minmax(0,1fr) 60px minmax(0,1fr)!important;column-gap:14px}
+    .ovm-sc{height:27px;font-size:22px;border-radius:7px}
+    .ovm-h,.ovm-a{font-size:16px}
+    .ovm-t{font-size:13px}.ovm-t span:last-child{font-size:12px}
+    .f-teko .ovm-sc{padding-top:5px}
+  }
   .ovm-sc.w{background:#2e7d32}.ovm-sc.d{background:#9aa3ad}.ovm-sc.l{background:#d32f2f}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
