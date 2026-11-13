@@ -79,6 +79,14 @@ async function viaPage() {
   if (!v.length) { const t = (html.match(/<title>([^<]*)<\/title>/) || [])[1] || ''; throw new Error(`page empty (${html.length}자, ${r.url.includes('consent') ? '동의 페이지' : t.slice(0, 40)})`); }
   return v;
 }
+// 제목 "20261110_ATTACK FC VS 어센틱 FC - 1Q" 에서 경기 날짜·상대·쿼터를 읽는다
+function meta(v) {
+  const t = v.title || '';
+  const d = t.match(/(20\d{2})[.\-]?(\d{2})[.\-]?(\d{2})/);
+  const q = t.match(/(\d)\s*Q\b/i) || t.match(/(\d)\s*쿼터/);
+  const o = t.match(/VS\.?\s*(.+?)\s*(?:-\s*\d\s*Q|\(|\[|$)/i);
+  return { ...v, date: d ? `${d[1]}-${d[2]}-${d[3]}` : null, q: q ? +q[1] : null, opp: o ? o[1].trim() : null };
+}
 module.exports = async (req, res) => {
   const errors = [];
   try {
@@ -87,7 +95,7 @@ module.exports = async (req, res) => {
       for (const f of [viaApi, viaFeed, viaPage]) { try { v = await f(); break; } catch (e) { errors.push(String(e.message || e)); } }
       if (!v) throw new Error(errors.join(' / '));
       v.sort((a, b) => (b.published ? Date.parse(b.published) : 0) - (a.published ? Date.parse(a.published) : 0));
-      cache = { at: Date.now(), data: v.slice(0, 6) };
+      cache = { at: Date.now(), data: v.slice(0, 50).map(meta) };
     }
     res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=3600');
     res.status(200).json({ channel: `https://www.youtube.com/playlist?list=${PLAYLIST_ID}`, videos: cache.data });
@@ -97,4 +105,5 @@ module.exports = async (req, res) => {
   }
 };
 module.exports.parseFeed = parseFeed;
+module.exports.meta = meta;
 module.exports.parsePlaylistPage = parsePlaylistPage;
