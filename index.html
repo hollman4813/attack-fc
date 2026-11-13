@@ -439,6 +439,7 @@
   .pd-info{position:relative;display:grid;grid-template-columns:repeat(4,1fr);margin-top:14px;padding:10px 0;border-top:1px solid rgba(255,255,255,.14);border-bottom:1px solid rgba(255,255,255,.14)}
   .pd-info div{text-align:center;min-width:0}
   .pd-info span{display:block;font-size:10px;color:var(--team-sky-soft)}
+  .pd-info b small.pd-by{font-size:11px;font-weight:600;color:var(--team-sky-soft);margin-left:2px}
   .pd-info b{display:block;font-size:13px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pd-res{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;flex:none;text-decoration:none;color:#fff;font-size:11px;font-weight:800;line-height:1;padding:0;box-sizing:border-box;text-align:center;font-family:'Noto Sans KR',sans-serif}
   .pd-res.w{background:#2e7d32}.pd-res.l{background:#c62828}.pd-res.d{background:#9e9e9e}
@@ -3867,7 +3868,7 @@ function pdRender(){
   const rc = v => v>=8?'#2e7d32':v>=6?'#f5a623':'#c62828';
   // 프로필
   let age = '-';
-  if (p.birth_date) { const t = new Date(), b = new Date(p.birth_date); age = t.getFullYear()-b.getFullYear(); if (t.getMonth()<b.getMonth() || (t.getMonth()===b.getMonth() && t.getDate()<b.getDate())) age--; age += '세'; }
+  if (p.birth_date) { const t = new Date(), b = new Date(p.birth_date); age = t.getFullYear()-b.getFullYear(); if (t.getMonth()<b.getMonth() || (t.getMonth()===b.getMonth() && t.getDate()<b.getDate())) age--; age += `세<small class="pd-by">(${b.getFullYear()})</small>`; }
   const footMap = {left:'왼발', right:'오른발', both:'양발'};
   const posMap = {GK:'골키퍼', DF:'수비수', MF:'미드필더', FW:'공격수'};
   const jd = p.join_date ? new Date(p.join_date) : null;
@@ -3913,7 +3914,7 @@ function pdRender(){
           <div style="min-width:0"><div class="tc-a">${p.number!=null?`<span class="tc-ano">${p.number}</span>`:''}<div class="tc-name${(p.name||'').length>4?' long':''}">${luEsc(p.name)}</div></div>
           <div class="pd-pos">${luEsc(posLine)}${nick}${stTag}</div></div>
         </div>
-        <div class="pd-info">${[['나이',age],['주발',footMap[p.dominant_foot]||'-'],['입단',jd?`${jd.getFullYear()}.${jd.getMonth()+1}`:'-'],['국가',p.nationality||'-']].map(([l,v])=>`<div><span>${l}</span><b>${luEsc(String(v))}</b></div>`).join('')}</div>
+        <div class="pd-info">${[['나이',age],['주발',footMap[p.dominant_foot]||'-'],['입단',jd?`${jd.getFullYear()}.${jd.getMonth()+1}`:'-'],['국가',p.nationality||'-']].map(([l,v])=>`<div><span>${l}</span><b>${l==='나이'?v:luEsc(String(v))}</b></div>`).join('')}</div>
         <div class="tc-stats">${[[GP,'출전'],[G,'득점'],[A,'도움'],[MOM,'MOM']].map(([v,l])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}<div class="tc-tot"><span>어택P</span><b>${D.power!=null?D.power:'-'}</b></div></div>
       </div>
       <div class="rs">
