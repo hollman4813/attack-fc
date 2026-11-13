@@ -514,6 +514,35 @@
   .rs-rank.ov-rs2{grid-template-columns:repeat(3,1fr);margin-top:16px;padding-top:14px;border-top:1px solid #e6ebf2}
   .rs-rank.ov-rs2 b{font-size:30px}
   .att-rec{font-style:normal;font-weight:800;color:#c98a00;white-space:nowrap}
+  /* 플레이어 통계 */
+  button.ovc-pill{border:0}
+  .sv-ttl{margin:14px 2px 0}
+  .sv-ttl h2{margin:0;font-size:20px;font-weight:800;color:var(--team-deep)}
+  .sv-ldr{display:flex;align-items:center;gap:14px;padding:2px 0 12px;cursor:pointer}
+  .sv-ph{width:64px;height:64px;flex:none;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#1e4d8c,#0f2850);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:800;position:relative}
+  .sv-ph img{width:100%;height:100%;object-fit:cover}
+  .sv-ph em{position:absolute;left:0;top:0;background:var(--team-gold);color:var(--team-deep);font-style:normal;font-family:'Teko','Noto Sans KR',sans-serif;font-size:16px;font-weight:600;width:22px;height:22px;display:flex;align-items:center;justify-content:center;line-height:1;border-bottom-right-radius:8px}
+  .f-teko .sv-ph em{padding-top:3px;box-sizing:border-box}
+  .sv-nm{flex:1;min-width:0}.sv-nm b{display:block;font-size:17px;font-weight:800;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sv-nm span{font-size:12px;color:var(--muted)}
+  .sv-big{font-family:'Teko','Noto Sans KR',sans-serif;font-size:46px;font-weight:600;line-height:1;color:var(--team-deep)}
+  .f-teko .sv-big{line-height:.8;padding-top:8px}
+  .sv-r{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid #eef1f5;cursor:pointer}
+  .sv-rk{width:26px;flex:none;text-align:center;font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;font-weight:600;color:var(--muted);line-height:1}
+  .f-teko .sv-r .sv-rk{padding-top:3px}
+  .sv-av{width:34px;height:34px;border-radius:50%;flex:none;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--team-navy);font-size:13px;overflow:hidden}
+  .sv-av img{width:100%;height:100%;object-fit:cover}
+  .sv-r p{margin:0;flex:1;min-width:0;font-size:14px;font-weight:700;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sv-r p small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+  .sv-ldr+.sv-r p small{display:none}
+  .ovc>.sv-ldr~.sv-r p small{display:none}
+  .sv-v{font-family:'Teko','Noto Sans KR',sans-serif;font-size:26px;font-weight:600;color:var(--team-navy);line-height:1;min-width:28px;text-align:right}
+  .f-teko .sv-v{padding-top:3px}
+  .sv-bk{display:flex;align-items:center;gap:10px;margin:14px 2px 0}
+  .sv-bk button{background:#fff;border:0;border-radius:18px;height:36px;padding:0 14px;font:inherit;font-size:13px;font-weight:800;color:var(--team-deep);cursor:pointer;box-shadow:0 1px 2px rgba(15,40,80,.06),0 4px 12px rgba(15,40,80,.06)}
+  .sv-bk h2{margin:0;font-size:20px;font-weight:800;color:var(--team-deep)}
+  .sv-hd{display:flex;align-items:center;font-size:11px;font-weight:700;color:var(--muted);padding:0 0 8px}
+  .sv-hd .sv-rk{font-family:inherit;font-size:11px;color:var(--muted)}
+  .sv-list .sv-r:nth-child(2) .sv-rk{color:#c98a00}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
@@ -2067,11 +2096,18 @@ function fmAvatar(p){
     ? `<img src="${p.photo_url}" alt="">`
     : `<span>${(p.name||'?').slice(0,1)}</span>`;
 }
-function fmRow(p, i, val){
-  return `<div class="fm-row" onclick="showPlayer(${p.id})"><div class="fm-av">${fmAvatar(p)}</div><div class="fm-name">${p.name}</div><div class="fm-val ${i===0?'top':''}">${val}</div></div>`;
+function svAv(p){ return `<span class="sv-av">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}</span>`; }
+function svRow(p, rank, val){
+  return `<div class="sv-r" onclick="showPlayer(${p.id})"><span class="sv-rk">${rank}</span>${svAv(p)}<p>${luEsc(p.name)}<small>${posShort(p)}</small></p><span class="sv-v">${val}</span></div>`;
 }
-function fmCard(tab, label, rowsHtml){
-  return `<div class="fm-card"><div class="fm-head" onclick="statGo('${tab}')"><span>${label}</span><span class="fm-chev">›</span></div>${rowsHtml || '<div class="fm-empty">기록 없음</div>'}</div>`;
+// 카테고리 카드: 1위 크게 + 2·3위
+function fmCard(tab, label, list, valOf, gold){
+  const head = `<h3 class="ovc-h"><span>${label}</span><button class="ovc-pill" onclick="statGo('${tab}')">전체 ›</button></h3>`;
+  if(!list || !list.length) return `<section class="ovc">${head}<div class="ovc-empty">기록 없음</div></section>`;
+  const p = list[0];
+  return `<section class="ovc">${head}
+    <div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b><span>${posShort(p)}</span></div><div class="sv-big"${gold?' style="color:#c98a00"':''}>${valOf(p)}</div></div>
+    ${list.slice(1,3).map((q,i)=>svRow(q,i+2,valOf(q))).join('')}</section>`;
 }
 async function getPower(){
   if(!window._powerList) window._powerList = await calcPowerRanking();
@@ -2080,61 +2116,34 @@ async function getPower(){
 function renderStatOverview() {
   window._currentStatTab = 'overview';
   const body = document.getElementById('scorers-body');
-  const season = `<div class="fm-season"><span class="fm-season-ico">⚽</span>ATTACK F.C. ${new Date().getFullYear()} 시즌</div>`;
   const cards = FM_CATS.map(cat => {
     const top = [...allStats].filter(p=>p[cat.key]>0).sort((a,b)=>b[cat.key]-a[cat.key]).slice(0,3);
-    return fmCard(cat.tab, cat.label, top.map((p,i)=>fmRow(p,i,p[cat.key])).join(''));
+    return fmCard(cat.tab, cat.label, top, p=>p[cat.key]);
   }).join('');
-  body.innerHTML = season + cards + `<div id="fm-power">${fmCard('power','어택 포인트','<div class="fm-empty">계산 중...</div>')}</div>`;
+  body.innerHTML = `<div class="sv-ttl"><h2>${new Date().getFullYear()} 시즌</h2></div>` + cards + `<div id="fm-power">${fmCard('power','어택 포인트',null)}</div>`;
+  const pb = document.querySelector('#fm-power .ovc-empty'); if(pb) pb.textContent = '계산 중...';
   window.scrollTo(0,0);
   getPower().then(list=>{
     const box = document.getElementById('fm-power'); if(!box || window._currentStatTab!=='overview') return;
-    box.innerHTML = fmCard('power','어택 포인트', list.slice(0,3).map((p,i)=>fmRow(p,i,Math.round(p.power))).join(''));
-  }).catch(e=>{ console.error('어택포인트 계산 실패:', e); const box=document.getElementById('fm-power'); if(box) box.innerHTML = fmCard('power','어택 포인트',''); });
+    box.innerHTML = fmCard('power','어택 포인트', list.slice(0,3), p=>Math.round(p.power), true);
+  }).catch(e=>{ console.error('어택포인트 계산 실패:', e); const box=document.getElementById('fm-power'); if(box) box.innerHTML = fmCard('power','어택 포인트',null); });
 }
 function statBackBar(title){
-  return `<div class="fm-back"><button onclick="statGo('overview')">‹ 뒤로</button><b>${title}</b><span style="width:48px"></span></div>`;
+  return `<div class="sv-bk"><button onclick="statGo('overview')">‹ 뒤로</button><h2>${title}</h2></div>`;
 }
 
 function renderStatList(tab) {
   window._currentStatTab = tab; window.scrollTo(0,0);
-  let sorted = [...allStats].sort((a,b)=>
-    tab==='goals'?b['총골']-a['총골']:
-    tab==='assists'?b['총어시스트']-a['총어시스트']:
-    tab==='points'?b['공격포인트']-a['공격포인트']:
-    b['mom횟수']-a['mom횟수']
-  );
   const key = tab==='goals'?'총골':tab==='assists'?'총어시스트':tab==='points'?'공격포인트':'mom횟수';
   const lbl = tab==='goals'?'득점':tab==='assists'?'도움':tab==='points'?'득점+도움':'MOM';
-  sorted = sorted.filter(p=>p[key]>0);
-
-  const rows = sorted.map((p,i) => {
-    const cls = ['p1','p2','p3'][i]||'';
-    const img = p.photo_url
-      ? `<img src="${p.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`
-      : `<div style="width:40px;height:40px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--skyblue)">${p.name.slice(0,1)}</div>`;
-    const subPos = posShort(p);
-    return `<div class="stat-full-row" onclick="showPlayer(${p.id})" style="cursor:pointer">
-      <div class="stat-full-rank ${cls}">${i+1}</div>
-      <div style="display:flex;align-items:center;justify-content:center">${img}</div>
-      <div>
-        <div class="stat-full-name">${p.number||'-'} ${p.name}</div>
-        <div class="stat-full-sub">${subPos}</div>
-      </div>
-      <div class="stat-full-val">${p[key]}</div>
-    </div>`;
-  }).join('');
-
+  const sorted = [...allStats].filter(p=>p[key]>0).sort((a,b)=>b[key]-a[key]);
+  // 동점은 같은 순위
+  let rk = 0;
+  const rows = sorted.map((p,i) => { if(i===0 || p[key]!==sorted[i-1][key]) rk = i+1; return svRow(p, rk, p[key]); }).join('');
   const ttl = {goals:'득점',assists:'도움',points:'득점 + 도움',mom:'MOM'}[tab];
-  document.getElementById('scorers-body').innerHTML = statBackBar(ttl) + `<div class="stat-full-list" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
-    <div class="stat-full-header">
-      <div style="text-align:center">순위</div>
-      <div></div>
-      <div>선수</div>
-      <div style="text-align:right">${lbl}</div>
-    </div>
-    ${rows}
-  </div>`;
+  document.getElementById('scorers-body').innerHTML = statBackBar(ttl) + `<section class="ovc sv-list">
+    <div class="sv-hd"><span class="sv-rk">순위</span><span style="flex:1;padding-left:44px">선수</span><span>${lbl}</span></div>
+    ${rows || '<div class="ovc-empty">기록 없음</div>'}</section>`;
 }
 
 /* ── 어택포인트 (경기당 1000점 만점: 출석200 + 연속출석 최대100 + 평점 700) ── */
@@ -2214,31 +2223,17 @@ async function calcPowerRanking() {
 async function renderPowerRanking() {
   const body = document.getElementById('scorers-body');
   window._currentStatTab = 'power'; window.scrollTo(0,0);
-  body.innerHTML = statBackBar('어택 포인트') + '<div class="loading"><div class="spinner"></div>계산 중...</div>';
+  body.innerHTML = statBackBar('어택 포인트') + '<div class="loading" style="display:flex"><div class="spinner"></div>계산 중...</div>';
   let list = [];
   try { list = await getPower(); } catch(e) { console.error('어택포인트 계산 실패:', e); }
   if (window._currentStatTab !== 'power') return;
-  const rows = list.map((p,i) => {
-    const cls = ['p1','p2','p3'][i]||'';
-    const img = p.photo_url
-      ? `<img src="${p.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`
-      : `<div style="width:40px;height:40px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--skyblue)">${p.name.slice(0,1)}</div>`;
-    return `<div class="stat-full-row" onclick="showPlayer(${p.id})" style="cursor:pointer">
-      <div class="stat-full-rank ${cls}">${i+1}</div>
-      <div style="display:flex;align-items:center;justify-content:center">${img}</div>
-      <div>
-        <div class="stat-full-name">${p.number||'-'} ${p.name}</div>
-        <div class="stat-full-sub">출석 ${p.attended}/${p.games}(${Math.round(p.attended/p.games*100)}%) · 평균 평점 ${p.avgRating != null ? p.avgRating.toFixed(1) : '-'}</div>
-      </div>
-      <div class="stat-full-val">${Math.round(p.power)}</div>
-    </div>`;
-  }).join('');
-  body.innerHTML = statBackBar('어택 포인트') + `<div class="stat-full-list" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
-    <div class="stat-full-header"><div style="text-align:center">순위</div><div></div><div>선수</div><div style="text-align:right">포인트</div></div>
-    ${rows || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음</div>'}
-  </div>
-  <div style="margin-top:10px;padding:10px 12px;font-size:11px;line-height:1.6;color:var(--muted);background:#f8f9fb;border-radius:8px">
-    <b>1000점 만점</b> = 경기 점수 평균×0.8 + 출석률×100 + 누적출석×100<br>
+  const rows = list.map((p,i) => `<div class="sv-r" onclick="showPlayer(${p.id})"><span class="sv-rk">${i+1}</span>${svAv(p)}<p>${luEsc(p.name)}<small>출석 ${p.attended}/${p.games}(${Math.round(p.attended/p.games*100)}%) · 평균 평점 ${p.avgRating != null ? p.avgRating.toFixed(1) : '-'}</small></p><span class="sv-v">${Math.round(p.power)}</span></div>`).join('');
+  body.innerHTML = statBackBar('어택 포인트') + `<section class="ovc sv-list">
+    <div class="sv-hd"><span class="sv-rk">순위</span><span style="flex:1;padding-left:44px">선수</span><span>포인트</span></div>
+    ${rows || '<div class="ovc-empty">데이터 없음</div>'}
+  </section>
+  <div class="ovc" style="font-size:11px;line-height:1.7;color:#51607a">
+    <b style="color:var(--team-deep)">1000점 만점</b> = 경기 점수 평균×0.8 + 출석률×100 + 누적출석×100<br>
     · 경기 점수(경기당 1000점 만점): 출석 200 + 연속출석 보너스(2연속부터 +20씩, 최대 +100) + 평점×70 (출석한 경기만 평균)<br>
     · 출석률: 시즌 전체 경기 중 출석 비율이에요. 입단 전 경기는 팀원들의 평균 출석률의 70%만큼 출석한 것으로 반영해요<br>
     · 누적출석: 출석 10경기가 목표이고, 입단 전 경기도 팀 평균 출석의 70%만큼 인정돼요<br>
