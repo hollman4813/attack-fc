@@ -36,7 +36,7 @@
     --draw: #757575;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  html { background:#1a3a6b; overscroll-behavior-y:none; }
+  html { background:var(--bg); overscroll-behavior-y:none; }
   body { background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; min-height:100vh; font-size:14px; overscroll-behavior-y:none; }
 
 
@@ -769,7 +769,7 @@
   .mem-pick.on{border-color:var(--skyblue);background:#eaf4fc;font-weight:700}
   /* 인트로 화면 */
   /* 인트로: 야간 경기 조명탑이 켜지며 엠블럼을 비춘다. 들어올 땐 감속, 나갈 땐 가속·더 짧게 */
-  #intro{position:fixed;inset:0;z-index:10000;background:linear-gradient(180deg,#14305c,var(--team-navy-2));color:var(--on-team);overflow:hidden;animation:introOut .38s cubic-bezier(.7,0,.84,0) 2.35s forwards}
+  #intro{position:fixed;inset:0;z-index:10000;background:linear-gradient(180deg,var(--team-navy),var(--team-navy-2));color:var(--on-team);overflow:hidden;animation:introOut .38s cubic-bezier(.7,0,.84,0) 2.35s forwards}
   #intro.out{transform:translateY(-100%);visibility:hidden;transition:transform .3s cubic-bezier(.7,0,.84,0),visibility .3s}
   #intro::before{content:'';position:absolute;inset:0;background:#0b1f40;animation:introDark .9s ease-out .15s both}
   /* 팀명(ATTACK)이 화면 세로 정가운데, 엠블럼은 그 위 */
@@ -867,7 +867,14 @@
   <div class="intro-txt"><div class="intro-name">ATTACK</div><div class="intro-sub">SINCE 2006</div></div>
   <div class="intro-by">made by redstone</div>
 </div>
-<script>try{ if(sessionStorage.getItem('attack_intro')==='1'){ document.getElementById('intro').style.display='none'; } else { sessionStorage.setItem('attack_intro','1'); } }catch(e){}</script>
+<script>(function(){ const el = document.getElementById('intro'); if(!el) return;
+  // 인트로가 끝나면 DOM에서 제거 — iOS Safari가 고정 레이어 색을 주소창 배경으로 계속 쓰지 않게
+  const kill = () => { if(el.parentNode) el.remove(); };
+  try{ if(sessionStorage.getItem('attack_intro')==='1'){ kill(); return; } sessionStorage.setItem('attack_intro','1'); }catch(e){}
+  el.addEventListener('animationend', e => { if(e.target===el && /introOut|introFadeOut/.test(e.animationName)) kill(); });
+  el.addEventListener('transitionend', e => { if(e.target===el) kill(); });
+  setTimeout(kill, 4000);
+})();</script>
 <script>(function(){ try{ var R=document.documentElement, F=document.fonts; if(!F||!F.load) return;
   var chk=function(){ F.load("600 26px Teko","10").then(function(f){ if(f&&f.length) R.classList.add('f-teko'); }).catch(function(){});
     F.load("38px 'Black Han Sans'","\uAE40").then(function(f){ if(f&&f.length) R.classList.add('f-bhs'); }).catch(function(){}); };
