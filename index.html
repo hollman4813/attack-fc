@@ -413,7 +413,7 @@
   .ovl-k.ph{background:#dbe4f0}
   .ovl-n small{font-size:10px;font-weight:700;color:var(--muted);margin-right:2px}
   .ovl-n small.g{margin:0 0 0 3px;color:#c98a00}
-  .ovl-lo,.ovf-lo{font-size:15px}
+  .ovl-lo,.ovf-lo{font-size:15px;background:none!important;box-shadow:none!important}
   .ovc-h .ovb-ic{font-size:18px}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
@@ -1566,7 +1566,7 @@ async function loadOverview() {
     const wd = '일월화수목금토'[d.getDay()];
     document.getElementById('next-match-card').innerHTML = `
       <div class="nm-a"><span>다음 경기 · ${d.getMonth()+1}월 ${d.getDate()}일 (${wd})${u.match_time?' '+String(u.match_time).slice(0,5):''}</span><b class="nm-dd" id="nm-dd"></b></div>
-      <div class="nm-b"><div class="nm-o">⚽</div><div style="min-width:0"><h4>vs ${luEsc(u.opponents?.name || u.opponent || '')}</h4><p>📍 ${luEsc(u.grounds?.name || u.ground || '미정')}<span id="nm-wx"></span></p></div><span class="nm-go">›</span></div>
+      <div class="nm-b"><div class="nm-o">${oppEmblem(u.opponents?.name || u.opponent || '', 34)}</div><div style="min-width:0"><h4>vs ${luEsc(u.opponents?.name || u.opponent || '')}</h4><p>📍 ${luEsc(u.grounds?.name || u.ground || '미정')}<span id="nm-wx"></span></p></div><span class="nm-go">›</span></div>
       <div class="nm-c" id="nm-h2h"><span class="nm-h2h-l">상대전적</span><span style="color:var(--muted)">불러오는 중...</span></div>`;
     document.getElementById('next-match-card').onclick = () => showMatch(u.id);
     ovCountdown();
@@ -1621,6 +1621,40 @@ async function loadOverview() {
 }
 
 // ── 메인: 팀 폼 / 지난 경기 라인업 / 시즌 리더 / 경기 영상 ──
+// 상대팀 이름으로 항상 같은 모양의 가상 엠블럼을 만든다 (모양·무늬·색·상징 조합)
+const OPP_COLORS = [['#c62828','#ffffff'],['#1565c0','#ffffff'],['#2e7d32','#ffffff'],['#6a1b9a','#ffd54a'],['#ef6c00','#1a1a1a'],['#00838f','#ffffff'],['#212121','#ffd54a'],['#ad1457','#ffffff'],['#f9a825','#1a237e'],['#4e342e','#ffcc80'],['#283593','#ef5350'],['#00695c','#ffeb3b'],['#b71c1c','#212121'],['#0277bd','#ffeb3b'],['#37474f','#80deea'],['#558b2f','#ffffff']];
+const OPP_SHAPES = [
+  'M16 2 4 6v9c0 7.5 5.2 12.6 12 15 6.8-2.4 12-7.5 12-15V6z',
+  'M16 2 3 7v8.5C3 23 9 28.4 16 30c7-1.6 13-7 13-14.5V7z',
+  'M4 4h24v12c0 7-5.4 12.3-12 14-6.6-1.7-12-7-12-14z',
+  'M16 2 29 9.5v13L16 30 3 22.5v-13z',
+  'M16 2a14 14 0 1 0 0 28 14 14 0 1 0 0-28z',
+  'M8 3h16l5 6v10c0 6-5.5 10.2-13 12-7.5-1.8-13-6-13-12V9z'];
+const OPP_SYMS = [
+  '<path d="M16 10.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" fill="C2"/>',
+  '<circle cx="16" cy="16" r="4.6" fill="none" stroke="C2" stroke-width="1.8"/><circle cx="16" cy="16" r="1.6" fill="C2"/>',
+  '<path d="M17.5 9.5 12.5 17h3.2l-1.2 6 5-8h-3.2z" fill="C2"/>',
+  '<path d="M10.5 19.5 12 12.5l2.4 3 1.6-4 1.6 4 2.4-3 1.5 7z" fill="C2"/>',
+  '<path d="M16 10.5c2.6 2 4.6 4.3 4.6 7a4.6 4.6 0 0 1-9.2 0c0-2.7 2-5 4.6-7z" fill="C2"/>',
+  '<path d="M11 11h10l-5 11z" fill="C2"/>',
+  '<path d="M16 10l2 4h4l-3.2 2.6 1.2 4.4-4-2.6-4 2.6 1.2-4.4L10 14h4z" fill="none" stroke="C2" stroke-width="1.3"/>',
+  '<rect x="12" y="12" width="8" height="8" rx="1.5" transform="rotate(45 16 16)" fill="C2"/>'];
+function oppEmblem(name, size){
+  let h = 2166136261; for(const c of String(name||'?')) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;
+  const pick = (arr, k) => arr[(h >>> k) % arr.length];
+  const [c1, c2] = pick(OPP_COLORS, 0), shape = pick(OPP_SHAPES, 5), sym = pick(OPP_SYMS, 9).replace(/C2/g, c2);
+  const pat = (h >>> 13) % 5, id = 'oe' + h.toString(36);
+  const fills = [
+    '',
+    `<rect x="0" y="0" width="16" height="32" fill="${c2}" opacity=".9"/>`,
+    `<path d="M0 0h32v32H0z" fill="url(#${id}s)"/>`,
+    `<path d="M0 12h32v5H0z" fill="${c2}" opacity=".9"/>`,
+    `<path d="M0 6l16 10 16-10v6L16 22 0 12z" fill="${c2}" opacity=".85"/>`][pat];
+  const defs = pat===2 ? `<defs><pattern id="${id}s" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="3" height="6" fill="${c2}" opacity=".85"/></pattern></defs>` : '';
+  // 무늬가 있으면 가운데 동그란 배지 위에 상징을 올려 잘 보이게
+  const badge = pat ? `<circle cx="16" cy="16" r="7.4" fill="${c1}" stroke="${c2}" stroke-width="1.4"/>` : '';
+  return `<svg viewBox="0 0 32 32" width="${size||28}" height="${size||28}" aria-hidden="true">${defs}<clipPath id="${id}c"><path d="${shape}"/></clipPath><g clip-path="url(#${id}c)"><path d="${shape}" fill="${c1}"/>${fills}</g><path d="${shape}" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="1"/>${badge}${sym}</svg>`;
+}
 const OV_SHIELD = '<svg viewBox="0 0 24 24" width="60%" height="60%" aria-hidden="true"><path d="M12 2.5 4 5.5v6.2c0 4.6 3.3 8.6 8 9.8 4.7-1.2 8-5.2 8-9.8V5.5z" fill="#c9d2de"/><path d="M12 6.2 7.2 8v3.8c0 2.8 2 5.3 4.8 6.1 2.8-.8 4.8-3.3 4.8-6.1V8z" fill="#fff" opacity=".75"/></svg>';
 const OV_PAL = ['#5b6b82','#8a4b4b','#3e6f5a','#7a5fa0','#a0762e','#2f6f8f','#8f5a2f','#4f5d9a'];
 function ovOppColor(n){ let h=0; for(const c of String(n||'')) h=(h*31+c.charCodeAt(0))>>>0; return OV_PAL[h%OV_PAL.length]; }
@@ -1641,7 +1675,7 @@ async function ovFormTab(k){
     let chip;
     if(k==='prev'){ const r = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; chip = `<div class="ovf-s ${r}">${m.our_score??'-'}-${m.opponent_score??'-'}</div>`; }
     else chip = `<div class="ovf-s up">${m.match_time?String(m.match_time).slice(0,5):'미정'}</div>`;
-    return `<div class="ovf-i" onclick="showMatch(${m.id})"><div class="ovf-d">${d.getMonth()+1}.${d.getDate()}</div><div class="ovf-lo">⚽</div><div class="ovf-n">${luEsc(nm)}</div>${chip}</div>`;
+    return `<div class="ovf-i" onclick="showMatch(${m.id})"><div class="ovf-d">${d.getMonth()+1}.${d.getDate()}</div><div class="ovf-lo">${oppEmblem(nm,32)}</div><div class="ovf-n">${luEsc(nm)}</div>${chip}</div>`;
   }).join('')}</div>`;
 }
 async function ovLineup(m){
@@ -1682,7 +1716,7 @@ function ovLuRender(){
     const evs = ev(sl.p) + (sub ? ev(sl.s) : '');
     return `<div class="ovl-p" style="left:${Math.max(12,Math.min(88,x))}%;top:${6+y*0.86}%">${evs?`<span class="ovl-ev">${evs}</span>`:''}<div class="ovl-k${g==='GK'?' gk':''}${p&&p.photo_url?' ph':''}">${p&&p.photo_url?`<img src="${p.photo_url}" referrerpolicy="no-referrer" alt="" onerror="this.remove()">`:''}<span>${p&&p.guest?'용':p&&p.number!=null?p.number:luEsc((p?p.name:'?').charAt(0))}</span></div><div class="ovl-n">${p&&p.number!=null&&!p.guest?`<small>${p.number}</small>`:''}${luEsc(p?p.name:'?')}${p&&p.guest?'<small class="g">용병</small>':''}</div>${sub?`<div class="ovl-s">↔ ${luEsc(sub.name)}</div>`:''}</div>`;
   }).join('');
-  box.innerHTML = `<div class="ovl-m" onclick="showMatch(${m.id})"><div class="ovl-g"><span class="ovl-t">ATTACK</span><img src="emblem_v4.png" alt=""><span class="ovl-sc ${r}">${m.our_score??'-'} - ${m.opponent_score??'-'}</span><span class="ovl-lo">⚽</span><span class="ovl-t">${luEsc(nm)}</span></div><div class="ovl-ft">경기 종료</div><div class="ovl-dt">${d.getMonth()+1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})${m.grounds?.name?' · '+luEsc(m.grounds.name):''}</div></div>
+  box.innerHTML = `<div class="ovl-m" onclick="showMatch(${m.id})"><div class="ovl-g"><span class="ovl-t">ATTACK</span><img src="emblem_v4.png" alt=""><span class="ovl-sc ${r}">${m.our_score??'-'} - ${m.opponent_score??'-'}</span><span class="ovl-lo">${oppEmblem(nm,26)}</span><span class="ovl-t">${luEsc(nm)}</span></div><div class="ovl-ft">경기 종료</div><div class="ovl-dt">${d.getMonth()+1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})${m.grounds?.name?' · '+luEsc(m.grounds.name):''}</div></div>
     <div class="ovl-q">${[0,1,2,3].map(i=>`<button class="${i===L.q?'on':''}" ${L.qs.includes(i)?`onclick="ovLuQ(${i})"`:'disabled'}>${i+1}Q</button>`).join('')}</div>
     <div class="ovl-info">${L.q+1}쿼터 · ${luEsc(e.formation)}${sc?` · 쿼터 스코어 ${sc.us}:${sc.them}`:''}</div>
     <div class="ovl-pitch"><i class="c"></i><i class="b"></i>${players}</div>`;
