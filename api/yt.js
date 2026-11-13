@@ -2,7 +2,7 @@
 // 순서: ① YouTube Data API (환경변수 YT_API_KEY 가 있을 때) ② RSS 피드 ③ 재생목록 페이지
 const HANDLE = 'ch.attack4905';
 const PLAYLIST_ID = process.env.YT_PLAYLIST_ID || 'PLYNW_qDTSA36dU3n9bd-lKPXKlyqn67dV';
-const UA = { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36', 'accept-language': 'ko-KR,ko;q=0.9' };
+const UA = { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36', 'accept-language': 'ko-KR,ko;q=0.9', 'cookie': 'CONSENT=YES+cb; SOCS=CAI' };
 let cache = { at: 0, data: null };
 
 function decode(s) {
@@ -43,6 +43,19 @@ function parsePlaylistPage(html) {
     const s = agoSec(ago);
     out.push({ id, title: unjson(title || ''), published: s != null ? new Date(Date.now() - s * 1000).toISOString() : null });
   }
+  if (!out.length) {
+    // 새 화면 구조(lockupViewModel)
+    const re2 = /"lockupViewModel":\{"contentImage".*?"contentId":"([\w-]{11})"/g; let k;
+    const re3 = /"contentId":"([\w-]{11})","contentType":"LOCKUP_CONTENT_TYPE_VIDEO"/g;
+    while ((k = re3.exec(html)) || (k = re2.exec(html))) {
+      const id = k[1]; if (seen.has(id)) continue; seen.add(id);
+      const chunk = html.slice(Math.max(0, k.index - 3000), k.index + 6000);
+      const title = (chunk.match(/"title":\{"content":"((?:[^"\\]|\\.)*)"/) || [])[1];
+      const ago = ([...chunk.matchAll(/"content":"((?:[^"\\]|\\.)*)"/g)].map(x => unjson(x[1])).find(x => /전$|ago$/.test(x))) || '';
+      const s = agoSec(ago);
+      out.push({ id, title: unjson(title || ''), published: s != null ? new Date(Date.now() - s * 1000).toISOString() : null });
+    }
+  }
   return out;
 }
 async function viaApi() {
@@ -61,7 +74,10 @@ async function viaFeed() {
 async function viaPage() {
   const r = await fetch(`https://www.youtube.com/playlist?list=${PLAYLIST_ID}&hl=ko&gl=KR`, { headers: UA });
   if (!r.ok) throw new Error('page ' + r.status);
-  const v = parsePlaylistPage(await r.text()); if (!v.length) throw new Error('page empty'); return v;
+  const html = await r.text();
+  const v = parsePlaylistPage(html);
+  if (!v.length) { const t = (html.match(/<title>([^<]*)<\/title>/) || [])[1] || ''; throw new Error(`page empty (${html.length}자, ${r.url.includes('consent') ? '동의 페이지' : t.slice(0, 40)})`); }
+  return v;
 }
 module.exports = async (req, res) => {
   const errors = [];
