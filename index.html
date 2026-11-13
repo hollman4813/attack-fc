@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ATTACK F.C.">
+<meta name="apple-mobile-web-app-title" content="ATTACK FC">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1a3a6b">
 <link rel="apple-touch-icon" href="emblem_v4.png">
@@ -13,7 +13,7 @@
 <link rel="icon" type="image/png" href="emblem_v4.png">
 <link rel="apple-touch-icon" href="emblem_v4.png">
 <link rel="manifest" href="manifest.json">
-<title>ATTACK F.C.</title>
+<title>ATTACK FC</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Teko:wght@500;600;700&family=Black+Han+Sans&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -900,7 +900,7 @@
   <div class="hero-main" style="padding:14px 16px">
     <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC" onclick="admSecretTap()" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
     <div class="hero-info" style="flex:1;margin-left:12px">
-      <div class="team-name" style="font-size:17px;font-weight:700;color:#fff;white-space:nowrap;display:flex;align-items:center;gap:8px">ATTACK F.C.<button id="season-badge" class="hd-season" onclick="seasonAdmin()">2026 시즌</button></div>
+      <div class="team-name" style="font-size:17px;font-weight:700;color:#fff;white-space:nowrap;display:flex;align-items:center;gap:8px">ATTACK FC<button id="season-badge" class="hd-season" onclick="seasonAdmin()">2026 시즌</button></div>
       <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px">창단 2006 · <img src="https://flagcdn.com/w40/kr.png" style="width:16px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:2px"> 대한민국</div>
     </div>
     <!-- 우측 상단: 유튜브 아이콘 + 로그인 -->
@@ -988,12 +988,12 @@
       <div id="teamstats-content" style="display:none;padding:0 12px 16px"></div>
     </div>
 
-    <footer class="ov-copy">© Copyright 2026 ATTACK F.C.</footer>
+    <footer class="ov-copy">© Copyright 2026 ATTACK FC</footer>
   </div>
   <!-- 경기 상세 페이지 -->
   <div class="section" id="match-detail">
     <div id="match-detail-content"></div>
-    <footer class="ov-copy">© Copyright 2026 ATTACK F.C.</footer>
+    <footer class="ov-copy">© Copyright 2026 ATTACK FC</footer>
   </div>
 
 
@@ -1169,7 +1169,7 @@
     <div style="background:linear-gradient(180deg,#1a3a6b,#1e4d8c);padding:calc(20px + env(safe-area-inset-top, 0px)) 16px">
       <div style="display:flex;justify-content:space-between;margin-bottom:12px"><button onclick="exitAdmin()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;padding:0;font-family:inherit">← 돌아가기</button><button onclick="adminLogout()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:12px;cursor:pointer;padding:5px 10px;border-radius:12px;font-family:inherit">로그아웃</button></div>
       <div style="font-size:18px;font-weight:700;color:#fff">관리자 모드</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">ATTACK F.C. 데이터 관리</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">ATTACK FC 데이터 관리</div>
     </div>
     <div style="padding:16px 12px">
 
@@ -1620,7 +1620,7 @@
   <!-- 선수 상세 페이지 -->
   <div class="section" id="player-detail">
     <div id="player-detail-content"></div>
-    <footer class="ov-copy">© Copyright 2026 ATTACK F.C.</footer>
+    <footer class="ov-copy">© Copyright 2026 ATTACK FC</footer>
   </div>
 
 </main>
@@ -2079,7 +2079,7 @@ function ovDots(){
   }
   requestAnimationFrame(draw);
 }
-const COPY_HTML = '<footer class="ov-copy">© Copyright 2026 ATTACK F.C.</footer>';
+const COPY_HTML = '<footer class="ov-copy">© Copyright 2026 ATTACK FC</footer>';
 function ovCountdown(){
   const u = window._nextMatch, dd = document.getElementById('nm-dd'); if(!u || !dd) return;
   const day = String(u.match_date).slice(0,10);
@@ -2866,8 +2866,8 @@ function addToCalendar(matchId) {
     'BEGIN:VEVENT',
     `DTSTART:${dtStart}`,
     `DTEND:${dtEnd}`,
-    `SUMMARY:ATTACK F.C. vs ${opponent}`,
-    `DESCRIPTION:ATTACK F.C. vs ${opponent} 경기`,
+    `SUMMARY:ATTACK FC vs ${opponent}`,
+    `DESCRIPTION:ATTACK FC vs ${opponent} 경기`,
     ground ? `LOCATION:${ground}` : '',
     `STATUS:CONFIRMED`,
     `BEGIN:VALARM`,
@@ -4185,7 +4185,7 @@ async function showMatch(matchId, skipPushState) {
 
   const heroHtml = `<div class="mdx-hero">${backBar}
     <div class="mdx-meta">${dateStr} (${dow})${isUpcoming&&m.match_time?' · '+m.match_time:''} · ${luEsc(ground)}</div>
-    <div class="mdx-sb">${team(ourEm,'ATTACK F.C.')}
+    <div class="mdx-sb">${team(ourEm,'ATTACK FC')}
       <div class="mdx-sc">${isUpcoming
         ? `<div class="mdx-num vs">VS</div>${mxDday(m)}`
         : `<div class="mdx-num">${m.our_score}<i>:</i>${m.opponent_score}</div><span class="mdx-rl ${rc==='win'?'w':rc==='lose'?'l':''}">${rc==='win'?'승리':rc==='lose'?'패배':'무승부'}</span>`}</div>
@@ -4697,7 +4697,7 @@ function gateReopen(){ gateRender(); }
 const GATE_FLOW = '로그인 → 본인 이름 선택 → 가입 신청 → 관리자가 승인하면 가입이 완료됩니다.';
 const gateSkipBtn = () => `<button onclick="gateClose()" style="width:100%;margin-top:14px;height:52px;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.6);border-radius:12px;color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer">메인 화면으로</button>`;
 const gateLogoutBtn = () => `<button onclick="memLogout()" style="width:100%;margin-top:2px;padding:10px;background:none;border:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer">다른 계정으로 로그인 (로그아웃)</button>`;
-const gateHead = (title, sub) => `<button class="gate-x" onclick="gateClose()" aria-label="닫기">✕</button><div style="text-align:center;padding-top:28px"><img src="emblem_v4.png" alt="" style="width:76px;height:76px;border-radius:50%;object-fit:cover"><div style="font-size:12px;color:var(--muted);letter-spacing:1px;margin-top:10px">ATTACK F.C.</div><div style="font-size:20px;font-weight:700;margin:6px 0 6px">${title}</div>${sub?`<div style="font-size:13px;color:var(--muted);line-height:1.6">${sub}</div>`:''}</div>`;
+const gateHead = (title, sub) => `<button class="gate-x" onclick="gateClose()" aria-label="닫기">✕</button><div style="text-align:center;padding-top:28px"><img src="emblem_v4.png" alt="" style="width:76px;height:76px;border-radius:50%;object-fit:cover"><div style="font-size:12px;color:var(--muted);letter-spacing:1px;margin-top:10px">ATTACK FC</div><div style="font-size:20px;font-weight:700;margin:6px 0 6px">${title}</div>${sub?`<div style="font-size:13px;color:var(--muted);line-height:1.6">${sub}</div>`:''}</div>`;
 function gateRender(){
   if(!authSession){ gateLogin(); return; }
   if(!myMember){ gateClose(); return; }          // 회원 설정(SQL) 전에는 막지 않음
@@ -5284,7 +5284,7 @@ async function luMakeImage(o){
   ctx.fillStyle = '#f4f6fa'; ctx.fillRect(0,0,W,H);
   ctx.fillStyle = '#1a3a6b'; ctx.fillRect(0,0,W,96);
   ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-  ctx.font = `700 40px ${FONT}`; ctx.fillText('ATTACK F.C. 라인업', PAD, 36);
+  ctx.font = `700 40px ${FONT}`; ctx.fillText('ATTACK FC 라인업', PAD, 36);
   ctx.font = `500 26px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillText(o.label||'', PAD, 72);
   if(o.finished && o.rec){ let tu=0,tt=0; [0,1,2,3].forEach(q=>{ if(!plan[q]) return; const x=luRecOf(o.rec,q); const sc=luQScore(x); tu+=sc.us; tt+=sc.them; }); ctx.textAlign='right'; ctx.font=`800 44px ${FONT}`; ctx.fillStyle='#fff'; ctx.fillText(`${tu} : ${tt}`, W-PAD, 48); ctx.textAlign='left'; }
   for(let q=0;q<4;q++){

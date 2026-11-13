@@ -1,7 +1,7 @@
 {
-  "name": "ATTACK F.C.",
-  "short_name": "ATTACK F.C.",
-  "description": "ATTACK F.C. 팀 관리 앱",
+  "name": "ATTACK FC",
+  "short_name": "ATTACK FC",
+  "description": "ATTACK FC 팀 관리 앱",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a3a6b",
