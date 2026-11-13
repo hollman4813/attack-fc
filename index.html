@@ -2268,7 +2268,7 @@ function squadFilter(pos){ window._sqPos = pos; squadRender(); }
 // 포지션 표시 이름 — 화면 전체 공통 (여기만 바꾸면 스쿼드·플레이어 카드·개인기록 모두 반영)
 const POS_NAME = {GK:'Goalkeeper', DF:'Defender', MF:'Midfielder', FW:'Forward'};
 // 세부 포지션 표시 이름 — 화면 전체 공통
-const SUB_POS_NAME = {GK:'Goalkeeper', CB:'Centre-Back', FB:'Full-Back', CDM:'Defensive Midfielder', CM:'Central Midfielder', CAM:'Attacking Midfielder', CF:'Centre-Forward', WF:'Winger'};
+const SUB_POS_NAME = {GK:'Goalkeeper', CB:'Centre-Back', FB:'Full-Back', CDM:'Defensive Midfielder', CM:'Central Midfielder', CAM:'Attacking Midfielder', CF:'Centre-Forward', WF:'Wing Forward'};
 // 선수 포지션 한 줄 표기 (세부 포지션 우선, 없으면 대분류 코드)
 function posShort(p){ return [p.sub_position1, p.sub_position2].filter(Boolean).join(' · ') || p.position || '-'; }
 
