@@ -4534,7 +4534,7 @@ function mrRender(){
     </div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px">${pill(currentSeasonId, currentSeasonName)}${seasons.filter(s=>s!==currentSeasonId).map(s=>pill(s,'시즌 '+s)).join('')}${pill('all','통산')}</div>
     ${GP ? `<div class="rs">
-    ${TM ? card(`${ttl('출석')}<div class="rs-rank">${[['참석',GP,`/ ${TM}경기`],['참석률',`${attRate}<small>%</small>`,''],['연속 출석',`${curAtt}<small>경기</small>`,'지금'],['최장 연속',`${bestAtt}<small>경기</small>`,'']].map(([l,v,x])=>`<div><span>${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`) : ''}
+    ${TM ? card(`${ttl('출석')}<div class="rs-rank">${[['참석',GP,`/ ${TM}경기`],['참석률',`${attRate}<small>%</small>`,''],['연속 출석',`${curAtt}<small>경기</small>`,'진행 중'],['최장 연속',`${bestAtt}<small>경기</small>`,'']].map(([l,v,x])=>`<div><span>${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`) : ''}
     ${card(`${ttl('팀 내 순위')}<div class="rs-rank">${ranks.map(([n,r,v])=>`<div class="${r&&r<=3?'top':''}"><span>${n}</span><b>${r?r+'<small>위</small>':'-'}</b><i>${v}${n==='출전'?'경기':n==='득점'?'골':n==='도움'?'개':''}</i></div>`).join('')}</div>`)}
     ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div class="rs-pos">
       <div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/posList[0][1]); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?g:''}</u>`; }).join('')}</div>
