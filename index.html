@@ -768,7 +768,7 @@
   .lu-pitch .lu-box{position:absolute;left:24%;right:24%;height:15%;border:2px solid rgba(255,255,255,.35);pointer-events:none}
   .lu-pitch .lu-box.b{bottom:-2px;border-bottom:none;border-radius:6px 6px 0 0}
   .lu-pitch .lu-box.t{top:-2px;border-top:none;border-radius:0 0 6px 6px}
-  .lu-slot{position:absolute;transform:translate(-50%,-56%);text-align:center;cursor:pointer;width:78px}
+  .lu-slot{position:absolute;z-index:2;transform:translate(-50%,-56%);text-align:center;cursor:pointer;width:78px}
   .lu-av{position:relative;width:46px;height:46px;border-radius:50%;margin:0 auto;background:linear-gradient(160deg,#2a78c8,#143a70);border:3px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;box-sizing:border-box;box-shadow:0 3px 8px rgba(0,0,0,.28)}
   .lu-av img{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:50%;object-fit:cover;background:#dfe6ee}
   .lu-av i{position:absolute;font-style:normal;min-width:22px;height:22px;border-radius:11px;background:#fff;color:#111;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.45);padding:0 0 3px;box-sizing:border-box;z-index:2}
@@ -778,8 +778,9 @@
   .lu-av .lu-bgrp i.og{background:#e5484d}
   .lu-av .lu-bgrp.a{right:calc(100% - 13px);flex-direction:row-reverse}.lu-av .lu-bgrp.a i+i{margin-right:-13px}
   .lu-av i.lu-bsub{left:-7px;top:-4px;background:#e5484d;color:#fff}
-  .lu-nm{display:inline-block;max-width:100%;font-size:11px;font-weight:700;color:#fff;line-height:1.3;margin-top:4px;padding:1px 7px;border-radius:9px;background:rgba(8,40,26,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:top}
-  .lu-nm .no{opacity:.75;font-weight:500;margin-right:2px}
+  .lu-nm{display:inline-flex;align-items:center;justify-content:center;gap:3px;max-width:100%;height:19px;box-sizing:border-box;font-size:11px;font-weight:700;color:#fff;line-height:1;margin-top:4px;padding:0 8px;border-radius:10px;background:rgba(8,40,26,.5);white-space:nowrap;overflow:hidden;vertical-align:top}
+  .lu-nm .no{opacity:.75;font-weight:500}
+  .lu-nm .tx{min-width:0;overflow:hidden;text-overflow:ellipsis;padding-top:1px}
   .lu-nsub{font-size:10px;font-weight:700;color:#ffe27a;text-shadow:0 1px 2px rgba(0,0,0,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
   .lu-ps{font-size:9px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.7);margin-top:1px}
   .lu-chip{background:#eef3fa;color:#1a3a6b;border-radius:12px;padding:4px 10px;font-size:12px;font-weight:600}
@@ -5127,7 +5128,7 @@ function luBubble(o){
   return `<div class="lu-slot" style="left:${o.x}%;top:${o.y}%;${o.click?'':'cursor:default'}" ${o.click?`onclick="${o.click}"`:''}>
     <div class="lu-av" style="${o.ring?`border-color:${o.ring};`:''}${o.empty?'background:#9aa4b2':''}"><span>${luEsc(o.number??'')}</span>${o.photo?`<img src="${luEsc(o.photo)}" alt="" onerror="this.remove()">`:''}
       ${o.sub?'<i class="lu-bsub">↻</i>':''}${a?`<span class="lu-bgrp a">${'<i>👟</i>'.repeat(Math.min(a,5))}</span>`:''}${(g||og)?`<span class="lu-bgrp g">${'<i>⚽</i>'.repeat(Math.min(g,5))}${'<i class="og">⚽</i>'.repeat(Math.min(og,5))}</span>`:''}</div>
-    <div class="lu-nm"${o.empty?' style="background:none;opacity:.8"':''}>${(o.empty||!o.photo)?'':`<span class="no">${luEsc(o.number??'')}</span>`}${luEsc(o.name)}</div>
+    <div class="lu-nm"${o.empty?' style="background:none;opacity:.8"':''}>${(o.empty||!o.photo)?'':`<span class="no">${luEsc(o.number??'')}</span>`}<span class="tx">${luEsc(o.name)}</span></div>
     ${o.sub?`<div class="lu-nsub">↻ ${luEsc(o.sub.name)}${o.sub.tag||''}</div>`:''}
     <div class="lu-ps">${luEsc(o.slot||'')}</div></div>`;
 }
