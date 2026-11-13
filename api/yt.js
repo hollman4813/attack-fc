@@ -1,8 +1,8 @@
 // 팀 유튜브 채널의 최근 영상 목록 (공개 RSS 피드). 제목·영상 ID·게시일만 돌려줍니다.
 const HANDLE = 'ch.attack4905';
 // 메인에 보여줄 재생목록: 이름으로 찾고, 재생목록 ID(PL...)를 알면 PLAYLIST_ID 에 넣는 게 가장 확실합니다.
-const PLAYLIST_NAME = '2025ing';
-const PLAYLIST_ID = process.env.YT_PLAYLIST_ID || '';
+const PLAYLIST_NAME = 'ATTACK FC 2025ing';
+const PLAYLIST_ID = process.env.YT_PLAYLIST_ID || 'PLYNW_qDTSA36dU3n9bd-lKPXKlyqn67dV';
 let cache = { at: 0, data: null, channelId: null, playlistId: PLAYLIST_ID || null };
 
 function decode(s) {
