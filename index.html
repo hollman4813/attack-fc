@@ -563,6 +563,18 @@
   .f-teko .ts-tr b{padding-top:3px}
   .ts-tr b.g{color:#51607a}.ts-tr b.w{color:#2e7d32}.ts-tr b.d{color:#9aa3ad}.ts-tr b.l{color:#d32f2f}
   #ts-tables .ovc-h{flex-wrap:wrap;gap:8px}
+  /* 시즌 뱃지·선택 */
+  .hd-season{border:0;background:var(--team-gold);color:var(--team-deep);font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:800;height:20px;line-height:1;padding:0 8px;border-radius:10px;cursor:default;display:inline-flex;align-items:center}
+  .ss-wrap{position:relative;display:inline-flex;align-items:center}
+  .ss-wrap:after{content:'';position:absolute;right:15px;top:50%;width:7px;height:7px;border-right:2px solid var(--team-deep);border-bottom:2px solid var(--team-deep);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+  .ss-sel{appearance:none;-webkit-appearance:none;border:0;background:#fff;border-radius:20px;height:40px;padding:0 40px 0 16px;font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:800;color:var(--team-deep);cursor:pointer;box-shadow:0 1px 2px rgba(15,40,80,.06),0 4px 12px rgba(15,40,80,.06)}
+  .sv-bk-s{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted)}
+  .ss-sheet h3{margin:4px 0 4px;font-size:17px;font-weight:800;color:var(--team-deep)}
+  .ss-sheet p{margin:0 0 12px;font-size:12px;color:var(--muted)}
+  .ss-opt,.ss-add{display:flex;align-items:center;justify-content:space-between;width:100%;height:48px;margin-top:8px;padding:0 16px;border-radius:12px;border:1px solid #e6ebf2;background:#fff;font-family:inherit;font-size:15px;font-weight:700;color:var(--team-deep);cursor:pointer}
+  .ss-opt.on{border-color:var(--team-navy);background:#eef4fc}
+  .ss-opt em{font-style:normal;font-size:11px;font-weight:800;background:var(--team-gold);border-radius:8px;padding:3px 8px}
+  .ss-add{justify-content:center;background:var(--team-navy);color:#fff;border:0;margin:12px 0 calc(6px + env(safe-area-inset-bottom,0px))}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
@@ -888,7 +900,7 @@
   <div class="hero-main" style="padding:14px 16px">
     <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC" onclick="admSecretTap()" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
     <div class="hero-info" style="flex:1;margin-left:12px">
-      <div class="team-name" style="font-size:17px;font-weight:700;color:#fff;white-space:nowrap">ATTACK F.C.</div>
+      <div class="team-name" style="font-size:17px;font-weight:700;color:#fff;white-space:nowrap;display:flex;align-items:center;gap:8px">ATTACK F.C.<button id="season-badge" class="hd-season" onclick="seasonAdmin()">2026 시즌</button></div>
       <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px">창단 2006 · <img src="https://flagcdn.com/w40/kr.png" style="width:16px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:2px"> 대한민국</div>
     </div>
     <!-- 우측 상단: 유튜브 아이콘 + 로그인 -->
@@ -1679,7 +1691,74 @@ const TAB_ORDER = ['overview','matches','squad','scorers','teamstats'];
 let allStats = [];
 let currentSeasonId = 1;
 let currentSeasonName = "2026 시즌";
-let allSeasons = [];
+let allSeasons = [{id:1, year:2026}];
+
+/* ── 시즌 설정 (lineup_store 'app_season') ──
+   current: 현재 시즌 id — 톱바 뱃지, 새 경기 등록, 통계 기본값의 기준 */
+function seasonName(id){ const x = allSeasons.find(s=>s.id===id); return x ? `${x.year} 시즌` : `시즌 ${id}`; }
+function seasonApply(cfg){
+  if (cfg && Array.isArray(cfg.list) && cfg.list.length) allSeasons = cfg.list.map(x=>({id:+x.id, year:+x.year})).sort((a,b)=>a.year-b.year);
+  if (cfg && cfg.current != null && allSeasons.some(x=>x.id===+cfg.current)) currentSeasonId = +cfg.current;
+  currentSeasonName = seasonName(currentSeasonId);
+  const b = document.getElementById('season-badge'); if (b) b.textContent = currentSeasonName;
+}
+async function seasonLoad(){
+  // 스크립트 초기 실행 중이라 LU_STORE 상수보다 먼저 불릴 수 있어 테이블 이름을 직접 쓴다
+  try { const r = await api('lineup_store?select=data&key=eq.app_season'); seasonApply(r && r[0] ? r[0].data : null); } catch(e){ seasonApply(null); }
+}
+// 시즌 선택 드롭다운 (플레이어 통계·팀 통계 상단)
+function seasonSelect(sel, onchange){
+  return `<label class="ss-wrap"><select class="ss-sel" onchange="${onchange}(+this.value)" aria-label="시즌 선택">${[...allSeasons].reverse().map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${x.year} 시즌</option>`).join('')}</select></label>`;
+}
+// 시즌별 선수 기록 / 팀 요약 — 경기·기록 원본에서 직접 계산 (캐시)
+window._ssCache = {};
+function seasonData(sid){
+  if (!window._ssCache[sid]) window._ssCache[sid] = (async()=>{
+    const [ms, rows, players] = await Promise.all([
+      api(`matches?select=id,result,our_score,opponent_score&status=eq.finished&season_id=eq.${sid}`),
+      api('match_stats?select=player_id,match_id,attended,goals,assists,is_mom'),
+      api('players?select=id,name,number,photo_url,position,sub_position1,sub_position2,region')
+    ]);
+    const ids = new Set(ms.map(m=>m.id)), by = {};
+    rows.forEach(r=>{ if(!ids.has(r.match_id)) return; const o = by[r.player_id] || (by[r.player_id] = {g:0,a:0,mom:0,apps:0});
+      o.g += r.goals||0; o.a += r.assists||0; if(r.is_mom) o.mom++; if(r.attended) o.apps++; });
+    const stats = players.filter(p=>by[p.id]).map(p=>{ const o = by[p.id]; return {...p, player_id:p.id, 총골:o.g, 총어시스트:o.a, 공격포인트:o.g+o.a, mom횟수:o.mom, 출전:o.apps}; });
+    const W = ms.filter(m=>m.result==='Win').length, D = ms.filter(m=>m.result==='Draw').length, L = ms.filter(m=>m.result==='Lose').length;
+    const gf = ms.reduce((t,m)=>t+(m.our_score||0),0), ga = ms.reduce((t,m)=>t+(m.opponent_score||0),0);
+    return { stats, summary: {총경기수:ms.length, 승:W, 무:D, 패:L, 총득점:gf, 총실점:ga, 득실차:gf-ga} };
+  })().catch(e=>{ delete window._ssCache[sid]; throw e; });
+  return window._ssCache[sid];
+}
+// 관리자: 톱바 시즌 뱃지 → 현재 시즌 변경 / 새 시즌 추가
+function seasonAdmin(){
+  if (!isAdmin) return;
+  document.getElementById('season-sheet')?.remove();
+  const box = document.createElement('div'); box.id = 'season-sheet';
+  const next = Math.max(...allSeasons.map(x=>x.year)) + 1;
+  box.innerHTML = `<div class="lu-shade" onclick="document.getElementById('season-sheet').remove()"></div>
+    <div class="lu-sheetbox ss-sheet"><h3>현재 시즌</h3><p>현재 시즌이 톱바 표시, 통계 기본값, 새 경기 등록 기준이 돼요.</p>
+    ${[...allSeasons].reverse().map(x=>`<button class="ss-opt${x.id===currentSeasonId?' on':''}" onclick="seasonSetCurrent(${x.id})">${x.year} 시즌${x.id===currentSeasonId?'<em>현재</em>':''}</button>`).join('')}
+    <button class="ss-add" onclick="seasonAdd(${next})">＋ ${next} 시즌 추가하고 현재 시즌으로</button></div>`;
+  document.body.appendChild(box);
+}
+async function seasonSave(cfg){
+  const ok = await luPut('app_season', cfg);
+  if (!ok) { alert('시즌 저장 실패: ' + (LU.lastErr||'')); return false; }
+  seasonApply(cfg); window._ssCache = {}; window._powerList = null; window._powerCache = {}; allStats = [];
+  window._statSeason = null; window._tsSeason = null;
+  ['matches','overview','teamstats','scorers','squad'].forEach(k=>{ loaded[k]=false; });
+  document.getElementById('season-sheet')?.remove();
+  const act = document.querySelector('.team-tab.active'); if (act) act.click();
+  return true;
+}
+function seasonSetCurrent(id){ if (id===currentSeasonId) { document.getElementById('season-sheet')?.remove(); return; } if(!confirm(`${seasonName(id)}을 현재 시즌으로 바꿀까요?`)) return; seasonSave({current:id, list:allSeasons}); }
+async function seasonAdd(year){
+  if (!confirm(`${year} 시즌을 추가하고 현재 시즌으로 바꿀까요?\n이후 등록하는 경기는 ${year} 시즌으로 저장돼요.`)) return;
+  const id = Math.max(...allSeasons.map(x=>x.id)) + 1;
+  // seasons 테이블이 있으면 같은 id로 추가 (없으면 무시)
+  try { await fetch(`${SUPA_URL}/rest/v1/seasons`, {method:'POST', headers:{apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`,'Content-Type':'application/json',Prefer:'resolution=ignore-duplicates,return=minimal'}, body: JSON.stringify({id, name:`${year} 시즌`})}); } catch(e){}
+  seasonSave({current:id, list:[...allSeasons, {id, year}]});
+}
 let allAdminMatches = [];
 let allOpponents = [];
 let allGrounds = [];
@@ -1687,14 +1766,14 @@ const loaded = {};
 
 /* ── 팀 개요 ── */
 async function loadOverview() {
-  const [summary, stats, matches, upcoming, photoPlayers] = await Promise.all([
-    api('view_season_summary?select=*'),
-    api('view_season_stats?select=*'),
+  const [sd, matches, upcoming, photoPlayers] = await Promise.all([
+    seasonData(currentSeasonId),
     api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.finished&season_id=eq.${currentSeasonId}&order=match_date.desc&limit=10`),
     api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.upcoming&season_id=eq.${currentSeasonId}&order=match_date.asc&limit=1`),
     api('players?select=name,photo_url,position,sub_position1,sub_position2,region'),
     oppMapLoad()
   ]);
+  const stats = sd.stats.map(x=>({...x}));
   // photo_url, 포지션, 거주지 병합
   const overviewPlayerMap = {};
   photoPlayers.forEach(p => overviewPlayerMap[p.name] = p);
@@ -1707,7 +1786,7 @@ async function loadOverview() {
     s.region = pm.region || null;
   });
   allStats = stats;
-  const s = summary[0] || {};
+  const s = sd.summary;
 
   // 다음 경기
   if (upcoming.length > 0) {
@@ -2087,17 +2166,18 @@ async function loadMatches() {
 }
 
 /* ── 플레이어 통계 ── */
+let statStats = [];   // 플레이어 통계 탭에서 보고 있는 시즌의 기록
 async function loadScorers(restoreTab) {
-  if (!allStats.length) allStats = await api('view_season_stats?select=*');
-  // photo_url, 포지션 정보 병합
-  const players = await api('players?select=name,photo_url,position,sub_position1,sub_position2');
-  const playerMap = {};
-  players.forEach(p => playerMap[p.name] = p);
-  allStats = allStats.map(s => ({...s, ...(playerMap[s.name]||{}), name: s.name}));
+  const sid = window._statSeason || currentSeasonId;
+  statStats = (await seasonData(sid)).stats;
   document.getElementById('scorers-loading').style.display = 'none';
   document.getElementById('scorers-content').style.display = 'block';
-  window._powerList = null;
   statGo(restoreTab || window._currentStatTab || 'overview');
+}
+async function statSeason(sid){
+  window._statSeason = sid;
+  document.getElementById('scorers-body').innerHTML = '<div class="loading" style="display:flex"><div class="spinner"></div>불러오는 중...</div>';
+  await loadScorers(window._currentStatTab);
 }
 
 function statCard(p, i, key) {
@@ -2136,34 +2216,42 @@ function fmCard(tab, label, list, valOf){
     <div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b><span>${posShort(p)}</span></div><div class="sv-big">${valOf(p)}</div></div>
     ${list.slice(1,3).map((q,i)=>svRow(q,i+2,valOf(q))).join('')}</section>`;
 }
-async function getPower(){
-  if(!window._powerList) window._powerList = await calcPowerRanking();
-  return window._powerList;
+async function getPower(sid){
+  sid = sid || currentSeasonId;
+  if (sid === currentSeasonId) {
+    if(!window._powerList) window._powerList = await calcPowerRanking();
+    return window._powerList;
+  }
+  window._powerCache = window._powerCache || {};
+  if (!window._powerCache[sid]) window._powerCache[sid] = await calcPowerRanking(sid);
+  return window._powerCache[sid];
 }
 function renderStatOverview() {
   window._currentStatTab = 'overview';
   const body = document.getElementById('scorers-body');
   const cards = FM_CATS.map(cat => {
-    const top = [...allStats].filter(p=>p[cat.key]>0).sort((a,b)=>b[cat.key]-a[cat.key]).slice(0,3);
+    const top = [...statStats].filter(p=>p[cat.key]>0).sort((a,b)=>b[cat.key]-a[cat.key]).slice(0,3);
     return fmCard(cat.tab, cat.label, top, p=>p[cat.key]);
   }).join('');
-  body.innerHTML = `<div class="sv-ttl"><h2>${new Date().getFullYear()} 시즌</h2></div>` + cards + `<div id="fm-power">${fmCard('power','어택 포인트',null)}</div>`;
+  const sid = window._statSeason || currentSeasonId;
+  body.innerHTML = `<div class="sv-ttl">${seasonSelect(sid,'statSeason')}</div>` + cards + `<div id="fm-power">${fmCard('power','어택 포인트',null)}</div>`;
   const pb = document.querySelector('#fm-power .ovc-empty'); if(pb) pb.textContent = '계산 중...';
   window.scrollTo(0,0);
-  getPower().then(list=>{
-    const box = document.getElementById('fm-power'); if(!box || window._currentStatTab!=='overview') return;
+  getPower(sid).then(list=>{
+    const box = document.getElementById('fm-power'); if(!box || window._currentStatTab!=='overview' || (window._statSeason||currentSeasonId)!==sid) return;
     box.innerHTML = fmCard('power','어택 포인트', list.slice(0,3), p=>Math.round(p.power));
   }).catch(e=>{ console.error('어택포인트 계산 실패:', e); const box=document.getElementById('fm-power'); if(box) box.innerHTML = fmCard('power','어택 포인트',null); });
 }
 function statBackBar(title){
-  return `<div class="sv-bk"><button onclick="statGo('overview')">‹ 뒤로</button><h2>${title}</h2></div>`;
+  const sid = window._statSeason || currentSeasonId;
+  return `<div class="sv-bk"><button onclick="statGo('overview')">‹ 뒤로</button><h2>${title}</h2><span class="sv-bk-s">${seasonName(sid)}</span></div>`;
 }
 
 function renderStatList(tab) {
   window._currentStatTab = tab; window.scrollTo(0,0);
   const key = tab==='goals'?'총골':tab==='assists'?'총어시스트':tab==='points'?'공격포인트':'mom횟수';
   const lbl = tab==='goals'?'득점':tab==='assists'?'도움':tab==='points'?'득점+도움':'MOM';
-  const sorted = [...allStats].filter(p=>p[key]>0).sort((a,b)=>b[key]-a[key]);
+  const sorted = [...statStats].filter(p=>p[key]>0).sort((a,b)=>b[key]-a[key]);
   // 동점은 같은 순위
   let rk = 0;
   const rows = sorted.map((p,i) => { if(i===0 || p[key]!==sorted[i-1][key]) rk = i+1; return svRow(p, rk, p[key]); }).join('');
@@ -2185,10 +2273,11 @@ function powerOf(matchAvg, attended, totalGames) {
   return matchAvg * c.matchWeight + rate * c.rateMax + cum * c.cumMax;
 }
 
-async function calcPowerRanking() {
+async function calcPowerRanking(sid) {
+  sid = sid || currentSeasonId;
   await ratingCtxLoad();
   const [matches, allMS, allV, players] = await Promise.all([
-    api(`matches?select=id,match_date&status=eq.finished&season_id=eq.${currentSeasonId}&order=match_date.asc`),
+    api(`matches?select=id,match_date&status=eq.finished&season_id=eq.${sid}&order=match_date.asc`),
     api('match_stats?select=player_id,match_id,attended,goals,assists,is_mom'),
     api('match_votes?select=player_id,match_id,vote_count,total_participants,is_defender,matches(goals_conceded,our_score,opponent_score)'),
     api('players?select=id,name,number,photo_url,position,sub_position1,sub_position2,join_date')
@@ -2252,7 +2341,7 @@ async function renderPowerRanking() {
   window._currentStatTab = 'power'; window.scrollTo(0,0);
   body.innerHTML = statBackBar('어택 포인트') + '<div class="loading" style="display:flex"><div class="spinner"></div>계산 중...</div>';
   let list = [];
-  try { list = await getPower(); } catch(e) { console.error('어택포인트 계산 실패:', e); }
+  try { list = await getPower(window._statSeason || currentSeasonId); } catch(e) { console.error('어택포인트 계산 실패:', e); }
   if (window._currentStatTab !== 'power') return;
   const rows = list.map((p,i) => `<div class="sv-r" onclick="showPlayer(${p.id})"><span class="sv-rk">${i+1}</span>${svAv(p)}<p>${luEsc(p.name)}<small>출석 ${p.attended}/${p.games}(${Math.round(p.attended/p.games*100)}%) · 평균 평점 ${p.avgRating != null ? p.avgRating.toFixed(1) : '-'}</small></p><span class="sv-v">${Math.round(p.power)}</span></div>`).join('');
   body.innerHTML = statBackBar('어택 포인트') + `<section class="ovc sv-list">
@@ -2278,7 +2367,7 @@ function statGo(tab) {
 /* ── 스쿼드 ── */
 async function loadSquad() {
   const players = await api('players?select=*&order=number.asc');
-  if (!allStats.length) allStats = await api('view_season_stats?select=*');
+  if (!allStats.length) allStats = (await seasonData(currentSeasonId)).stats;
   window._sqPlayers = players;
   squadRender();
   document.getElementById('squad-loading').style.display = 'none';
@@ -2420,7 +2509,8 @@ function backToOpponentsList() {
 
 /* ── 팀 통계 ── */
 async function loadTeamStats() {
-  const matches = await api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.finished&season_id=eq.${currentSeasonId}&order=match_date.asc`);
+  const sid = window._tsSeason || currentSeasonId;
+  const matches = await api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.finished&season_id=eq.${sid}&order=match_date.asc`);
   const allPlayersData = await api('players?select=id,name,number,photo_url,join_date');
   const allStatsData = await api('match_stats?select=*,matches(match_date,result,opponent,opponent_id,season_id)&attended=eq.true');
 
@@ -2492,6 +2582,12 @@ async function loadTeamStats() {
   });
 
   const G = total || 1;
+  if (!total) {
+    document.getElementById('teamstats-content').innerHTML = `<div class="sv-ttl">${seasonSelect(sid,'tsSeason')}</div><section class="ovc"><div class="ovc-empty">${seasonName(sid)} 경기 기록이 아직 없어요</div></section>`;
+    document.getElementById('teamstats-loading').style.display = 'none';
+    document.getElementById('teamstats-content').style.display = 'block';
+    return;
+  }
   const tsLeader = (title, list, valOf, subOf, empty) => {
     const head = `<h3 class="ovc-h"><span>${title}</span></h3>`;
     if (!list.length) return `<section class="ovc">${head}<div class="ovc-empty">${empty}</div></section>`;
@@ -2503,7 +2599,7 @@ async function loadTeamStats() {
   const recRow = (label, m) => m ? `<div class="ts-mr" onclick="showMatch(${m.id})"><div class="ts-ml"><span>${label}</span><b><span class="mx-e" style="width:22px;height:22px">${oppLogo(m,20)}</span>${luEsc(m.opponents?.name||m.opponent||'')}</b></div>${mxScore(m)}</div>` : '';
   const pct = n => Math.round(n/G*100);
 
-  let html = `<div class="sv-ttl"><h2>${new Date().getFullYear()} 시즌 팀 통계</h2></div>`;
+  let html = `<div class="sv-ttl">${seasonSelect(sid,'tsSeason')}</div>`;
 
   // 핵심 기록
   const gd = totalGoals-totalConcede;
@@ -2525,7 +2621,7 @@ async function loadTeamStats() {
   const threeMonthsAgoStr = new Date(Date.now() - 90*24*60*60*1000).toISOString().slice(0,10);
 
   const attendanceRank = eligiblePlayers.map(p => {
-    const playerStats = allStatsData.filter(s => s.player_id === p.id && s.matches?.season_id === currentSeasonId);
+    const playerStats = allStatsData.filter(s => s.player_id === p.id && s.matches?.season_id === sid);
     const attended = playerStats.length;
     // 입단일 이후 전체 경기 수
     const eligibleMatches = matches.filter(m => m.match_date >= p.join_date);
@@ -2538,7 +2634,7 @@ async function loadTeamStats() {
 
   // 🍀 승리요정 (참석 시 팀 승률)
   const luckyRank = allPlayersData.map(p => {
-    const playerStats = allStatsData.filter(s => s.player_id === p.id && s.matches?.season_id === currentSeasonId);
+    const playerStats = allStatsData.filter(s => s.player_id === p.id && s.matches?.season_id === sid);
     const attended = playerStats.length;
     if (attended < 3) return null; // 최소 3경기 이상
     const recentAttended = playerStats.some(s => s.matches?.match_date >= threeMonthsAgoStr);
@@ -2554,7 +2650,7 @@ async function loadTeamStats() {
   );
   const killerMap = {};
   allStatsData.forEach(s => {
-    if (s.matches?.season_id !== currentSeasonId) return;
+    if (s.matches?.season_id !== sid) return;
     if (!recentPlayerIds.has(s.player_id)) return; // 최근 3개월 미참여 제외
     const opp = s.matches?.opponent;
     if (!opp || !s.goals) return;
@@ -2584,6 +2680,12 @@ async function loadTeamStats() {
   document.getElementById('teamstats-content').innerHTML = html;
   document.getElementById('teamstats-loading').style.display = 'none';
   document.getElementById('teamstats-content').style.display = 'block';
+}
+
+async function tsSeason(sid){
+  window._tsSeason = sid;
+  document.getElementById('teamstats-content').innerHTML = '<div class="loading" style="display:flex"><div class="spinner"></div>불러오는 중...</div>';
+  await loadTeamStats();
 }
 
 function tsTab(k, btn){
@@ -2852,7 +2954,7 @@ window.addEventListener('popstate', (e) => {
 // 초기 히스토리 상태 설정
 history.replaceState({ page: 'home' }, '');
 
-loadOverview();
+seasonLoad().then(loadOverview);
 loaded['overview'] = true;
 setTimeout(authInit, 0);  // 스크립트 전체가 로드된 뒤 실행
 
@@ -3203,7 +3305,7 @@ async function saveStat() {
     document.getElementById('a-assists').value = '0';
     document.getElementById('a-mom').value = 'false';
     // 캐시 초기화
-    allStats = [];
+    allStats = []; window._ssCache = {};
     loaded['overview'] = false;
   } else {
     const err = await res.text();
@@ -3830,7 +3932,7 @@ async function deletePlayer() {
     await loadAdminData();
     loaded['squad'] = false;
     loaded['overview'] = false;
-    allStats = [];
+    allStats = []; window._ssCache = {};
   } else {
     alert('오류가 발생했어요.');
   }
@@ -4187,7 +4289,7 @@ function backFromPlayer() {
   else if (document.querySelectorAll('.team-tab')[idx]) document.querySelectorAll('.team-tab')[idx].classList.add('active');
   // 뒤로가기 시 탭 내용 유지 (캐시 초기화 안 함)
   if (!loaded[tabName]) {
-    allStats = [];
+    allStats = []; window._ssCache = {};
     if (tabName==='overview') loadOverview();
     else if (tabName==='matches') loadMatches();
     else if (tabName==='scorers') {
@@ -5141,7 +5243,7 @@ async function luSyncStats(){
   }
   const mr = await fetch(`${SUPA_URL}/rest/v1/matches?id=eq.${v.matchId}`,{method:'PATCH',headers:hd,body:JSON.stringify(finish?{our_score:us,opponent_score:them,result,status:'finished'}:(v.status==='upcoming'?{our_score:us,opponent_score:them,result}:{our_score:us,opponent_score:them,result}))});
   if(!mr.ok) ok = false;
-  try{ if(typeof loaded!=='undefined'){ ['matches','overview','teamstats','scorers','squad'].forEach(k=>{ loaded[k]=false; }); } if(typeof allStats!=='undefined') allStats=[]; }catch(e){}
+  try{ if(typeof loaded!=='undefined'){ ['matches','overview','teamstats','scorers','squad'].forEach(k=>{ loaded[k]=false; }); } if(typeof allStats!=='undefined') allStats=[]; window._ssCache = {}; }catch(e){}
   alert(ok?`반영 완료 ✅ ${us}:${them}`:'일부 반영에 실패했어요 😢 다시 시도해주세요.');
   if(ok) showMatch(v.matchId, true);
   return ok;
