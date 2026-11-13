@@ -2265,12 +2265,15 @@ async function loadSquad() {
   getPower().then(()=>squadRender()).catch(()=>{});
 }
 function squadFilter(pos){ window._sqPos = pos; squadRender(); }
+// 포지션 표시 이름 — 화면 전체 공통 (여기만 바꾸면 스쿼드·플레이어 카드·개인기록 모두 반영)
+const POS_NAME = {GK:'골키퍼', DF:'Defender', MF:'Midfielder', FW:'Forward'};
+
 function squadRender(){
   const players = window._sqPlayers || [];
   const sm = {}; allStats.forEach(s=>sm[s.name]=s);
   const pw = {}; (window._powerList||[]).forEach(x=>pw[x.id]=x);
   const posOrder = ['GK','DF','MF','FW'];
-  const posLabel = {GK:'골키퍼',DF:'Defender',MF:'Midfielder',FW:'Forward',etc:'기타'};
+  const posLabel = {...POS_NAME, etc:'기타'};
   const cur = window._sqPos || 'all';
   const active = players.filter(p=>!p.status || p.status==='active');
   const inactive = players.filter(p=>p.status==='injured'||p.status==='resting');
@@ -3967,7 +3970,7 @@ function pdRender(){
   let age = '-';
   if (p.birth_date) { const t = new Date(), b = new Date(p.birth_date); age = t.getFullYear()-b.getFullYear(); if (t.getMonth()<b.getMonth() || (t.getMonth()===b.getMonth() && t.getDate()<b.getDate())) age--; age += `세<small class="pd-by">(${b.getFullYear()})</small>`; }
   const footMap = {left:'왼발', right:'오른발', both:'양발'};
-  const posMap = {GK:'골키퍼', DF:'수비수', MF:'미드필더', FW:'공격수'};
+  const posMap = POS_NAME;
   const jd = p.join_date ? new Date(p.join_date) : null;
   const subPos = [p.sub_position1, p.sub_position2].filter(Boolean);
   const st = p.status||'active';
@@ -4514,7 +4517,7 @@ function mrRender(){
   const topRated = rated.length ? rated.reduce((b,x)=>x.r>b.r?x:b) : null;
   const topRatedM = topRated ? (D.me.find(r=>r.match_id===topRated.id)||{}).matches : null;
   const firstG = chrono.find(r=>r.goals>0);
-  const POS = {GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수'};
+  const POS = POS_NAME;
   const seasons = [...new Set(D.me.map(r=>r.matches.season_id))].sort((a,b)=>b-a);
   const pill = (v,t) => { const on = String(D.scope)===String(v); return `<button onclick="mrScope('${v}')" style="padding:7px 14px;border-radius:20px;border:1.5px solid ${on?'var(--skyblue)':'var(--border)'};background:${on?'var(--skyblue)':'#fff'};color:${on?'#fff':'var(--text)'};font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">${t}</button>`; };
   const card = (inner,extra) => `<section class="rs-sec" style="${extra||''}">${inner}</section>`;
@@ -4577,7 +4580,7 @@ async function profileOpen(){
   ov.innerHTML = `<div style="max-width:420px;margin:0 auto">${head}<div style="padding:40px;text-align:center;color:var(--muted)">불러오는 중...</div></div>`;
   let p = null;
   if(myMember && myMember.player_id){ const r = await api(`players?select=*&id=eq.${myMember.player_id}`); p = r[0] || null; }
-  const POS = {GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수'}, FOOT = {right:'오른발',left:'왼발',both:'양발'}, ST = {active:'정상',injured:'부상',resting:'휴식'};
+  const POS = POS_NAME, FOOT = {right:'오른발',left:'왼발',both:'양발'}, ST = {active:'정상',injured:'부상',resting:'휴식'};
   const fmt = d => d ? new Date(d).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'}) : '-';
   let age = '';
   if(p && p.birth_date){ const t=new Date(), b=new Date(p.birth_date); let a=t.getFullYear()-b.getFullYear(); if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate())) a--; age = ` (만 ${a}세)`; }
