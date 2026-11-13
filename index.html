@@ -511,6 +511,8 @@
   .mdx-map iframe{display:block;border:0;width:100%;height:200px}
   .mdx-addr{font-size:12px;color:#51607a;margin-top:10px}
   #md-videos.ovc .md-vh{display:none}
+  .rs-rank.ov-rs2{grid-template-columns:repeat(3,1fr);margin-top:16px;padding-top:14px;border-top:1px solid #e6ebf2}
+  .rs-rank.ov-rs2 b{font-size:30px}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
@@ -1689,9 +1691,8 @@ async function loadOverview() {
   {
     const G = s.총경기수||0, wins = s.승||0, draws = s.무||0, losses = s.패||0, gf = s.총득점||0, ga = s.총실점||0;
     const gd = s.득실차!=null ? s.득실차 : gf-ga;
-    document.getElementById('ov-season').innerHTML = `<div class="rs-rank">${[['경기',G],['승률',G?`${Math.round(wins/G*100)}<small>%</small>`:'-','top'],['득점',gf],['실점',ga]].map(([l,v,c])=>`<div class="${c||''}"><span>${l}</span><b>${v}</b></div>`).join('')}</div>
-      <div class="ov-bar">${G?`<i style="flex:${wins};background:#2e7d32"></i><i style="flex:${draws};background:#9e9e9e"></i><i style="flex:${losses};background:#c62828"></i>`:''}</div>
-      <div class="ov-bl"><span style="color:#2e7d32">${wins}승</span><span style="color:#757575">${draws}무</span><span style="color:#c62828">${losses}패</span><span class="r">득실 ${gd>0?'+':''}${gd} · 경기당 ${G?(gf/G).toFixed(1):'-'}골</span></div>`;
+    document.getElementById('ov-season').innerHTML = `<div class="rs-rank">${[['경기',G,''],['승',wins,'#2e7d32'],['무',draws,'#9aa3ad'],['패',losses,'#d32f2f']].map(([l,v,c])=>`<div><span>${l}</span><b${c?` style="color:${c}"`:''}>${v}</b></div>`).join('')}</div>
+      <div class="rs-rank ov-rs2">${[['승률',G?`${Math.round(wins/G*100)}<small>%</small>`:'-','top'],['득점',gf],['실점',ga]].map(([l,v,c])=>`<div class="${c||''}"><span>${l}</span><b>${v}</b></div>`).join('')}</div>`;
   }
   {
     const fin = matches.filter(m=>m.result != null);
