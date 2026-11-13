@@ -1503,14 +1503,14 @@ const loaded = {};
 
 /* ── 팀 개요 ── */
 async function loadOverview() {
-  const [summary, stats, matches, upcoming] = await Promise.all([
+  const [summary, stats, matches, upcoming, photoPlayers] = await Promise.all([
     api('view_season_summary?select=*'),
     api('view_season_stats?select=*'),
     api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.finished&season_id=eq.${currentSeasonId}&order=match_date.desc&limit=10`),
-    api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.upcoming&season_id=eq.${currentSeasonId}&order=match_date.asc&limit=1`)
+    api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.upcoming&season_id=eq.${currentSeasonId}&order=match_date.asc&limit=1`),
+    api('players?select=name,photo_url,position,sub_position1,sub_position2,region')
   ]);
   // photo_url, 포지션, 거주지 병합
-  const photoPlayers = await api('players?select=name,photo_url,position,sub_position1,sub_position2,region');
   const overviewPlayerMap = {};
   photoPlayers.forEach(p => overviewPlayerMap[p.name] = p);
   stats.forEach(s => {
@@ -1529,34 +1529,27 @@ async function loadOverview() {
     const u = upcoming[0];
     const d = new Date(u.match_date);
 
-    // 날씨 예보
-    let wx = null;
-    if (u.grounds?.lat && u.grounds?.lng) {
+    // 날씨 예보: 카드를 먼저 그리고 날씨는 받아오는 대로 채운다
+    const wxP = (async()=>{
+      if (!(u.grounds?.lat && u.grounds?.lng)) return null;
+      const diffDays = Math.ceil((new Date(u.match_date) - new Date()) / (1000*60*60*24));
+      if (diffDays < 0 || diffDays > 15) return null;
       try {
-        const today = new Date();
-        const diffDays = Math.ceil((new Date(u.match_date) - today) / (1000*60*60*24));
-        if (diffDays >= 0 && diffDays <= 15) {
-          const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${u.grounds.lat}&longitude=${u.grounds.lng}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=16`);
-          const wData = await wRes.json();
-          const dayIdx = wData.daily.time.indexOf(u.match_date);
-          if (dayIdx >= 0) {
-            const code = wData.daily.weathercode[dayIdx];
-            const tMax = wData.daily.temperature_2m_max[dayIdx];
-            const tMin = wData.daily.temperature_2m_min[dayIdx];
-            const rain = wData.daily.precipitation_probability_max[dayIdx];
-            const emoji = code===0?'☀️':code<=2?'🌤️':code<=3?'☁️':code<=49?'🌫️':code<=59?'🌦️':code<=69?'🌧️':code<=79?'❄️':code<=82?'🌧️':'⛈️';
-            const desc = code===0?'맑음':code<=2?'대체로 맑음':code<=3?'흐림':code<=49?'안개':code<=59?'이슬비':code<=69?'비':code<=79?'눈':code<=82?'소나기':'뇌우';
-            wx = { emoji, desc, tMax: Math.round(tMax), tMin: Math.round(tMin), rain };
-          }
-        }
-      } catch(e) { console.log('날씨 로드 실패:', e); }
-    }
-
+        const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${u.grounds.lat}&longitude=${u.grounds.lng}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=16`);
+        const wData = await wRes.json();
+        const dayIdx = wData.daily.time.indexOf(u.match_date);
+        if (dayIdx < 0) return null;
+        const code = wData.daily.weathercode[dayIdx];
+        const emoji = code===0?'☀️':code<=2?'🌤️':code<=3?'☁️':code<=49?'🌫️':code<=59?'🌦️':code<=69?'🌧️':code<=79?'❄️':code<=82?'🌧️':'⛈️';
+        return { emoji, tMax: Math.round(wData.daily.temperature_2m_max[dayIdx]), tMin: Math.round(wData.daily.temperature_2m_min[dayIdx]), rain: wData.daily.precipitation_probability_max[dayIdx] };
+      } catch(e) { console.log('날씨 로드 실패:', e); return null; }
+    })();
+    wxP.then(wx => { const el = document.getElementById('nm-wx'); if(el && wx && window._nextMatch===u) el.textContent = ` · ${wx.emoji} ${wx.tMax}°/${wx.tMin}°${wx.rain!=null?` · 강수 ${wx.rain}%`:''}`; });
     window._nextMatch = u;
     const wd = '일월화수목금토'[d.getDay()];
     document.getElementById('next-match-card').innerHTML = `
       <div class="nm-a"><span>다음 경기 · ${d.getMonth()+1}월 ${d.getDate()}일 (${wd})${u.match_time?' '+String(u.match_time).slice(0,5):''}</span><b class="nm-dd" id="nm-dd"></b></div>
-      <div class="nm-b"><div class="nm-o">⚽</div><div style="min-width:0"><h4>vs ${luEsc(u.opponents?.name || u.opponent || '')}</h4><p>📍 ${luEsc(u.grounds?.name || u.ground || '미정')}${wx?` · ${wx.emoji} ${wx.tMax}°/${wx.tMin}°${wx.rain!=null?` · 강수 ${wx.rain}%`:''}`:''}</p></div><span class="nm-go">›</span></div>
+      <div class="nm-b"><div class="nm-o">⚽</div><div style="min-width:0"><h4>vs ${luEsc(u.opponents?.name || u.opponent || '')}</h4><p>📍 ${luEsc(u.grounds?.name || u.ground || '미정')}<span id="nm-wx"></span></p></div><span class="nm-go">›</span></div>
       <div class="nm-c" id="nm-h2h"><span class="nm-h2h-l">상대전적</span><span style="color:var(--muted)">불러오는 중...</span></div>`;
     document.getElementById('next-match-card').onclick = () => showMatch(u.id);
     ovCountdown();
@@ -1637,8 +1630,17 @@ async function ovLineup(m){
   const card = document.getElementById('ov-lu-card'); if(!card) return;
   if(!m){ card.style.display='none'; return; }
   let ctx = null, pl = [];
-  try{ [ctx, pl] = await Promise.all([ratingCtxLoad(), api('players?select=id,name,number')]); }catch(e){}
-  const plan = ctx && ctx.plans && ctx.plans[m.id];
+  let mrow = [], rrows = [];
+  try{ [mrow, rrows, pl] = await Promise.all([
+    api(`${LU_STORE}?select=key,data&key=eq.match_${m.id}`).catch(()=>[]),
+    api(`${LU_STORE}?select=key,data&key=like.rec_${m.id}_*`).catch(()=>[]),
+    api('players?select=id,name,number')
+  ]); }catch(e){}
+  const md = (mrow&&mrow[0]&&mrow[0].data) || {};
+  let rec = Array.isArray(md.rec) ? JSON.parse(JSON.stringify(md.rec)) : null;
+  (rrows||[]).forEach(r=>{ const mm = /^rec_\d+_(\d)$/.exec(r.key); if(!mm) return; (rec = rec || [null,null,null,null])[+mm[1]] = {them:(r.data&&r.data.them)||0, goals:(r.data&&r.data.goals)||[]}; });
+  ctx = { recs: { [m.id]: rec } };
+  const plan = md.plan;
   const qs = (plan||[]).map((e,i)=>e && LU_FORMATIONS[e.formation] ? i : -1).filter(i=>i>=0);
   if(!qs.length){ card.style.display='none'; return; }
   window._ovLu = { m, plan, rec: (ctx.recs||{})[m.id] || null, pm: Object.fromEntries((pl||[]).map(p=>[p.id,p])), qs, q: qs[0] };
@@ -1676,7 +1678,13 @@ function ovLeaders(stats){
 }
 async function ovYoutube(){
   const box = document.getElementById('ov-yt'); if(!box) return;
-  let d = null; try{ const r = await fetch('/api/yt'); d = await r.json(); }catch(e){}
+  let d = null;
+  try{ d = JSON.parse(localStorage.getItem('attack_yt')||'null'); }catch(e){}
+  if(d && d.videos && d.videos.length && !box._fresh){ box._fresh = true; ovYoutubeDraw(box, d); }
+  try{ const r = await fetch('/api/yt'); const nd = await r.json(); if(nd && nd.videos && nd.videos.length){ d = nd; try{ localStorage.setItem('attack_yt', JSON.stringify(nd)); }catch(e){} } else if(!d) d = nd; }catch(e){}
+  ovYoutubeDraw(box, d);
+}
+function ovYoutubeDraw(box, d){
   const v = (d && d.videos) || [], ch = (d && d.channel) || 'https://www.youtube.com/@ch.attack4905';
   const ago = t => { const s = (Date.now()-new Date(t))/1000; if(!(s>=0)) return ''; if(s<3600) return Math.max(1,Math.round(s/60))+'분 전'; if(s<86400) return Math.round(s/3600)+'시간 전'; if(s<86400*14) return Math.round(s/86400)+'일 전'; if(s<86400*60) return Math.round(s/86400/7)+'주 전'; return Math.round(s/86400/30)+'개월 전'; };
   const url = id => `https://www.youtube.com/watch?v=${id}`;
