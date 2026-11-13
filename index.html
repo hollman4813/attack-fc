@@ -564,7 +564,9 @@
   .ts-tr b.g{color:#51607a}.ts-tr b.w{color:#2e7d32}.ts-tr b.d{color:#9aa3ad}.ts-tr b.l{color:#d32f2f}
   #ts-tables .ovc-h{flex-wrap:wrap;gap:8px}
   /* 시즌 뱃지·선택 */
-  .hd-season{border:0;background:#fff;color:var(--team-deep);font-family:'Noto Sans KR',sans-serif;font-size:9.5px;font-weight:800;letter-spacing:.2px;height:13px;line-height:1;padding:2px 5px 0;box-sizing:border-box;border-radius:3px;cursor:default;display:inline-flex;align-items:center;align-self:center;margin-top:2px}
+  .hd-season{border:0;background:#fff;color:var(--team-deep);font-family:'Noto Sans KR',sans-serif;font-size:9.5px;font-weight:800;letter-spacing:.2px;height:13px;line-height:1;padding:0 5px;box-sizing:border-box;border-radius:3px;cursor:default;display:inline-flex;align-items:center;align-self:center;margin-top:2px}
+  .hd-season span{display:block;text-box:trim-both cap alphabetic}  /* 글꼴 위아래 여백을 잘라 기기별로 정확히 가운데 */
+  @supports not (text-box: trim-both cap alphabetic){ .hd-season span{padding-top:1px} }
   .ss-wrap{position:relative;display:inline-flex;align-items:center}
   .ss-wrap:after{content:'';position:absolute;right:15px;top:50%;width:7px;height:7px;border-right:2px solid var(--team-deep);border-bottom:2px solid var(--team-deep);transform:translateY(-70%) rotate(45deg);pointer-events:none}
   .ss-sel{appearance:none;-webkit-appearance:none;border:0;background:#fff;border-radius:20px;height:40px;padding:0 40px 0 16px;font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:800;color:var(--team-deep);cursor:pointer;box-shadow:0 1px 2px rgba(15,40,80,.06),0 4px 12px rgba(15,40,80,.06)}
@@ -900,7 +902,7 @@
   <div class="hero-main" style="padding:14px 16px">
     <img class="hero-emblem" src="emblem_v4.png" alt="ATTACK FC" onclick="admSecretTap()" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
     <div class="hero-info" style="flex:1;margin-left:12px">
-      <div class="team-name" style="font-size:17px;font-weight:700;color:#fff;white-space:nowrap;display:flex;align-items:center;gap:8px">ATTACK FC<button id="season-badge" class="hd-season" onclick="seasonAdmin()">2026 시즌</button></div>
+      <div class="team-name" style="font-size:17px;font-weight:700;color:#fff;white-space:nowrap;display:flex;align-items:center;gap:8px">ATTACK FC<button id="season-badge" class="hd-season" onclick="seasonAdmin()"><span>2026 시즌</span></button></div>
       <div class="team-sub" style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px">창단 2006 · <img src="https://flagcdn.com/w40/kr.png" style="width:16px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:2px"> 대한민국</div>
     </div>
     <!-- 우측 상단: 유튜브 아이콘 + 로그인 -->
@@ -1700,7 +1702,7 @@ function seasonApply(cfg){
   if (cfg && Array.isArray(cfg.list) && cfg.list.length) allSeasons = cfg.list.map(x=>({id:+x.id, year:+x.year})).sort((a,b)=>a.year-b.year);
   if (cfg && cfg.current != null && allSeasons.some(x=>x.id===+cfg.current)) currentSeasonId = +cfg.current;
   currentSeasonName = seasonName(currentSeasonId);
-  const b = document.getElementById('season-badge'); if (b) b.textContent = currentSeasonName;
+  const b = document.getElementById('season-badge'); if (b) b.innerHTML = `<span>${currentSeasonName}</span>`;
 }
 async function seasonLoad(){
   // 스크립트 초기 실행 중이라 LU_STORE 상수보다 먼저 불릴 수 있어 테이블 이름을 직접 쓴다
