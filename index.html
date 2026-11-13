@@ -1401,7 +1401,17 @@
         </div>
         <div style="margin-bottom:10px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">팀명 *</div>
-          <input id="om-name" type="text" placeholder="팀명" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+          <input id="om-name" type="text" placeholder="팀명" oninput="if(!(window._omEmblem||{}).val&&!(window._omEmblem||{}).file)omEmblemPrev()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">엠블럼 (없으면 자동으로 만들어져요)</div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div id="om-emblem-prev" style="width:56px;height:56px;border-radius:12px;background:#f4f6fa;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden"></div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <label style="padding:7px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer">이미지 선택<input id="om-emblem" type="file" accept="image/*" onchange="omEmblemPick(this)" style="display:none"></label>
+              <button type="button" onclick="omEmblemReroll()" style="padding:7px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">🎲 다시 뽑기</button>
+            </div>
+          </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
@@ -1525,7 +1535,8 @@ async function loadOverview() {
     api('view_season_stats?select=*'),
     api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.finished&season_id=eq.${currentSeasonId}&order=match_date.desc&limit=10`),
     api(`matches?select=*,grounds(name,location,lat,lng),opponents(name)&status=eq.upcoming&season_id=eq.${currentSeasonId}&order=match_date.asc&limit=1`),
-    api('players?select=name,photo_url,position,sub_position1,sub_position2,region')
+    api('players?select=name,photo_url,position,sub_position1,sub_position2,region'),
+    oppMapLoad()
   ]);
   // photo_url, 포지션, 거주지 병합
   const overviewPlayerMap = {};
@@ -1566,7 +1577,7 @@ async function loadOverview() {
     const wd = '일월화수목금토'[d.getDay()];
     document.getElementById('next-match-card').innerHTML = `
       <div class="nm-a"><span>다음 경기 · ${d.getMonth()+1}월 ${d.getDate()}일 (${wd})${u.match_time?' '+String(u.match_time).slice(0,5):''}</span><b class="nm-dd" id="nm-dd"></b></div>
-      <div class="nm-b"><div class="nm-o">${oppEmblem(u.opponents?.name || u.opponent || '', 34)}</div><div style="min-width:0"><h4>vs ${luEsc(u.opponents?.name || u.opponent || '')}</h4><p>📍 ${luEsc(u.grounds?.name || u.ground || '미정')}<span id="nm-wx"></span></p></div><span class="nm-go">›</span></div>
+      <div class="nm-b"><div class="nm-o">${oppLogo(u, 34)}</div><div style="min-width:0"><h4>vs ${luEsc(u.opponents?.name || u.opponent || '')}</h4><p>📍 ${luEsc(u.grounds?.name || u.ground || '미정')}<span id="nm-wx"></span></p></div><span class="nm-go">›</span></div>
       <div class="nm-c" id="nm-h2h"><span class="nm-h2h-l">상대전적</span><span style="color:var(--muted)">불러오는 중...</span></div>`;
     document.getElementById('next-match-card').onclick = () => showMatch(u.id);
     ovCountdown();
@@ -1621,6 +1632,35 @@ async function loadOverview() {
 }
 
 // ── 메인: 팀 폼 / 지난 경기 라인업 / 시즌 리더 / 경기 영상 ──
+// ── 상대팀 엠블럼: 등록 이미지 → 저장된 자동 엠블럼(gen:시드) → 이름으로 만든 자동 엠블럼 ──
+function oppGenSeed(){ return 'gen:' + Math.random().toString(36).slice(2, 10); }
+function oppHasEmblemCol(){ const a = (typeof allOpponents!=='undefined' && allOpponents) || []; return !a.length || Object.prototype.hasOwnProperty.call(a[0], 'emblem_url'); }
+async function oppMapLoad(){
+  if(window._oppMap) return window._oppMap;
+  if(window._oppMapP) return window._oppMapP;
+  window._oppMapP = api('opponents?select=*').then(rows=>{ const m = {byId:{}, byName:{}}; (rows||[]).forEach(o=>{ m.byId[o.id]=o; m.byName[o.name]=o; }); window._oppMap = m; window._oppMapP = null; return m; }).catch(()=>{ window._oppMapP = null; return {byId:{},byName:{}}; });
+  return window._oppMapP;
+}
+function oppLogoVal(v, name, size){
+  if(v && /^https?:\/\//.test(v)) return `<img src="${v}" alt="" width="${size}" height="${size}" style="width:${size}px;height:${size}px;object-fit:contain" referrerpolicy="no-referrer" onerror="this.outerHTML=oppEmblem(${JSON.stringify(String(name||'')).replace(/"/g,'&quot;')},${size})">`;
+  if(v && v.startsWith('gen:')) return oppEmblem(v, size);
+  return oppEmblem(name, size);
+}
+// 경기(m) 또는 이름으로 엠블럼 HTML
+function oppLogo(m, size){
+  const M = window._oppMap || {byId:{},byName:{}};
+  const name = typeof m === 'string' ? m : (m && (m.opponents?.name || m.opponent)) || '';
+  const o = (m && typeof m === 'object' && m.opponent_id && M.byId[m.opponent_id]) || M.byName[name];
+  return oppLogoVal(o && o.emblem_url, name, size||28);
+}
+function omEmblemPrev(){
+  const el = document.getElementById('om-emblem-prev'); if(!el) return;
+  const E = window._omEmblem || {}; const nm = (document.getElementById('om-name')||{}).value || '';
+  if(E.file){ const u = URL.createObjectURL(E.file); el.innerHTML = `<img src="${u}" alt="" style="width:100%;height:100%;object-fit:contain">`; return; }
+  el.innerHTML = oppLogoVal(E.val, nm, 44);
+}
+function omEmblemPick(inp){ const f = inp.files && inp.files[0]; if(!f) return; window._omEmblem = { val: null, file: f }; omEmblemPrev(); }
+function omEmblemReroll(){ window._omEmblem = { val: oppGenSeed(), file: null }; const f = document.getElementById('om-emblem'); if(f) f.value=''; omEmblemPrev(); }
 // 상대팀 이름으로 항상 같은 모양의 가상 엠블럼을 만든다 (모양·무늬·색·상징 조합)
 const OPP_COLORS = [['#c62828','#ffffff'],['#1565c0','#ffffff'],['#2e7d32','#ffffff'],['#6a1b9a','#ffd54a'],['#ef6c00','#1a1a1a'],['#00838f','#ffffff'],['#212121','#ffd54a'],['#ad1457','#ffffff'],['#f9a825','#1a237e'],['#4e342e','#ffcc80'],['#283593','#ef5350'],['#00695c','#ffeb3b'],['#b71c1c','#212121'],['#0277bd','#ffeb3b'],['#37474f','#80deea'],['#558b2f','#ffffff']];
 const OPP_SHAPES = [
@@ -1665,7 +1705,7 @@ async function ovFormTab(k){
   let list = [];
   if(k==='prev') list = (window._ovFin||[]).slice().reverse();
   else {
-    if(!window._ovUp) { try{ window._ovUp = await api(`matches?select=id,match_date,match_time,opponent,opponents(name)&status=eq.upcoming&order=match_date.asc&limit=5`); }catch(e){ window._ovUp = []; } }
+    if(!window._ovUp) { try{ window._ovUp = await api(`matches?select=id,match_date,match_time,opponent,opponent_id,opponents(name)&status=eq.upcoming&order=match_date.asc&limit=5`); }catch(e){ window._ovUp = []; } }
     list = window._ovUp;
   }
   card.style.display = (window._ovFin||[]).length || (window._ovUp||[]).length ? 'block' : 'none';
@@ -1675,7 +1715,7 @@ async function ovFormTab(k){
     let chip;
     if(k==='prev'){ const r = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; chip = `<div class="ovf-s ${r}">${m.our_score??'-'}-${m.opponent_score??'-'}</div>`; }
     else chip = `<div class="ovf-s up">${m.match_time?String(m.match_time).slice(0,5):'미정'}</div>`;
-    return `<div class="ovf-i" onclick="showMatch(${m.id})"><div class="ovf-d">${d.getMonth()+1}.${d.getDate()}</div><div class="ovf-lo">${oppEmblem(nm,32)}</div><div class="ovf-n">${luEsc(nm)}</div>${chip}</div>`;
+    return `<div class="ovf-i" onclick="showMatch(${m.id})"><div class="ovf-d">${d.getMonth()+1}.${d.getDate()}</div><div class="ovf-lo">${oppLogo(m,32)}</div><div class="ovf-n">${luEsc(nm)}</div>${chip}</div>`;
   }).join('')}</div>`;
 }
 async function ovLineup(m){
@@ -1716,7 +1756,7 @@ function ovLuRender(){
     const evs = ev(sl.p) + (sub ? ev(sl.s) : '');
     return `<div class="ovl-p" style="left:${Math.max(12,Math.min(88,x))}%;top:${6+y*0.86}%">${evs?`<span class="ovl-ev">${evs}</span>`:''}<div class="ovl-k${g==='GK'?' gk':''}${p&&p.photo_url?' ph':''}">${p&&p.photo_url?`<img src="${p.photo_url}" referrerpolicy="no-referrer" alt="" onerror="this.remove()">`:''}<span>${p&&p.guest?'용':p&&p.number!=null?p.number:luEsc((p?p.name:'?').charAt(0))}</span></div><div class="ovl-n">${p&&p.number!=null&&!p.guest?`<small>${p.number}</small>`:''}${luEsc(p?p.name:'?')}${p&&p.guest?'<small class="g">용병</small>':''}</div>${sub?`<div class="ovl-s">↔ ${luEsc(sub.name)}</div>`:''}</div>`;
   }).join('');
-  box.innerHTML = `<div class="ovl-m" onclick="showMatch(${m.id})"><div class="ovl-g"><span class="ovl-t">ATTACK</span><img src="emblem_v4.png" alt=""><span class="ovl-sc ${r}">${m.our_score??'-'} - ${m.opponent_score??'-'}</span><span class="ovl-lo">${oppEmblem(nm,26)}</span><span class="ovl-t">${luEsc(nm)}</span></div><div class="ovl-ft">경기 종료</div><div class="ovl-dt">${d.getMonth()+1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})${m.grounds?.name?' · '+luEsc(m.grounds.name):''}</div></div>
+  box.innerHTML = `<div class="ovl-m" onclick="showMatch(${m.id})"><div class="ovl-g"><span class="ovl-t">ATTACK</span><img src="emblem_v4.png" alt=""><span class="ovl-sc ${r}">${m.our_score??'-'} - ${m.opponent_score??'-'}</span><span class="ovl-lo">${oppLogo(m,26)}</span><span class="ovl-t">${luEsc(nm)}</span></div><div class="ovl-ft">경기 종료</div><div class="ovl-dt">${d.getMonth()+1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})${m.grounds?.name?' · '+luEsc(m.grounds.name):''}</div></div>
     <div class="ovl-q">${[0,1,2,3].map(i=>`<button class="${i===L.q?'on':''}" ${L.qs.includes(i)?`onclick="ovLuQ(${i})"`:'disabled'}>${i+1}Q</button>`).join('')}</div>
     <div class="ovl-info">${L.q+1}쿼터 · ${luEsc(e.formation)}${sc?` · 쿼터 스코어 ${sc.us}:${sc.them}`:''}</div>
     <div class="ovl-pitch"><i class="c"></i><i class="b"></i>${players}</div>`;
@@ -2214,10 +2254,10 @@ async function loadOpponents() {
 
   let html = opponents.map(o => `
     <div onclick="showOpponentDetail(${o.id})" style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
-      <div>
+      <div style="display:flex;align-items:center;gap:12px"><span style="flex:none;display:flex">${oppLogoVal(o.emblem_url, o.name, 34)}</span><div>
         <div style="font-size:14px;font-weight:600;color:var(--text)">${o.name}</div>
         ${o.location||o.age_group ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${[o.location,o.age_group].filter(Boolean).join(' · ')}</div>` : ''}
-      </div>
+      </div></div>
       <div style="font-size:18px;color:var(--muted)">›</div>
     </div>`).join('');
 
@@ -2911,6 +2951,8 @@ async function loadAdminData() {
 
   const omSel = document.getElementById('om-select');
   if (omSel) omSel.innerHTML = '<option value="">+ 신규 등록</option>' + opponents.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
+  if (!window._omEmblem) window._omEmblem = { val: oppGenSeed(), file: null };
+  omEmblemPrev();
 
   // 기록 입력용 (finished)
   const statSel = document.getElementById('a-stat-match');
@@ -2957,10 +2999,11 @@ async function addMatch() {
     const res = await fetch(`${SUPA_URL}/rest/v1/opponents`, {
       method: 'POST',
       headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify({ name: opponent })
+      body: JSON.stringify(oppHasEmblemCol() ? { name: opponent, emblem_url: oppGenSeed() } : { name: opponent })
     });
     const data = await res.json();
     opponentId = data[0]?.id;
+    window._oppMap = null;
   } else {
     opponentId = parseInt(oppSel.value);
     if (!opponentId) { alert('상대팀을 선택해주세요!'); return; }
@@ -3420,12 +3463,15 @@ function loadEditOpponent() {
   const o = allOpponents.find(x=>x.id===id);
   if (!o) {
     ['om-name','om-location','om-age','om-desc'].forEach(i=>document.getElementById(i).value='');
+    window._omEmblem = { val: oppGenSeed(), file: null }; omEmblemPrev();
     return;
   }
+  window._omEmblem = { val: o.emblem_url || null, file: null };
   document.getElementById('om-name').value = o.name || '';
   document.getElementById('om-location').value = o.location || '';
   document.getElementById('om-age').value = o.age_group || '';
   document.getElementById('om-desc').value = o.description || '';
+  omEmblemPrev();
 }
 
 async function saveOpponent() {
@@ -3438,6 +3484,16 @@ async function saveOpponent() {
     age_group: document.getElementById('om-age').value.trim() || null,
     description: document.getElementById('om-desc').value.trim() || null,
   };
+  if (oppHasEmblemCol()) {
+    const E = window._omEmblem || {};
+    if (E.file) {
+      const ext = (E.file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g,'') || 'png';
+      const fileName = `emblem/opp_${Date.now().toString(36)}.${ext}`;
+      const up = await fetch(`${SUPA_URL}/storage/v1/object/profile/${fileName}`, { method:'POST', headers:{ 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': E.file.type || 'image/png', 'x-upsert':'true', 'Cache-Control':'3600' }, body: E.file });
+      if (!up.ok) { alert('엠블럼 이미지 업로드에 실패했어요.\n' + await up.text()); return; }
+      body.emblem_url = `${SUPA_URL}/storage/v1/object/public/profile/${fileName}`;
+    } else body.emblem_url = E.val || oppGenSeed();
+  }
   const isNew = !id;
   const url = isNew ? `${SUPA_URL}/rest/v1/opponents` : `${SUPA_URL}/rest/v1/opponents?id=eq.${id}`;
   const method = isNew ? 'POST' : 'PATCH';
@@ -3453,6 +3509,8 @@ async function saveOpponent() {
       if(el) el.value='';
     });
     document.getElementById('om-select').value = '';
+    window._omEmblem = { val: oppGenSeed(), file: null }; omEmblemPrev(); const f = document.getElementById('om-emblem'); if(f) f.value='';
+    window._oppMap = null;
     await loadAdminData();
     loaded['opponents'] = false;
   } else { alert('오류가 발생했어요.'); }
