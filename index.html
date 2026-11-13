@@ -543,6 +543,26 @@
   .sv-hd{display:flex;align-items:center;font-size:11px;font-weight:700;color:var(--muted);padding:0 0 8px}
   .sv-hd .sv-rk{font-family:inherit;font-size:11px;color:var(--muted)}
   .sv-list .sv-r:nth-child(2) .sv-rk{color:#c98a00}
+  /* 팀 통계 */
+  .ts-recs{margin-top:14px;border-top:1px solid #e6ebf2}
+  .ts-mr{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #eef1f5;cursor:pointer}
+  .ts-mr:last-child{border-bottom:0;padding-bottom:0}
+  .ts-ml{flex:1;min-width:0}
+  .ts-ml>span{display:block;font-size:11px;font-weight:700;color:var(--muted)}
+  .ts-ml b{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:14px;font-weight:800;color:var(--team-deep);white-space:nowrap;overflow:hidden}
+  .ts-ml .mx-e{flex:none}
+  .sv-big small,.sv-v small{font-family:'Noto Sans KR',sans-serif;font-size:.42em;font-weight:800;margin-left:1px}
+  .ts-th,.ts-tr{display:grid;grid-template-columns:minmax(0,1fr) repeat(6,30px);align-items:center;column-gap:2px;text-align:center}
+  .ts-th{font-size:11px;font-weight:700;color:var(--muted);padding:2px 0 8px}
+  .ts-th span:first-child{text-align:left}
+  .ts-th .w{color:#2e7d32}.ts-th .l{color:#d32f2f}
+  .ts-tr{padding:9px 0;border-top:1px solid #eef1f5}
+  .ts-nm{display:flex;align-items:center;gap:8px;min-width:0;text-align:left}
+  .ts-nm em{font-style:normal;font-size:14px;font-weight:700;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ts-tr b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:21px;font-weight:600;line-height:1;color:var(--team-navy)}
+  .f-teko .ts-tr b{padding-top:3px}
+  .ts-tr b.g{color:#51607a}.ts-tr b.w{color:#2e7d32}.ts-tr b.d{color:#9aa3ad}.ts-tr b.l{color:#d32f2f}
+  #ts-tables .ovc-h{flex-wrap:wrap;gap:8px}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
@@ -2464,61 +2484,27 @@ async function loadTeamStats() {
     maxLoseStreak = Math.max(maxLoseStreak, curLoseStreak);
   });
 
-  const wdlBadge = (w,d,l) => `<span style="color:#2e7d32;font-weight:700">${w}승</span> <span style="color:#757575">${d}무</span> <span style="color:#c62828">${l}패</span>`;
-  const resultDot = r => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${r==='Win'?'#2e7d32':r==='Lose'?'#c62828':'#9e9e9e'};margin-right:2px"></span>`;
+  const G = total || 1;
+  const tsLeader = (title, list, valOf, subOf, empty) => {
+    const head = `<h3 class="ovc-h"><span>${title}</span></h3>`;
+    if (!list.length) return `<section class="ovc">${head}<div class="ovc-empty">${empty}</div></section>`;
+    const p = list[0];
+    return `<section class="ovc">${head}
+      <div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc(p.name.slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b><span>${subOf(p)}</span></div><div class="sv-big">${valOf(p)}</div></div>
+      ${list.slice(1).map((q,i)=>`<div class="sv-r" onclick="showPlayer(${q.id})"><span class="sv-rk">${i+2}</span>${svAv(q)}<p>${luEsc(q.name)}<small>${subOf(q)}</small></p><span class="sv-v">${valOf(q)}</span></div>`).join('')}</section>`;
+  };
+  const recRow = (label, m) => m ? `<div class="ts-mr" onclick="showMatch(${m.id})"><div class="ts-ml"><span>${label}</span><b><span class="mx-e" style="width:22px;height:22px">${oppLogo(m,20)}</span>${luEsc(m.opponents?.name||m.opponent||'')}</b></div>${mxScore(m)}</div>` : '';
+  const pct = n => Math.round(n/G*100);
 
-  const sectionTitle = (icon, title) => `<div style="font-size:13px;font-weight:700;color:var(--text);margin:20px 0 10px;display:flex;align-items:center;gap:6px">${icon} ${title}</div>`;
+  let html = `<div class="sv-ttl"><h2>${new Date().getFullYear()} 시즌 팀 통계</h2></div>`;
 
-
-
-  const card = (inner) => `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:4px">${inner}</div>`;
-
-  const statRow = (label, value, sub='', color='var(--text)') => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border)">
-      <div style="font-size:13px;color:var(--text)">${label}</div>
-      <div style="text-align:right">
-        <div style="font-size:15px;font-weight:700;color:${color}">${value}</div>
-        ${sub?`<div style="font-size:11px;color:var(--muted);margin-top:1px">${sub}</div>`:''}
-      </div>
-    </div>`;
-
-  let html = '';
-
-  // 🏆 핵심 기록
-  html += sectionTitle('🏆', '핵심 기록');
-  html += card(`
-    <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)">
-      <div style="padding:14px;text-align:center;border-right:1px solid var(--border)">
-        <div style="font-size:28px;font-weight:800;color:#2e7d32">${maxWinStreak}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">최장 연승</div>
-      </div>
-      <div style="padding:14px;text-align:center">
-        <div style="font-size:28px;font-weight:800;color:#c62828">${maxLoseStreak}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">최장 연패</div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border)">
-      <div style="padding:12px;text-align:center;border-right:1px solid var(--border)">
-        <div style="font-size:22px;font-weight:700;color:var(--skyblue)">${(totalGoals/total).toFixed(1)}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당 득점</div>
-      </div>
-      <div style="padding:12px;text-align:center;border-right:1px solid var(--border)">
-        <div style="font-size:22px;font-weight:700;color:#c62828">${(totalConcede/total).toFixed(1)}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:3px">경기당 실점</div>
-      </div>
-      <div style="padding:12px;text-align:center">
-        <div style="font-size:22px;font-weight:700;color:${totalGoals-totalConcede>=0?'#2e7d32':'#c62828'}">${totalGoals-totalConcede>=0?'+':''}${totalGoals-totalConcede}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:3px">총 득실차</div>
-      </div>
-    </div>
-    <div style="padding:0">
-      ${statRow('🔥 최다 득점 경기', `${topScoring[0]?.our_score}:${topScoring[0]?.opponent_score}`, `vs ${topScoring[0]?.opponent}`, 'var(--skyblue)')}
-      ${statRow('😰 최다 실점 경기', `${topConcede[0]?.our_score}:${topConcede[0]?.opponent_score}`, `vs ${topConcede[0]?.opponent}`, '#c62828')}
-      ${statRow('💪 최대 점수차 승리', `${bigWins[0]?.our_score}:${bigWins[0]?.opponent_score}`, `vs ${bigWins[0]?.opponent}`, '#2e7d32')}
-      ${statRow('🤝 클린시트', `${matches.filter(m=>m.opponent_score===0).length}경기`, `전체 ${total}경기 중`, 'var(--skyblue)')}
-      ${statRow('🎯 5골 이상 경기', `${matches.filter(m=>(m.our_score||0)>=5).length}경기`, '', 'var(--skyblue)')}
-    </div>
-  `);
+  // 핵심 기록
+  const gd = totalGoals-totalConcede;
+  html += `<section class="ovc"><h3 class="ovc-h"><span>핵심 기록</span></h3>
+    <div class="rs-rank"><div><span>최장 연승</span><b style="color:#2e7d32">${maxWinStreak}</b></div><div><span>최장 연패</span><b style="color:#d32f2f">${maxLoseStreak}</b></div><div><span>클린시트</span><b>${matches.filter(m=>m.opponent_score===0).length}</b></div><div><span>5골 이상</span><b>${matches.filter(m=>(m.our_score||0)>=5).length}</b></div></div>
+    <div class="rs-rank ov-rs2"><div><span>경기당 득점</span><b>${(totalGoals/G).toFixed(1)}</b></div><div><span>경기당 실점</span><b>${(totalConcede/G).toFixed(1)}</b></div><div><span>득실차</span><b style="color:${gd>=0?'#2e7d32':'#d32f2f'}">${gd>0?'+':''}${gd}</b></div></div>
+    <div class="ts-recs">${recRow('최다 득점 경기', topScoring[0])}${recRow('최다 실점 경기', topConcede[0])}${recRow('최대 점수차 승리', bigWins[0])}</div>
+  </section>`;
 
   // 🏃 참석률 최다 (입단 3개월 이상자)
   const now = new Date();
@@ -2543,18 +2529,6 @@ async function loadTeamStats() {
     return { ...p, attended, totalEligible, rate, recentAttended };
   }).filter(p => p.totalEligible > 0 && p.recentAttended).sort((a,b)=>b.rate-a.rate).slice(0,5);
 
-  html += sectionTitle('🏃', '참석률 TOP 5');
-  html += card(attendanceRank.map((p,i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:${i===0?'none':'1px solid var(--border)'}">
-      <div style="font-size:12px;font-weight:800;color:${i<3?'var(--skyblue)':'var(--muted)'};width:16px">${i+1}</div>
-      ${p.photo_url ? `<img src="${p.photo_url}" style="width:30px;height:30px;border-radius:50%;object-fit:cover">` : `<div style="width:30px;height:30px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--skyblue)">${p.name.slice(0,1)}</div>`}
-      <div style="flex:1;font-size:13px;font-weight:600;color:var(--text)">${p.name}</div>
-      <div style="text-align:right">
-        <div style="font-size:14px;font-weight:700;color:var(--skyblue)">${p.rate}%</div>
-        <div style="font-size:10px;color:var(--muted)">${p.attended}/${p.totalEligible}경기</div>
-      </div>
-    </div>`).join('') || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음 (입단 3개월 이상자 없음)</div>');
-
   // 🍀 승리요정 (참석 시 팀 승률)
   const luckyRank = allPlayersData.map(p => {
     const playerStats = allStatsData.filter(s => s.player_id === p.id && s.matches?.season_id === currentSeasonId);
@@ -2566,18 +2540,6 @@ async function loadTeamStats() {
     const winRate = Math.round(winsWhenPlayed/attended*100);
     return { ...p, attended, winsWhenPlayed, winRate };
   }).filter(Boolean).sort((a,b)=>b.winRate-a.winRate).slice(0,5);
-
-  html += sectionTitle('🍀', '승리요정 TOP 5');
-  html += card(luckyRank.map((p,i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:${i===0?'none':'1px solid var(--border)'}">
-      <div style="font-size:12px;font-weight:800;color:${i<3?'#2e7d32':'var(--muted)'};width:16px">${i+1}</div>
-      ${p.photo_url ? `<img src="${p.photo_url}" style="width:30px;height:30px;border-radius:50%;object-fit:cover">` : `<div style="width:30px;height:30px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--skyblue)">${p.name.slice(0,1)}</div>`}
-      <div style="flex:1;font-size:13px;font-weight:600;color:var(--text)">${p.name}</div>
-      <div style="text-align:right">
-        <div style="font-size:14px;font-weight:700;color:#2e7d32">${p.winRate}%</div>
-        <div style="font-size:10px;color:var(--muted)">${p.winsWhenPlayed}승/${p.attended}경기</div>
-      </div>
-    </div>`).join('') || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음 (3경기 이상 참석자 없음)</div>');
 
   // 🎯 상대팀 킬러 (특정 팀 상대 최다골)
   const recentPlayerIds = new Set(
@@ -2600,43 +2562,27 @@ async function loadTeamStats() {
     .map(k => ({ ...k, player: allPlayersData.find(p=>p.id===k.player_id) }))
     .filter(k => k.player);
 
-  html += sectionTitle('🎯', '상대팀 킬러');
-  html += card(killerRank.map((k,i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:${i===0?'none':'1px solid var(--border)'}">
-      <div style="font-size:12px;font-weight:800;color:${i<3?'#c62828':'var(--muted)'};width:16px">${i+1}</div>
-      ${k.player.photo_url ? `<img src="${k.player.photo_url}" style="width:30px;height:30px;border-radius:50%;object-fit:cover">` : `<div style="width:30px;height:30px;border-radius:50%;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--skyblue)">${k.player.name.slice(0,1)}</div>`}
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;color:var(--text)">${k.player.name}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:1px">vs ${k.opponent}</div>
-      </div>
-      <div style="font-size:14px;font-weight:700;color:#c62828">${k.goals}골</div>
-    </div>`).join('') || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음 (동일 상대 2골 이상 없음)</div>');
+  html += tsLeader('참석률 TOP 5', attendanceRank, p=>`${p.rate}<small>%</small>`, p=>`${p.attended}/${p.totalEligible}경기 출석`, '데이터 없음 (입단 3개월 이상자 없음)');
+  html += tsLeader('승리요정 TOP 5', luckyRank, p=>`${p.winRate}<small>%</small>`, p=>`출전 ${p.attended}경기 ${p.winsWhenPlayed}승`, '데이터 없음 (3경기 이상 참석자 없음)');
+  html += tsLeader('상대팀 킬러', killerRank.map(k=>({...k.player, _g:k.goals, _o:k.opponent})), p=>p._g, p=>`vs ${luEsc(p._o)}`, '데이터 없음 (동일 상대 2골 이상 없음)');
 
-  // 📅 월별 / 🏟️ 경기장별 / ⚔️ 상대팀별 — 같은 표 형식 (이름 | 경기 | 득점 | 실점 | 승/무/패)
-  const GRID = 'grid-template-columns:1fr 34px 34px 34px 92px;gap:2px';
-  const statTable = (firstLabel, entries) => card(`<div style="padding:0">
-    <div style="display:grid;${GRID};padding:8px 16px;background:var(--bg3);font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">
-      <div>${firstLabel}</div><div style="text-align:center">경기</div><div style="text-align:center;color:var(--skyblue)">득점</div><div style="text-align:center;color:#c62828">실점</div><div style="text-align:right">승 무 패</div>
-    </div>
-    ${entries.map(([name, s]) => `
-      <div style="display:grid;${GRID};padding:11px 16px;border-top:1px solid var(--border);align-items:center">
-        <div style="font-size:13px;font-weight:600;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</div>
-        <div style="text-align:center;font-size:13px;color:var(--muted)">${s.games}</div>
-        <div style="text-align:center;font-size:13px;font-weight:700;color:var(--skyblue)">${s.goals}</div>
-        <div style="text-align:center;font-size:13px;font-weight:700;color:#c62828">${s.concede}</div>
-        <div style="text-align:right;font-size:12px;white-space:nowrap">${wdlBadge(s.wins,s.draws,s.losses)}</div>
-      </div>`).join('') || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">데이터 없음</div>'}
-  </div>`);
-  html += sectionTitle('📅', '월별 통계');
-  html += statTable('월', Object.entries(monthMap));
-  html += sectionTitle('🏟️', '경기장별 통계');
-  html += statTable('경기장', grounds);
-  html += sectionTitle('⚔️', '상대팀별 통계');
-  html += statTable('상대팀', opps);
+  // 월별 / 경기장별 / 상대팀별 — 한 카드에서 전환
+  const oppRow = name => { const m = matches.find(x=>(x.opponents?.name||x.opponent)===name); return m ? `<span class="mx-e" style="width:24px;height:24px">${oppLogo(m,22)}</span>` : ''; };
+  const tbl = (kind, entries) => `<div class="ts-tb" data-k="${kind}"${kind==='month'?'':' hidden'}>
+    <div class="ts-th"><span>${{month:'월',ground:'경기장',opp:'상대팀'}[kind]}</span><span>경기</span><span>득점</span><span>실점</span><span class="w">승</span><span>무</span><span class="l">패</span></div>
+    ${entries.map(([name,s])=>`<div class="ts-tr"><span class="ts-nm">${kind==='opp'?oppRow(name):''}<em>${luEsc(kind==='month'?name.replace(/^\d+년 /,''):name)}</em></span><b class="g">${s.games}</b><b>${s.goals}</b><b>${s.concede}</b><b class="w">${s.wins}</b><b class="d">${s.draws}</b><b class="l">${s.losses}</b></div>`).join('') || '<div class="ovc-empty">데이터 없음</div>'}</div>`;
+  html += `<section class="ovc" id="ts-tables"><h3 class="ovc-h"><span>상세 기록</span><span class="ovc-tg">${[['month','월별'],['ground','경기장'],['opp','상대팀']].map(([k,l],i)=>`<button class="${i?'':'on'}" onclick="tsTab('${k}',this)">${l}</button>`).join('')}</span></h3>
+    ${tbl('month', Object.entries(monthMap))}${tbl('ground', grounds)}${tbl('opp', opps)}</section>`;
 
   document.getElementById('teamstats-content').innerHTML = html;
   document.getElementById('teamstats-loading').style.display = 'none';
   document.getElementById('teamstats-content').style.display = 'block';
+}
+
+function tsTab(k, btn){
+  const box = document.getElementById('ts-tables'); if(!box) return;
+  box.querySelectorAll('.ovc-tg button').forEach(b=>b.classList.toggle('on', b===btn));
+  box.querySelectorAll('.ts-tb').forEach(t=>t.hidden = t.dataset.k!==k);
 }
 
 function switchTab(tab, btn) {
