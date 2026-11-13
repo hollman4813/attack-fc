@@ -2304,7 +2304,7 @@ function squadRender(){
   const keys = cur==='all' ? [...posOrder,'etc'] : [cur];
   keys.forEach(k=>{ if(groups[k] && groups[k].length) html += sec(k, groups[k]); });
   const inact = inactive.filter(p=>cur==='all' || p.position===cur).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
-  if (inact.length) html += sec('x', inact, 'Injured · Resting');
+  if (inact.length) html += sec('x', inact, '부상 · 휴식');
   const total = players.length;
   const chips = ['all',...posOrder].map(k=>`<button class="sq-chip${cur===k?' on':''}" onclick="squadFilter('${k}')">${k==='all'?'전체':k}</button>`).join('');
   document.getElementById('squad-list').innerHTML =
