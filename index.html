@@ -330,6 +330,74 @@
   .ovr-dots{display:flex;justify-content:center;gap:5px;margin-top:12px;min-height:6px}
   .ovr-dots i{width:6px;height:6px;border-radius:3px;background:#c6cfdb;cursor:pointer;transition:width .2s,background .2s}
   .ovr-dots i.on{width:16px;background:var(--team-navy)}
+  /* 메인: PL 클럽 페이지 구성 */
+  .ovc{background:#fff;border-radius:18px;margin-top:12px;padding:18px 16px 16px;box-shadow:0 1px 2px rgba(15,40,80,.05),0 6px 18px rgba(15,40,80,.06)}
+  .ovc-flush{padding-bottom:0;overflow:hidden}
+  .ovc-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 14px;font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:800;color:var(--team-deep)}
+  .ovc-h>span:first-child{display:flex;align-items:center;gap:8px}
+  .ovc-pill{flex:none;background:#eef2f8;color:var(--team-deep);font-size:12px;font-weight:700;border-radius:16px;padding:6px 12px;cursor:pointer;text-decoration:none;font-family:'Noto Sans KR',sans-serif}
+  .ovc-tg{display:flex;background:#eef2f8;border-radius:10px;padding:3px}
+  .ovc-tg button{border:0;background:none;font:inherit;font-size:12px;font-weight:700;color:#51607a;padding:5px 10px;border-radius:8px;cursor:pointer}
+  .ovc-tg button.on{background:#fff;color:var(--team-deep);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .ovc-me{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--team-deep);margin-bottom:12px}.ovc-me img{width:20px;height:20px;border-radius:50%}
+  .ovc-empty{font-size:13px;color:var(--muted);text-align:center;padding:14px 0}
+  .ovf{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;text-align:center}
+  .ovf-i{cursor:pointer;min-width:0}
+  .ovf-d{font-size:11px;color:var(--muted)}
+  .ovf-lo{width:34px;height:34px;border-radius:50%;margin:8px auto 6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px}
+  .ovf-n{font-size:11px;font-weight:800;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ovf-s{margin-top:8px;height:22px;border-radius:5px;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Teko','Noto Sans KR',sans-serif;font-size:19px;font-weight:600;line-height:1;letter-spacing:1px;white-space:nowrap}
+  .f-teko .ovf-s{padding-top:3px}
+  .ovf-s.w{background:#2e7d32}.ovf-s.l{background:#d32f2f}.ovf-s.d{background:#9aa3ad}
+  .ovf-s.up{background:#fff;color:var(--team-navy);box-shadow:inset 0 0 0 1.5px var(--team-navy)}
+  .ovl-m{background:#f4f6fa;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer}
+  .ovl-g{display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:800;color:var(--team-deep)}
+  .ovl-t{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ovl-g img,.ovl-lo{width:26px;height:26px;border-radius:50%;flex:none}
+  .ovl-lo{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+  .ovl-sc{flex:none;font-family:'Teko','Noto Sans KR',sans-serif;font-size:30px;font-weight:600;line-height:1;letter-spacing:1px}
+  .f-teko .ovl-sc{padding-top:4px;line-height:.9}
+  .ovl-ft{font-size:12px;font-weight:800;color:var(--team-deep);margin-top:6px}.ovl-dt{font-size:11px;color:var(--muted);margin-top:4px}
+  .ovl-q{display:flex;gap:6px;margin-top:12px}
+  .ovl-q button{flex:1;border:0;font:inherit;font-size:13px;font-weight:800;color:#51607a;background:#eef2f8;border-radius:10px;padding:8px 0;cursor:pointer}
+  .ovl-q button.on{background:var(--team-navy);color:#fff}.ovl-q button:disabled{opacity:.35;cursor:default}
+  .ovl-info{font-size:12px;color:var(--muted);margin-top:10px}
+  .ovl-pitch{position:relative;height:470px;margin:10px -16px 0;overflow:hidden;background:linear-gradient(180deg,#f7f9fc,#fff)}
+  .ovl-pitch i.c{position:absolute;left:50%;top:-60px;width:120px;height:120px;margin-left:-60px;border:1px solid #e9edf3;border-radius:50%}
+  .ovl-pitch i.b{position:absolute;left:24%;right:24%;bottom:0;height:70px;border:1px solid #e9edf3;border-bottom:0}
+  .ovl-p{position:absolute;transform:translate(-50%,-50%);text-align:center;width:84px}
+  .ovl-k{width:38px;height:38px;margin:0 auto;border-radius:50%;background:var(--team-navy);color:#fff;border:2px solid #fff;box-shadow:0 3px 8px rgba(15,40,80,.3);display:flex;align-items:center;justify-content:center;font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;font-weight:600;line-height:1;box-sizing:content-box}
+  .f-teko .ovl-k{padding-top:3px;height:35px}
+  .ovl-k.gk{background:var(--team-gold);color:var(--team-deep)}
+  .ovl-n{font-size:11px;font-weight:700;color:var(--team-deep);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ovl-s{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ovl-ev{position:absolute;top:-6px;left:56px;font-size:10px;white-space:nowrap;letter-spacing:-2px}
+  .ovs-h{display:flex;justify-content:space-between;align-items:center;margin:20px 2px 10px;font-size:17px;font-weight:800;color:var(--team-deep)}
+  .ovs{display:flex;gap:10px;overflow-x:auto;margin:0 -12px;padding:0 12px 4px;scrollbar-width:none;scroll-snap-type:x mandatory;scroll-padding:0 12px}
+  .ovs::-webkit-scrollbar{display:none}
+  .ovs-c{flex:none;width:236px;background:#fff;border-radius:18px;padding:16px;cursor:pointer;scroll-snap-align:start;box-shadow:0 1px 2px rgba(15,40,80,.05),0 6px 18px rgba(15,40,80,.06)}
+  .ovs-t{font-size:15px;font-weight:800;color:var(--team-deep)}
+  .ovs-b{display:flex;gap:12px;align-items:center;margin-top:12px}
+  .ovs-im{width:76px;height:76px;flex:none;border-radius:12px;overflow:hidden;background:linear-gradient(160deg,#1e4d8c,#0f2850);display:flex;align-items:center;justify-content:center}
+  .ovs-im img{width:100%;height:100%;object-fit:cover}.ovs-im b{color:#fff;font-size:30px;font-weight:800}
+  .ovs-pos{font-size:12px;color:var(--muted)}.ovs-nm{font-size:16px;font-weight:800;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ovs-v{font-family:'Teko','Noto Sans KR',sans-serif;font-size:34px;font-weight:600;line-height:1;color:var(--team-deep)}
+  .f-teko .ovs-v{line-height:.9;padding-top:4px}
+  .ovy-badge:before{content:'';width:26px;height:18px;border-radius:5px;flex:none;background:#ff0000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M3 2l5 3-5 3z' fill='white'/%3E%3C/svg%3E") center/10px no-repeat}
+  .ovy-big{display:block;position:relative;border-radius:12px;overflow:hidden;aspect-ratio:16/9;background:#0f2850}
+  .ovy-big img{width:100%;height:100%;object-fit:cover;display:block}
+  .ovy-play{position:absolute;left:50%;top:50%;width:60px;height:42px;margin:-21px 0 0 -30px;background:#ff0000;border-radius:12px}
+  .ovy-play:after{content:'';position:absolute;left:24px;top:11px;border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent}
+  .ovy-tt{display:block;font-size:15px;font-weight:800;color:var(--team-deep);margin-top:10px;line-height:1.4;text-decoration:none}
+  .ovy-sub{font-size:11px;color:var(--muted);margin-top:3px}
+  .ovy-row{display:flex;gap:10px;margin-top:12px;text-decoration:none}
+  .ovy-th{width:120px;flex:none;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#1a3a6b}.ovy-th img{width:100%;height:100%;object-fit:cover;display:block}
+  .ovy-row b{display:block;font-size:13px;color:var(--team-deep);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.ovy-row i{font-style:normal;font-size:11px;color:var(--muted)}
+  .ovy-ch{display:block;text-align:center;font-size:14px;font-weight:800;color:#fff;background:#ff0000;border-radius:12px;padding:14px;text-decoration:none}
+  .ovb .ovb-em{width:26px;height:26px;border-radius:7px}
+  .ovb .news-row{border:0;border-top:1px solid #eef1f5;border-radius:0;margin:0;padding:12px 0;background:none}
+  .ovb .news-row:first-of-type{border-top:0;padding-top:0}
+  .ovb .news-thumb{width:84px;height:64px;border-radius:10px}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
@@ -684,10 +752,20 @@
         <div class="content-wrap">
           <div id="my-mini"></div>
           <div id="next-match-wrap" style="display:none"><div class="nm-card" id="next-match-card"></div></div>
-          <div class="rs ov-rs">
-            <section class="rs-sec"><h3 class="rs-ttl ov-hd"><span id="ov-season-title">2026 시즌</span><a onclick="switchTab('teamstats',document.querySelectorAll('.team-tab')[4])">팀 통계 ›</a></h3><div id="ov-season"></div></section>
-            <section class="rs-sec"><h3 class="rs-ttl ov-hd"><span>최근 10경기</span><a onclick="switchTab('matches',document.querySelectorAll('.team-tab')[1])">전체 ›</a></h3><div id="form-strip" class="ovr-scroll"></div><div class="ovr-dots" id="ovr-dots"></div></section>
+          <div class="ovc" id="ov-form-card" style="display:none">
+            <h3 class="ovc-h"><span>팀 폼</span><span class="ovc-tg" id="ov-form-tg"><button class="on" onclick="ovFormTab('prev')">지난 경기</button><button onclick="ovFormTab('next')">다음 경기</button></span></h3>
+            <div class="ovc-me"><img src="emblem_v4.png" alt="">ATTACK</div>
+            <div id="ov-form"></div>
           </div>
+          <div class="ovc ovc-flush" id="ov-lu-card" style="display:none">
+            <h3 class="ovc-h"><span>지난 경기 라인업</span><a class="ovc-pill" id="ov-lu-go">경기 상세 ›</a></h3>
+            <div id="ov-lu"></div>
+          </div>
+          <div class="rs ov-rs">
+            <section class="rs-sec"><h3 class="rs-ttl ov-hd"><span id="ov-season-title">2026 시즌</span><a class="ovc-pill" onclick="switchTab('teamstats',document.querySelectorAll('.team-tab')[4])">팀 통계 ›</a></h3><div id="ov-season"></div></section>
+          </div>
+          <div id="ov-leaders"></div>
+          <div id="ov-yt"></div>
         </div>
       </div>
     </div>
@@ -1497,13 +1575,12 @@ async function loadOverview() {
       <div class="ov-bl"><span style="color:#2e7d32">${wins}승</span><span style="color:#757575">${draws}무</span><span style="color:#c62828">${losses}패</span><span class="r">득실 ${gd>0?'+':''}${gd} · 경기당 ${G?(gf/G).toFixed(1):'-'}골</span></div>`;
   }
   {
-    const fin = matches.filter(m=>m.result != null).slice(0,10);
-    document.getElementById('form-strip').innerHTML = fin.length ? fin.map(m=>{
-      const k = m.result==='Win'?'w':m.result==='Lose'?'l':'d';
-      return `<div class="ovr-c ${k}" onclick="showMatch(${m.id})"><div class="ovr-nm">${luEsc(m.opponents?.name||m.opponent||'')}</div><div class="ovr-sc">${m.our_score??'-'}:${m.opponent_score??'-'}</div></div>`;
-    }).join('') : '<div style="font-size:13px;color:var(--muted);padding:4px 0">아직 끝난 경기가 없어요.</div>';
-    ovDragScroll(document.getElementById('form-strip'));
-    ovDots();
+    const fin = matches.filter(m=>m.result != null);
+    window._ovFin = fin.slice(0,5);
+    ovFormTab('prev');
+    ovLineup(fin[0]);
+    ovLeaders(stats);
+    ovYoutube();
   }
 
   // TOP3
@@ -1533,6 +1610,84 @@ async function loadOverview() {
   loadNews();
 }
 
+// ── 메인: 팀 폼 / 지난 경기 라인업 / 시즌 리더 / 경기 영상 ──
+const OV_PAL = ['#5b6b82','#8a4b4b','#3e6f5a','#7a5fa0','#a0762e','#2f6f8f','#8f5a2f','#4f5d9a'];
+function ovOppColor(n){ let h=0; for(const c of String(n||'')) h=(h*31+c.charCodeAt(0))>>>0; return OV_PAL[h%OV_PAL.length]; }
+function ovOppName(m){ return m.opponents?.name || m.opponent || ''; }
+async function ovFormTab(k){
+  const card = document.getElementById('ov-form-card'), box = document.getElementById('ov-form'); if(!box) return;
+  document.querySelectorAll('#ov-form-tg button').forEach((b,i)=>b.classList.toggle('on', (i===0)===(k==='prev')));
+  let list = [];
+  if(k==='prev') list = (window._ovFin||[]).slice().reverse();
+  else {
+    if(!window._ovUp) { try{ window._ovUp = await api(`matches?select=id,match_date,match_time,opponent,opponents(name)&status=eq.upcoming&order=match_date.asc&limit=5`); }catch(e){ window._ovUp = []; } }
+    list = window._ovUp;
+  }
+  card.style.display = (window._ovFin||[]).length || (window._ovUp||[]).length ? 'block' : 'none';
+  if(!list.length){ box.innerHTML = `<div class="ovc-empty">${k==='prev'?'아직 끝난 경기가 없어요.':'예정된 경기가 없어요.'}</div>`; return; }
+  box.innerHTML = `<div class="ovf">${list.map(m=>{
+    const d = new Date(m.match_date), nm = ovOppName(m);
+    let chip;
+    if(k==='prev'){ const r = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; chip = `<div class="ovf-s ${r}">${m.our_score??'-'}-${m.opponent_score??'-'}</div>`; }
+    else chip = `<div class="ovf-s up">${m.match_time?String(m.match_time).slice(0,5):'미정'}</div>`;
+    return `<div class="ovf-i" onclick="showMatch(${m.id})"><div class="ovf-d">${d.getMonth()+1}.${d.getDate()}</div><div class="ovf-lo" style="background:${ovOppColor(nm)}">${luEsc(nm.charAt(0)||'?')}</div><div class="ovf-n">${luEsc(nm)}</div>${chip}</div>`;
+  }).join('')}</div>`;
+}
+async function ovLineup(m){
+  const card = document.getElementById('ov-lu-card'); if(!card) return;
+  if(!m){ card.style.display='none'; return; }
+  let ctx = null, pl = [];
+  try{ [ctx, pl] = await Promise.all([ratingCtxLoad(), api('players?select=id,name,number')]); }catch(e){}
+  const plan = ctx && ctx.plans && ctx.plans[m.id];
+  const qs = (plan||[]).map((e,i)=>e && LU_FORMATIONS[e.formation] ? i : -1).filter(i=>i>=0);
+  if(!qs.length){ card.style.display='none'; return; }
+  window._ovLu = { m, plan, rec: (ctx.recs||{})[m.id] || null, pm: Object.fromEntries((pl||[]).map(p=>[p.id,p])), qs, q: qs[0] };
+  document.getElementById('ov-lu-go').onclick = () => showMatch(m.id);
+  card.style.display = 'block';
+  ovLuRender();
+}
+function ovLuQ(q){ if(window._ovLu){ window._ovLu.q = q; ovLuRender(); } }
+function ovLuRender(){
+  const L = window._ovLu, box = document.getElementById('ov-lu'); if(!L || !box) return;
+  const m = L.m, d = new Date(m.match_date), nm = ovOppName(m), r = m.result==='Win'?'w':m.result==='Lose'?'l':'d';
+  const e = L.plan[L.q], fm = LU_FORMATIONS[e.formation] || [];
+  const rq = luRecOf(L.rec, L.q), sc = L.rec ? luQScore(rq) : null;
+  const ev = pid => { if(!L.rec || pid==null) return ''; const x = luQStat(L.rec, L.q, pid); return '⚽'.repeat(Math.min(x.g,3)) + '🅰'.repeat(Math.min(x.a,3)); };
+  const who = id => L.pm[id] || null;
+  const players = fm.map(([k,g,x,y])=>{
+    const sl = (e.slots||{})[k]; if(!sl || sl.p==null) return '';
+    const p = who(sl.p), sub = sl.s!=null && sl.s!==sl.p ? who(sl.s) : null;
+    const evs = ev(sl.p) + (sub ? ev(sl.s) : '');
+    return `<div class="ovl-p" style="left:${Math.max(12,Math.min(88,x))}%;top:${6+y*0.86}%">${evs?`<span class="ovl-ev">${evs}</span>`:''}<div class="ovl-k${g==='GK'?' gk':''}">${p&&p.number!=null?p.number:luEsc((p?p.name:'?').charAt(0))}</div><div class="ovl-n">${luEsc(p?p.name:'?')}</div>${sub?`<div class="ovl-s">↔ ${luEsc(sub.name)}</div>`:''}</div>`;
+  }).join('');
+  box.innerHTML = `<div class="ovl-m" onclick="showMatch(${m.id})"><div class="ovl-g"><span class="ovl-t">ATTACK</span><img src="emblem_v4.png" alt=""><span class="ovl-sc ${r}">${m.our_score??'-'} - ${m.opponent_score??'-'}</span><span class="ovl-lo" style="background:${ovOppColor(nm)}">${luEsc(nm.charAt(0)||'?')}</span><span class="ovl-t">${luEsc(nm)}</span></div><div class="ovl-ft">경기 종료</div><div class="ovl-dt">${d.getMonth()+1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})${m.grounds?.name?' · '+luEsc(m.grounds.name):''}</div></div>
+    <div class="ovl-q">${[0,1,2,3].map(i=>`<button class="${i===L.q?'on':''}" ${L.qs.includes(i)?`onclick="ovLuQ(${i})"`:'disabled'}>${i+1}Q</button>`).join('')}</div>
+    <div class="ovl-info">${L.q+1}쿼터 · ${luEsc(e.formation)}${sc?` · 쿼터 스코어 ${sc.us}:${sc.them}`:''}</div>
+    <div class="ovl-pitch"><i class="c"></i><i class="b"></i>${players}</div>`;
+}
+function ovLeaders(stats){
+  const box = document.getElementById('ov-leaders'); if(!box) return;
+  const top = k => (stats||[]).filter(x=>(x[k]||0)>0).sort((a,b)=>(b[k]||0)-(a[k]||0))[0];
+  const items = [['최다 득점','총골',top('총골')],['최다 도움','총어시스트',top('총어시스트')],['최다 MOM','mom횟수',top('mom횟수')]].filter(x=>x[2]);
+  if(!items.length){ box.innerHTML=''; return; }
+  const pos = p => [p.sub_position1].filter(Boolean)[0] || p.position || '';
+  box.innerHTML = `<div class="ovs-h"><span>시즌 리더</span><a class="ovc-pill" onclick="switchTab('scorers',document.querySelectorAll('.team-tab')[3])">전체 ›</a></div>
+    <div class="ovs">${items.map(([t,k,p])=>`<div class="ovs-c" onclick="showPlayer(${p.id})"><div class="ovs-t">${t} ›</div><div class="ovs-b"><div class="ovs-im">${p.photo_url?`<img src="${p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((p.name||'?').charAt(0))}</b>`}</div><div style="min-width:0"><div class="ovs-pos">${luEsc([pos(p), p.number!=null?p.number:''].filter(x=>x!=='').join(' · '))}</div><div class="ovs-nm">${luEsc(p.name)}</div><div class="ovs-v">${p[k]}</div></div></div></div>`).join('')}</div>`;
+}
+async function ovYoutube(){
+  const box = document.getElementById('ov-yt'); if(!box) return;
+  let d = null; try{ const r = await fetch('/api/yt'); d = await r.json(); }catch(e){}
+  const v = (d && d.videos) || [], ch = (d && d.channel) || 'https://www.youtube.com/@ch.attack4905';
+  const ago = t => { const s = (Date.now()-new Date(t))/1000; if(!(s>=0)) return ''; if(s<3600) return Math.max(1,Math.round(s/60))+'분 전'; if(s<86400) return Math.round(s/3600)+'시간 전'; if(s<86400*14) return Math.round(s/86400)+'일 전'; if(s<86400*60) return Math.round(s/86400/7)+'주 전'; return Math.round(s/86400/30)+'개월 전'; };
+  const url = id => `https://www.youtube.com/watch?v=${id}`;
+  const head = `<h3 class="ovc-h"><span class="ovy-badge">경기 영상</span><a class="ovc-pill" href="${ch}" target="_blank" rel="noopener">채널 ›</a></h3>`;
+  if(!v.length){ box.innerHTML = `<div class="ovc">${head}<a class="ovy-ch" href="${ch}" target="_blank" rel="noopener">▶ 유튜브 채널에서 경기 영상 보기</a></div>`; return; }
+  const [a, ...rest] = v;
+  box.innerHTML = `<div class="ovc">${head}
+    <a class="ovy-big" href="${url(a.id)}" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/${a.id}/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><i class="ovy-play"></i></a>
+    <a class="ovy-tt" href="${url(a.id)}" target="_blank" rel="noopener">${luEsc(a.title)}</a><div class="ovy-sub">YouTube · ${ago(a.published)}</div>
+    ${rest.slice(0,2).map(x=>`<a class="ovy-row" href="${url(x.id)}" target="_blank" rel="noopener"><span class="ovy-th"><img src="https://i.ytimg.com/vi/${x.id}/mqdefault.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'"></span><span><b>${luEsc(x.title)}</b><i>YouTube · ${ago(x.published)}</i></span></a>`).join('')}</div>`;
+}
 // PC에서 마우스로 끌어서 가로 스크롤 (터치는 기본 스와이프)
 function ovDragScroll(el){
   if(!el || el._drag) return; el._drag = true;
@@ -4513,8 +4668,8 @@ async function memReject(uid){
 /* ===== NEWS ===== */
 const NEWS_PREFIX = 'news_';
 const BOARDS = {
-  news:{prefix:'news_', title:'어택 소식', limit:5, list:'_news', box:'ov-news', empty:'등록된 소식이 없어요', ph:'📰', nm:'소식', write:'글쓰기'},
-  info:{prefix:'info_', title:'축구 정보', limit:5, list:'_info', box:'ov-info', empty:'등록된 글이 없어요', ph:'📋', nm:'글', write:'글쓰기'}
+  news:{prefix:'news_', title:'구단 소식', limit:5, list:'_news', box:'ov-news', empty:'등록된 소식이 없어요', ph:'📰', nm:'소식', write:'글쓰기'},
+  info:{prefix:'info_', title:'축구 소식', limit:5, list:'_info', box:'ov-info', empty:'등록된 글이 없어요', ph:'📋', nm:'글', write:'글쓰기'}
 };
 async function newsFetch(limit, b){
   const prefix = BOARDS[b||'news'].prefix;
@@ -4544,10 +4699,10 @@ async function loadNews(){
   for(const b of Object.keys(BOARDS)){
     const c = BOARDS[b];
     let box = document.getElementById(c.box);
-    if(!box){ box = document.createElement('div'); box.id=c.box; host.appendChild(box); }
+    if(!box){ box = document.createElement('div'); box.id=c.box; box.className='content-wrap'; host.appendChild(box); }
     const posts = await newsFetch(c.limit, b);
     window[c.list] = posts;
-    box.innerHTML = `<div class="divider"></div><div class="sec-header" style="padding:0 12px"><div class="sec-title">${c.title}</div>${admIcon('✏️',`newsEdit(null,true,'${b}')`,c.nm+' 쓰기',c.write)}</div><div style="padding:0 12px 20px">${posts.length ? posts.map((p,i)=>newsRowHtml(p,i,b)).join('') : `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">${c.empty}</div>`}</div>`;
+    box.innerHTML = `<div class="ovc ovb"><h3 class="ovc-h"><span>${b==='news'?'<img class="ovb-em" src="emblem_v4.png" alt="">':'⚽ '}${c.title}</span>${admIcon('✏️',`newsEdit(null,true,'${b}')`,c.nm+' 쓰기',c.write)}</h3>${posts.length ? posts.map((p,i)=>newsRowHtml(p,i,b)).join('') : `<div class="ovc-empty">${c.empty}</div>`}</div>`;
   }
 }
 function newsOpen(i, b){
