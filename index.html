@@ -513,6 +513,7 @@
   #md-videos.ovc .md-vh{display:none}
   .rs-rank.ov-rs2{grid-template-columns:repeat(3,1fr);margin-top:16px;padding-top:14px;border-top:1px solid #e6ebf2}
   .rs-rank.ov-rs2 b{font-size:30px}
+  .att-rec{font-style:normal;font-weight:800;color:#c98a00;white-space:nowrap}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
@@ -4487,8 +4488,8 @@ function mrRender(){
   const teamM = (D.matches||[]).filter(m=>D.scope==='all'||m.season_id===D.scope).sort(byDate);
   const playedIds = new Set(played.map(r=>r.match_id));
   const TM = teamM.length, attRate = TM ? Math.round(GP/TM*100) : null;
-  let cs = 0, bestAtt = 0; teamM.forEach(m=>{ if(playedIds.has(m.id)){ cs++; bestAtt = Math.max(bestAtt,cs); } else cs = 0; });
-  const curAtt = cs;
+  let cs = 0, bestAtt = 0, prevBest = 0; teamM.forEach(m=>{ if(playedIds.has(m.id)){ cs++; bestAtt = Math.max(bestAtt,cs); } else { prevBest = Math.max(prevBest,cs); cs = 0; } });
+  const curAtt = cs, attRecord = curAtt >= 2 && curAtt > prevBest;  // 지금 이어가는 연속 출석이 이전 최장 기록을 넘김
   const without = teamM.filter(m=>!playedIds.has(m.id)), withM = teamM.filter(m=>playedIds.has(m.id));
   const tstat = arr => arr.length ? { n:arr.length, wr:Math.round(arr.filter(m=>m.result==='Win').length/arr.length*100), gf:(arr.reduce((t,m)=>t+(m.our_score||0),0)/arr.length).toFixed(1), ga:(arr.reduce((t,m)=>t+(m.opponent_score||0),0)/arr.length).toFixed(1) } : null;
   const tWith = tstat(withM), tWo = tstat(without);
@@ -4534,7 +4535,7 @@ function mrRender(){
     </div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px">${pill(currentSeasonId, currentSeasonName)}${seasons.filter(s=>s!==currentSeasonId).map(s=>pill(s,'시즌 '+s)).join('')}${pill('all','통산')}</div>
     ${GP ? `<div class="rs">
-    ${TM ? card(`${ttl('출석')}<div class="rs-rank">${[['참석',GP,`/ ${TM}경기`],['참석률',`${attRate}<small>%</small>`,''],['연속 출석',`${curAtt}<small>경기</small>`,'진행 중'],['최장 연속',`${bestAtt}<small>경기</small>`,'']].map(([l,v,x])=>`<div><span>${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`) : ''}
+    ${TM ? card(`${ttl('출석')}<div class="rs-rank">${[['참석',GP,`/ ${TM}경기`],['참석률',`${attRate}<small>%</small>`,''],['연속 출석',`${curAtt}<small>경기</small>`,'진행 중'],['최장 연속',`${bestAtt}<small>경기</small>`,attRecord?'<em class="att-rec">신기록 달성 중!</em>':'']].map(([l,v,x])=>`<div><span>${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`) : ''}
     ${card(`${ttl('팀 내 순위')}<div class="rs-rank">${ranks.map(([n,r,v])=>`<div class="${r&&r<=3?'top':''}"><span>${n}</span><b>${r?r+'<small>위</small>':'-'}</b><i>${v}${n==='출전'?'경기':n==='득점'?'골':n==='도움'?'개':''}</i></div>`).join('')}</div>`)}
     ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div class="rs-pos">
       <div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/posList[0][1]); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?g:''}</u>`; }).join('')}</div>
