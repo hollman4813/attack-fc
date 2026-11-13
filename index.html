@@ -2101,12 +2101,12 @@ function svRow(p, rank, val){
   return `<div class="sv-r" onclick="showPlayer(${p.id})"><span class="sv-rk">${rank}</span>${svAv(p)}<p>${luEsc(p.name)}<small>${posShort(p)}</small></p><span class="sv-v">${val}</span></div>`;
 }
 // 카테고리 카드: 1위 크게 + 2·3위
-function fmCard(tab, label, list, valOf, gold){
+function fmCard(tab, label, list, valOf){
   const head = `<h3 class="ovc-h"><span>${label}</span><button class="ovc-pill" onclick="statGo('${tab}')">전체 ›</button></h3>`;
   if(!list || !list.length) return `<section class="ovc">${head}<div class="ovc-empty">기록 없음</div></section>`;
   const p = list[0];
   return `<section class="ovc">${head}
-    <div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b><span>${posShort(p)}</span></div><div class="sv-big"${gold?' style="color:#c98a00"':''}>${valOf(p)}</div></div>
+    <div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b><span>${posShort(p)}</span></div><div class="sv-big">${valOf(p)}</div></div>
     ${list.slice(1,3).map((q,i)=>svRow(q,i+2,valOf(q))).join('')}</section>`;
 }
 async function getPower(){
@@ -2125,7 +2125,7 @@ function renderStatOverview() {
   window.scrollTo(0,0);
   getPower().then(list=>{
     const box = document.getElementById('fm-power'); if(!box || window._currentStatTab!=='overview') return;
-    box.innerHTML = fmCard('power','어택 포인트', list.slice(0,3), p=>Math.round(p.power), true);
+    box.innerHTML = fmCard('power','어택 포인트', list.slice(0,3), p=>Math.round(p.power));
   }).catch(e=>{ console.error('어택포인트 계산 실패:', e); const box=document.getElementById('fm-power'); if(box) box.innerHTML = fmCard('power','어택 포인트',null); });
 }
 function statBackBar(title){
