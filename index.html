@@ -344,7 +344,7 @@
   .ovf{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;text-align:center}
   .ovf-i{cursor:pointer;min-width:0}
   .ovf-d{font-size:11px;color:var(--muted)}
-  .ovf-lo{width:34px;height:34px;border-radius:50%;margin:8px auto 6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px}
+  .ovf-lo{width:34px;height:34px;border-radius:50%;margin:8px auto 6px;display:flex;align-items:center;justify-content:center;background:#eef2f8}
   .ovf-n{font-size:11px;font-weight:800;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ovf-s{margin-top:8px;height:22px;border-radius:5px;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Teko','Noto Sans KR',sans-serif;font-size:19px;font-weight:600;line-height:1;letter-spacing:1px;white-space:nowrap}
   .f-teko .ovf-s{padding-top:3px}
@@ -354,7 +354,7 @@
   .ovl-g{display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:800;color:var(--team-deep)}
   .ovl-t{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ovl-g img,.ovl-lo{width:26px;height:26px;border-radius:50%;flex:none}
-  .ovl-lo{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+  .ovl-lo{display:flex;align-items:center;justify-content:center;background:#fff;box-shadow:0 0 0 1px #e3e8ef}
   .ovl-sc{flex:none;font-family:'Teko','Noto Sans KR',sans-serif;font-size:30px;font-weight:600;line-height:1;letter-spacing:1px}
   .f-teko .ovl-sc{padding-top:4px;line-height:.9}
   .ovl-ft{font-size:12px;font-weight:800;color:var(--team-deep);margin-top:6px}.ovl-dt{font-size:11px;color:var(--muted);margin-top:4px}
@@ -1614,6 +1614,7 @@ async function loadOverview() {
 }
 
 // ── 메인: 팀 폼 / 지난 경기 라인업 / 시즌 리더 / 경기 영상 ──
+const OV_SHIELD = '<svg viewBox="0 0 24 24" width="60%" height="60%" aria-hidden="true"><path d="M12 2.5 4 5.5v6.2c0 4.6 3.3 8.6 8 9.8 4.7-1.2 8-5.2 8-9.8V5.5z" fill="#c9d2de"/><path d="M12 6.2 7.2 8v3.8c0 2.8 2 5.3 4.8 6.1 2.8-.8 4.8-3.3 4.8-6.1V8z" fill="#fff" opacity=".75"/></svg>';
 const OV_PAL = ['#5b6b82','#8a4b4b','#3e6f5a','#7a5fa0','#a0762e','#2f6f8f','#8f5a2f','#4f5d9a'];
 function ovOppColor(n){ let h=0; for(const c of String(n||'')) h=(h*31+c.charCodeAt(0))>>>0; return OV_PAL[h%OV_PAL.length]; }
 function ovOppName(m){ return m.opponents?.name || m.opponent || ''; }
@@ -1633,7 +1634,7 @@ async function ovFormTab(k){
     let chip;
     if(k==='prev'){ const r = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; chip = `<div class="ovf-s ${r}">${m.our_score??'-'}-${m.opponent_score??'-'}</div>`; }
     else chip = `<div class="ovf-s up">${m.match_time?String(m.match_time).slice(0,5):'미정'}</div>`;
-    return `<div class="ovf-i" onclick="showMatch(${m.id})"><div class="ovf-d">${d.getMonth()+1}.${d.getDate()}</div><div class="ovf-lo" style="background:${ovOppColor(nm)}">${luEsc(nm.charAt(0)||'?')}</div><div class="ovf-n">${luEsc(nm)}</div>${chip}</div>`;
+    return `<div class="ovf-i" onclick="showMatch(${m.id})"><div class="ovf-d">${d.getMonth()+1}.${d.getDate()}</div><div class="ovf-lo">${OV_SHIELD}</div><div class="ovf-n">${luEsc(nm)}</div>${chip}</div>`;
   }).join('')}</div>`;
 }
 async function ovLineup(m){
@@ -1672,7 +1673,7 @@ function ovLuRender(){
     const evs = ev(sl.p) + (sub ? ev(sl.s) : '');
     return `<div class="ovl-p" style="left:${Math.max(12,Math.min(88,x))}%;top:${6+y*0.86}%">${evs?`<span class="ovl-ev">${evs}</span>`:''}<div class="ovl-k${g==='GK'?' gk':''}">${p&&p.number!=null?p.number:luEsc((p?p.name:'?').charAt(0))}</div><div class="ovl-n">${luEsc(p?p.name:'?')}</div>${sub?`<div class="ovl-s">↔ ${luEsc(sub.name)}</div>`:''}</div>`;
   }).join('');
-  box.innerHTML = `<div class="ovl-m" onclick="showMatch(${m.id})"><div class="ovl-g"><span class="ovl-t">ATTACK</span><img src="emblem_v4.png" alt=""><span class="ovl-sc ${r}">${m.our_score??'-'} - ${m.opponent_score??'-'}</span><span class="ovl-lo" style="background:${ovOppColor(nm)}">${luEsc(nm.charAt(0)||'?')}</span><span class="ovl-t">${luEsc(nm)}</span></div><div class="ovl-ft">경기 종료</div><div class="ovl-dt">${d.getMonth()+1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})${m.grounds?.name?' · '+luEsc(m.grounds.name):''}</div></div>
+  box.innerHTML = `<div class="ovl-m" onclick="showMatch(${m.id})"><div class="ovl-g"><span class="ovl-t">ATTACK</span><img src="emblem_v4.png" alt=""><span class="ovl-sc ${r}">${m.our_score??'-'} - ${m.opponent_score??'-'}</span><span class="ovl-lo">${OV_SHIELD}</span><span class="ovl-t">${luEsc(nm)}</span></div><div class="ovl-ft">경기 종료</div><div class="ovl-dt">${d.getMonth()+1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})${m.grounds?.name?' · '+luEsc(m.grounds.name):''}</div></div>
     <div class="ovl-q">${[0,1,2,3].map(i=>`<button class="${i===L.q?'on':''}" ${L.qs.includes(i)?`onclick="ovLuQ(${i})"`:'disabled'}>${i+1}Q</button>`).join('')}</div>
     <div class="ovl-info">${L.q+1}쿼터 · ${luEsc(e.formation)}${sc?` · 쿼터 스코어 ${sc.us}:${sc.them}`:''}</div>
     <div class="ovl-pitch"><i class="c"></i><i class="b"></i>${players}</div>`;
@@ -4716,8 +4717,8 @@ async function memReject(uid){
 /* ===== NEWS ===== */
 const NEWS_PREFIX = 'news_';
 const BOARDS = {
-  news:{prefix:'news_', title:'구단 소식', limit:5, list:'_news', box:'ov-news', empty:'등록된 소식이 없어요', ph:'📰', nm:'소식', write:'글쓰기'},
-  info:{prefix:'info_', title:'축구 소식', limit:5, list:'_info', box:'ov-info', empty:'등록된 글이 없어요', ph:'📋', nm:'글', write:'글쓰기'}
+  news:{prefix:'news_', title:'어택 소식', limit:5, list:'_news', box:'ov-news', empty:'등록된 소식이 없어요', ph:'📰', nm:'소식', write:'글쓰기'},
+  info:{prefix:'info_', title:'축구 정보', limit:5, list:'_info', box:'ov-info', empty:'등록된 글이 없어요', ph:'📋', nm:'글', write:'글쓰기'}
 };
 async function newsFetch(limit, b){
   const prefix = BOARDS[b||'news'].prefix;
@@ -4750,7 +4751,7 @@ async function loadNews(){
     if(!box){ box = document.createElement('div'); box.id=c.box; box.className='content-wrap'; host.appendChild(box); }
     const posts = await newsFetch(c.limit, b);
     window[c.list] = posts;
-    box.innerHTML = `<div class="ovc ovb"><h3 class="ovc-h"><span>${b==='news'?'<img class="ovb-em" src="emblem_v4.png" alt="">':'⚽ '}${c.title}</span>${admIcon('✏️',`newsEdit(null,true,'${b}')`,c.nm+' 쓰기',c.write)}</h3>${posts.length ? posts.map((p,i)=>newsRowHtml(p,i,b)).join('') : `<div class="ovc-empty">${c.empty}</div>`}</div>`;
+    box.innerHTML = `<div class="ovc ovb"><h3 class="ovc-h"><span>${c.title}</span>${admIcon('✏️',`newsEdit(null,true,'${b}')`,c.nm+' 쓰기',c.write)}</h3>${posts.length ? posts.map((p,i)=>newsRowHtml(p,i,b)).join('') : `<div class="ovc-empty">${c.empty}</div>`}</div>`;
   }
 }
 function newsOpen(i, b){
