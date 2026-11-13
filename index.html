@@ -2270,7 +2270,7 @@ function squadRender(){
   const sm = {}; allStats.forEach(s=>sm[s.name]=s);
   const pw = {}; (window._powerList||[]).forEach(x=>pw[x.id]=x);
   const posOrder = ['GK','DF','MF','FW'];
-  const posLabel = {GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수',etc:'기타'};
+  const posLabel = {GK:'골키퍼',DF:'Defender',MF:'Midfielder',FW:'Forward',etc:'기타'};
   const cur = window._sqPos || 'all';
   const active = players.filter(p=>!p.status || p.status==='active');
   const inactive = players.filter(p=>p.status==='injured'||p.status==='resting');
