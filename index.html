@@ -4072,7 +4072,7 @@ function pdRender(){
           <div style="min-width:0"><div class="tc-a">${p.number!=null?`<span class="tc-ano">${p.number}</span>`:''}<div class="tc-name${(p.name||'').length>4?' long':''}">${luEsc(p.name)}</div></div>
           <div class="pd-pos">${luEsc(posLine)}${nick}${stTag}</div></div>
         </div>
-        <div class="pd-info">${[['나이',age],['주발',footMap[p.dominant_foot]||'-'],['입단',jd?`${jd.getFullYear()}.${jd.getMonth()+1}`:'-'],['국가',p.nationality||'-']].map(([l,v])=>`<div><span>${l}</span><b>${l==='나이'?v:luEsc(String(v))}</b></div>`).join('')}</div>
+        <div class="pd-info">${[['나이',age],['주발',footMap[p.dominant_foot]||'-'],['입단',jd?`${jd.getFullYear()}.${String(jd.getMonth()+1).padStart(2,'0')}`:'-'],['국가',p.nationality||'-']].map(([l,v])=>`<div><span>${l}</span><b>${l==='나이'?v:luEsc(String(v))}</b></div>`).join('')}</div>
         <div class="tc-stats">${[[GP,'출전'],[G,'득점'],[A,'도움'],[MOM,'MOM']].map(([v,l])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}<div class="tc-tot"><span>어택P</span><b>${D.power!=null?D.power:'-'}</b></div></div>
       </div>
       <div class="rs">
