@@ -4026,7 +4026,7 @@ function pdRender(){
   const rc = v => v>=8?'#2e7d32':v>=6?'#f5a623':'#c62828';
   // 프로필
   let age = '-';
-  if (p.birth_date) { const t = new Date(), b = new Date(p.birth_date); age = t.getFullYear()-b.getFullYear(); if (t.getMonth()<b.getMonth() || (t.getMonth()===b.getMonth() && t.getDate()<b.getDate())) age--; age += `세<small class="pd-by">(${b.getFullYear()})</small>`; }
+  if (p.birth_date) { const t = new Date(), b = new Date(p.birth_date); age = t.getFullYear()-b.getFullYear(); if (t.getMonth()<b.getMonth() || (t.getMonth()===b.getMonth() && t.getDate()<b.getDate())) age--; age += `세<small class="pd-by">(${b.getFullYear()}.${String(b.getMonth()+1).padStart(2,'0')})</small>`; }
   const footMap = {left:'왼발', right:'오른발', both:'양발'};
   const posMap = POS_NAME;
   const jd = p.join_date ? new Date(p.join_date) : null;
