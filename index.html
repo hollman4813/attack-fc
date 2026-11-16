@@ -786,7 +786,7 @@
   /* 인트로: 야간 경기 조명탑이 켜지며 엠블럼을 비춘다. 들어올 땐 감속, 나갈 땐 가속·더 짧게 */
   #intro{position:fixed;inset:0;z-index:10000;background:linear-gradient(180deg,var(--team-navy),var(--team-navy-2));color:var(--on-team);overflow:hidden;animation:introOut .38s cubic-bezier(.7,0,.84,0) 2.35s forwards}
   #intro.out{transform:translateY(-100%);visibility:hidden;transition:transform .3s cubic-bezier(.7,0,.84,0),visibility .3s}
-  #intro::before{content:'';position:absolute;inset:0;background:#0b1f40;animation:introDark .9s ease-out .15s both}
+  html.intro-on{background:var(--team-navy)}  /* 인트로 동안 사파리 상단바 색 = 인트로 색 */
   /* 팀명(ATTACK)이 화면 세로 정가운데, 엠블럼은 그 위 */
   .intro-spot{position:absolute;left:50%;top:-6%;width:170%;margin-left:-85%;height:calc(56% + 10px);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(190,225,255,.26) 62%,rgba(190,225,255,0));clip-path:polygon(47.5% 0,52.5% 0,76% 100%,24% 100%);-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent 96%);mask-image:linear-gradient(180deg,#000 55%,transparent 96%);filter:blur(12px);transform-origin:50% 0;animation:introSpot .75s linear .2s both}
   .intro-glow{position:absolute;left:50%;top:calc(50% - 141px);width:440px;height:440px;margin:-220px 0 0 -220px;border-radius:50%;background:radial-gradient(circle,rgba(150,205,255,.42),rgba(124,192,255,.12) 42%,transparent 64%);animation:introGlow .7s var(--ease-out) .55s both}
@@ -804,7 +804,7 @@
   @keyframes introRise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
   @keyframes introOut{to{transform:translateY(-100%);visibility:hidden}}
   @media (max-height:640px){.intro-emblem{width:120px;height:120px;margin:-60px 0 0 -60px;top:calc(50% - 108px)}.intro-glow{top:calc(50% - 108px)}.intro-spot{height:calc(56% + 20px)}.intro-txt{top:calc(50% - 31px)}.intro-name{font-size:72px}.intro-sub{font-size:21px}}
-  @media (prefers-reduced-motion:reduce){#intro,#intro *,#intro::before{animation-duration:.01s!important;animation-delay:0s!important}#intro{animation:introFadeOut .3s linear 1.6s forwards!important}}
+  @media (prefers-reduced-motion:reduce){#intro,#intro *{animation-duration:.01s!important;animation-delay:0s!important}#intro{animation:introFadeOut .3s linear 1.6s forwards!important}}
   @keyframes introFadeOut{to{opacity:0;visibility:hidden}}
   /* 시작 화면: 팀 컬러 배경 */
   #gate{background:linear-gradient(180deg,#1a3a6b,#1e4d8c);color:#fff;--muted:rgba(255,255,255,.72)}
@@ -884,8 +884,9 @@
 </div>
 <script>(function(){ const el = document.getElementById('intro'); if(!el) return;
   // 인트로가 끝나면 DOM에서 제거 — iOS Safari가 고정 레이어 색을 주소창 배경으로 계속 쓰지 않게
-  const kill = () => { if(el.parentNode) el.remove(); };
+  const kill = () => { if(el.parentNode) el.remove(); document.documentElement.classList.remove('intro-on'); };
   try{ if(sessionStorage.getItem('attack_intro')==='1'){ kill(); return; } sessionStorage.setItem('attack_intro','1'); }catch(e){}
+  document.documentElement.classList.add('intro-on');
   el.addEventListener('animationend', e => { if(e.target===el && /introOut|introFadeOut/.test(e.animationName)) kill(); });
   el.addEventListener('transitionend', e => { if(e.target===el) kill(); });
   setTimeout(kill, 4000);
