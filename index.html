@@ -578,6 +578,13 @@
   .ss-opt.on{border-color:var(--team-navy);background:#eef4fc}
   .ss-opt em{font-style:normal;font-size:11px;font-weight:800;background:var(--team-gold);border-radius:8px;padding:3px 8px}
   .ss-add{justify-content:center;background:var(--team-navy);color:#fff;border:0;margin:12px 0 calc(6px + env(safe-area-inset-bottom,0px))}
+  /* 저장 중 표시 */
+  #net-bar{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);height:3px;z-index:10001;pointer-events:none;overflow:hidden;opacity:0;transition:opacity .2s}
+  #net-bar:before{content:'';position:absolute;top:0;bottom:0;left:-40%;width:40%;background:linear-gradient(90deg,transparent,var(--team-gold),#fff3c4,var(--team-gold),transparent);animation:netBar 1s ease-in-out infinite}
+  html.net-busy #net-bar{opacity:1;transition-delay:.12s}
+  @keyframes netBar{to{left:100%}}
+  .is-busy{pointer-events:none!important;opacity:.8}
+  .is-busy:before{content:'';display:inline-block;width:.9em;height:.9em;margin-right:6px;vertical-align:-.12em;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;box-sizing:border-box;animation:spin .7s linear infinite;flex:none}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
@@ -1653,14 +1660,41 @@ function authSave(sess){
 function authValid(){ return !!(authSession && authSession.access_token && authSession.expires_at > Date.now()/1000 + 20); }
 // 회원 정보(members)와 RPC 호출에만 로그인 토큰을 실음. 그 외 기존 테이블은 테스트 기간 동안 익명 키 그대로 (RLS 정책이 anon 전용이어도 안 사라지게)
 const _rawFetch = window.fetch.bind(window);
+/* ── 저장 중 표시: 쓰기 요청(POST/PATCH/PUT/DELETE)이 도는 동안 상단 진행바 + 누른 버튼에 스피너·중복 클릭 막기 ── */
+const _busy = { n:0, btns:new Set() };
+let _lastTap = { el:null, t:0 };
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('button,.btn,[role="button"],input[type="submit"]'); if (b) _lastTap = { el:b, t:Date.now() }; }, true);
+function busyStart(){
+  _busy.n++;
+  let bar = document.getElementById('net-bar');
+  if (!bar) { bar = document.createElement('div'); bar.id = 'net-bar'; bar.setAttribute('role','progressbar'); bar.setAttribute('aria-label','저장 중'); document.body.appendChild(bar); }
+  document.documentElement.classList.add('net-busy');
+  const L = _lastTap;   // 확인창(confirm)에서 머뭇거린 시간까지 감안해 10초 안에 누른 버튼
+  if (L.el && Date.now()-L.t < 10000 && document.contains(L.el) && !_busy.btns.has(L.el)) { L.el.classList.add('is-busy'); L.el.setAttribute('aria-busy','true'); _busy.btns.add(L.el); }
+}
+function busyEnd(){
+  if (--_busy.n > 0) return;
+  _busy.n = 0;
+  document.documentElement.classList.remove('net-busy');
+  _busy.btns.forEach(b => { b.classList.remove('is-busy'); b.removeAttribute('aria-busy'); });
+  _busy.btns.clear(); _lastTap = { el:null, t:0 };
+}
 window.fetch = (u, o) => {
+  const m = String((o && o.method) || 'GET').toUpperCase();
+  if (m !== 'GET' && m !== 'HEAD' && String(u).startsWith(SUPA_URL) && !String(u).includes('/auth/v1/token')) {
+    busyStart();
+    return _fetchAuth(u, o).finally(busyEnd);
+  }
+  return _fetchAuth(u, o);
+};
+function _fetchAuth(u, o){
   try {
     if (authValid() && /^\/rest\/v1\/(members|rpc\/)/.test(String(u).slice(SUPA_URL.length)) && String(u).startsWith(SUPA_URL) && o && o.headers && o.headers.Authorization === `Bearer ${SUPA_KEY}`) {
       o = { ...o, headers: { ...o.headers, Authorization: `Bearer ${authSession.access_token}` } };
     }
   } catch(e) {}
   return _rawFetch(u, o);
-};
+}
 async function authRefresh(){
   if (!authSession || !authSession.refresh_token) return false;
   try {
