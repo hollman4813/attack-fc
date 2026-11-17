@@ -767,8 +767,10 @@
   .tab-slides { display:flex; transition:transform 0.3s ease; will-change:transform; }
   .tab-slide { flex:0 0 100%; width:100%; min-height:200px; }
 
-  .loading { display:flex; flex-direction:column; align-items:center; padding:60px 0; color:var(--muted); font-size:13px; gap:12px; }
+  /* 로딩 표시 = 저장 중 표시와 같은 모양: 화면 정가운데 상자 하나 */
+  .loading { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:9800; display:flex; flex-direction:column; align-items:center; gap:12px; min-width:132px; padding:22px 24px 18px; border-radius:18px; background:rgba(15,40,80,.92); color:#fff; box-shadow:0 12px 32px rgba(0,0,0,.25); font-size:14px; font-weight:700; pointer-events:none; }
   .spinner { width:26px; height:26px; border:2px solid var(--border); border-top-color:var(--skyblue); border-radius:50%; animation:spin 0.7s linear infinite; }
+  .loading .spinner { width:30px; height:30px; border:3px solid rgba(255,255,255,.25); border-top-color:var(--team-gold); animation-duration:.75s; }
   @keyframes spin { to { transform:rotate(360deg); } }
 
   #lineup-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;height:100vh;height:100dvh;z-index:500;background:#f4f6fa;flex-direction:column;overflow:hidden}
@@ -4507,7 +4509,7 @@ async function myRecordOpen(){
   const pid = myMember.player_id;
   let ov = document.getElementById('my-record');
   if(!ov){ ov = document.createElement('div'); ov.id='my-record'; ov.className='mem-ov'; ov.style.cssText='z-index:9600;background:var(--bg)'; document.body.appendChild(ov); ovPush('my-record'); }
-  ov.innerHTML = `<div style="max-width:440px;margin:0 auto"><button onclick="ovClose('my-record')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button><div style="padding:60px;text-align:center;color:var(--muted)">기록을 로딩 중...</div></div>`;
+  ov.innerHTML = `<div style="max-width:440px;margin:0 auto"><button onclick="ovClose('my-record')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button><div class="loading"><div class="spinner"></div>로딩 중...</div></div>`;
   let me = [], all = [], votes = [], pl = [], lu = [], mt = [], pn = [];
   try{
     [me, all, votes, pl, lu, , mt, pn] = await Promise.all([
@@ -4675,7 +4677,7 @@ async function profileOpen(){
   let ov = document.getElementById('profile-page');
   if(!ov){ ov = document.createElement('div'); ov.id='profile-page'; ov.className='mem-ov'; ov.style.zIndex=9600; document.body.appendChild(ov); ovPush('profile-page'); }
   const head = `<button onclick="ovClose('profile-page')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>`;
-  ov.innerHTML = `<div style="max-width:420px;margin:0 auto">${head}<div style="padding:40px;text-align:center;color:var(--muted)">로딩 중...</div></div>`;
+  ov.innerHTML = `<div style="max-width:420px;margin:0 auto">${head}<div class="loading"><div class="spinner"></div>로딩 중...</div></div>`;
   let p = null;
   if(myMember && myMember.player_id){ const r = await api(`players?select=*&id=eq.${myMember.player_id}`); p = r[0] || null; }
   const POS = POS_NAME, FOOT = {right:'오른발',left:'왼발',both:'양발'}, ST = {active:'정상',injured:'부상',resting:'휴식'};
@@ -5441,7 +5443,7 @@ async function openLineup(fixed){
   document.body.style.transform = '';
   ov.style.display = 'flex';
   document.body.style.overflow = 'hidden';
-  ov.querySelector('.lu-body').innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">로딩 중...</div>';
+  ov.querySelector('.lu-body').innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
   const [players, prefs] = await Promise.all([
     api('players?select=*&order=number.asc'),
     luGet('prefs')
