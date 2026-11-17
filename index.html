@@ -579,10 +579,10 @@
   .ss-opt em{font-style:normal;font-size:11px;font-weight:800;background:var(--team-gold);border-radius:8px;padding:3px 8px}
   .ss-add{justify-content:center;background:var(--team-navy);color:#fff;border:0;margin:12px 0 calc(6px + env(safe-area-inset-bottom,0px))}
   /* 저장 중 표시 */
-  #net-bar{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);height:3px;z-index:10001;pointer-events:none;overflow:hidden;opacity:0;transition:opacity .2s}
-  #net-bar:before{content:'';position:absolute;top:0;bottom:0;left:-40%;width:40%;background:linear-gradient(90deg,transparent,var(--team-gold),#fff3c4,var(--team-gold),transparent);animation:netBar 1s ease-in-out infinite}
-  html.net-busy #net-bar{opacity:1;transition-delay:.12s}
-  @keyframes netBar{to{left:100%}}
+  #net-busy{position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;background:rgba(10,25,50,.18);opacity:0;visibility:hidden;transition:opacity .15s,visibility 0s .15s}
+  html.net-busy #net-busy{opacity:1;visibility:visible;transition:opacity .15s .15s,visibility 0s .15s}
+  .nb-box{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:132px;padding:22px 24px 18px;border-radius:18px;background:rgba(15,40,80,.92);color:#fff;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14px;font-weight:700}
+  .nb-box i{width:30px;height:30px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:var(--team-gold);animation:spin .75s linear infinite}
   .is-busy{pointer-events:none!important;opacity:.8}
   .is-busy:before{content:'';display:inline-block;width:.9em;height:.9em;margin-right:6px;vertical-align:-.12em;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;box-sizing:border-box;animation:spin .7s linear infinite;flex:none}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
@@ -1660,14 +1660,15 @@ function authSave(sess){
 function authValid(){ return !!(authSession && authSession.access_token && authSession.expires_at > Date.now()/1000 + 20); }
 // 회원 정보(members)와 RPC 호출에만 로그인 토큰을 실음. 그 외 기존 테이블은 테스트 기간 동안 익명 키 그대로 (RLS 정책이 anon 전용이어도 안 사라지게)
 const _rawFetch = window.fetch.bind(window);
-/* ── 저장 중 표시: 쓰기 요청(POST/PATCH/PUT/DELETE)이 도는 동안 상단 진행바 + 누른 버튼에 스피너·중복 클릭 막기 ── */
+/* ── 저장 중 표시: 쓰기 요청(POST/PATCH/PUT/DELETE)이 도는 동안 화면 가운데 '저장 중' + 누른 버튼에 스피너·중복 클릭 막기 ── */
 const _busy = { n:0, btns:new Set() };
 let _lastTap = { el:null, t:0 };
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('button,.btn,[role="button"],input[type="submit"]'); if (b) _lastTap = { el:b, t:Date.now() }; }, true);
-function busyStart(){
+function busyStart(method){
   _busy.n++;
-  let bar = document.getElementById('net-bar');
-  if (!bar) { bar = document.createElement('div'); bar.id = 'net-bar'; bar.setAttribute('role','progressbar'); bar.setAttribute('aria-label','저장 중'); document.body.appendChild(bar); }
+  let ov = document.getElementById('net-busy');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'net-busy'; ov.setAttribute('role','status'); ov.setAttribute('aria-live','polite'); ov.innerHTML = '<div class="nb-box"><i></i><span></span></div>'; document.body.appendChild(ov); }
+  if (_busy.n === 1) ov.querySelector('span').textContent = method === 'DELETE' ? '삭제 중...' : '저장 중...';
   document.documentElement.classList.add('net-busy');
   const L = _lastTap;   // 확인창(confirm)에서 머뭇거린 시간까지 감안해 10초 안에 누른 버튼
   if (L.el && Date.now()-L.t < 10000 && document.contains(L.el) && !_busy.btns.has(L.el)) { L.el.classList.add('is-busy'); L.el.setAttribute('aria-busy','true'); _busy.btns.add(L.el); }
@@ -1682,7 +1683,7 @@ function busyEnd(){
 window.fetch = (u, o) => {
   const m = String((o && o.method) || 'GET').toUpperCase();
   if (m !== 'GET' && m !== 'HEAD' && String(u).startsWith(SUPA_URL) && !String(u).includes('/auth/v1/token')) {
-    busyStart();
+    busyStart(m);
     return _fetchAuth(u, o).finally(busyEnd);
   }
   return _fetchAuth(u, o);
