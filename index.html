@@ -579,6 +579,8 @@
   .ss-opt em{font-style:normal;font-size:11px;font-weight:800;background:var(--team-gold);border-radius:8px;padding:3px 8px}
   .ss-add{justify-content:center;background:var(--team-navy);color:#fff;border:0;margin:12px 0 calc(6px + env(safe-area-inset-bottom,0px))}
   /* 저장 중 표시 */
+  /* 저장 중에는 화면 안의 '로딩 중' 표시를 숨겨 하나만 보이게 */
+  html.net-busy .loading,html.net-busy .loading *{visibility:hidden}
   #net-busy{position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;background:rgba(10,25,50,.18);opacity:0;visibility:hidden;transition:opacity .15s,visibility 0s .15s}
   html.net-busy #net-busy{opacity:1;visibility:visible;transition:opacity .15s .15s,visibility 0s .15s}
   .nb-box{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:132px;padding:22px 24px 18px;border-radius:18px;background:rgba(15,40,80,.92);color:#fff;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14px;font-weight:700}
@@ -944,7 +946,7 @@
     <!-- 팀 개요 -->
     <div class="tab-section active" id="tab-overview">
 
-      <div class="loading" id="ov-loading"><div class="spinner"></div>불러오는 중...</div>
+      <div class="loading" id="ov-loading"><div class="spinner"></div>로딩 중...</div>
       <div id="ov-content" style="display:none">
         <div class="content-wrap">
           <div id="my-mini"></div>
@@ -969,7 +971,7 @@
 
     <!-- 경기 -->
     <div class="tab-section" id="tab-matches">
-      <div class="loading" id="matches-loading"><div class="spinner"></div>불러오는 중...</div>
+      <div class="loading" id="matches-loading"><div class="spinner"></div>로딩 중...</div>
       <div id="matches-content" style="display:none">
         <div id="matches-list"></div>
       </div>
@@ -977,7 +979,7 @@
 
     <!-- 플레이어 통계 - FOTMOB 스타일 -->
     <div class="tab-section" id="tab-scorers">
-      <div class="loading" id="scorers-loading"><div class="spinner"></div>불러오는 중...</div>
+      <div class="loading" id="scorers-loading"><div class="spinner"></div>로딩 중...</div>
       <div id="scorers-content" style="display:none">
         <div style="padding:0 12px 16px" id="scorers-body"></div>
       </div>
@@ -985,7 +987,7 @@
 
     <!-- 스쿼드 -->
     <div class="tab-section" id="tab-squad">
-      <div class="loading" id="squad-loading"><div class="spinner"></div>불러오는 중...</div>
+      <div class="loading" id="squad-loading"><div class="spinner"></div>로딩 중...</div>
       <div id="squad-content" style="display:none">
         <div class="content-wrap" style="padding-top:12px">
           <div id="squad-list"></div>
@@ -995,7 +997,7 @@
 
     <!-- 팀 통계 -->
     <div class="tab-section" id="tab-teamstats">
-      <div class="loading" id="teamstats-loading"><div class="spinner"></div>불러오는 중...</div>
+      <div class="loading" id="teamstats-loading"><div class="spinner"></div>로딩 중...</div>
       <div id="teamstats-content" style="display:none;padding:0 12px 16px"></div>
     </div>
 
@@ -1195,7 +1197,7 @@
 
       <!-- 회원 관리 -->
       <div id="a-card-members" style="scroll-margin-top:12px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">회원 관리 (카카오 가입)</div>
-      <div class="card" style="margin-bottom:16px"><div id="a-members" style="padding:12px;font-size:13px;color:var(--muted)">불러오는 중...</div></div>
+      <div class="card" style="margin-bottom:16px"><div id="a-members" style="padding:12px;font-size:13px;color:var(--muted)">로딩 중...</div></div>
 
       <!-- 참석 관리 -->
       <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">참석 관리</div>
@@ -1668,7 +1670,7 @@ function busyStart(method){
   _busy.n++;
   let ov = document.getElementById('net-busy');
   if (!ov) { ov = document.createElement('div'); ov.id = 'net-busy'; ov.setAttribute('role','status'); ov.setAttribute('aria-live','polite'); ov.innerHTML = '<div class="nb-box"><i></i><span></span></div>'; document.body.appendChild(ov); }
-  if (_busy.n === 1) ov.querySelector('span').textContent = method === 'DELETE' ? '삭제 중...' : '저장 중...';
+  if (_busy.n === 1) ov.querySelector('span').textContent = '저장 중...';
   document.documentElement.classList.add('net-busy');
   const L = _lastTap;   // 확인창(confirm)에서 머뭇거린 시간까지 감안해 10초 안에 누른 버튼
   if (L.el && Date.now()-L.t < 10000 && document.contains(L.el) && !_busy.btns.has(L.el)) { L.el.classList.add('is-busy'); L.el.setAttribute('aria-busy','true'); _busy.btns.add(L.el); }
@@ -1853,7 +1855,7 @@ async function loadOverview() {
     document.getElementById('next-match-card').innerHTML = `
       <div class="nm-a"><span>다음 경기 · ${d.getMonth()+1}월 ${d.getDate()}일 (${wd})${u.match_time?' '+String(u.match_time).slice(0,5):''}</span><b class="nm-dd" id="nm-dd"></b></div>
       <div class="nm-b"><div class="nm-o">${oppLogo(u, 34)}</div><div style="min-width:0"><h4>vs ${luEsc(u.opponents?.name || u.opponent || '')}</h4><p>📍 ${luEsc(u.grounds?.name || u.ground || '미정')}<span id="nm-wx"></span></p></div><span class="nm-go">›</span></div>
-      <div class="nm-c" id="nm-h2h"><span class="nm-h2h-l">상대전적</span><span style="color:var(--muted)">불러오는 중...</span></div>`;
+      <div class="nm-c" id="nm-h2h"><span class="nm-h2h-l">상대전적</span><span style="color:var(--muted)">로딩 중...</span></div>`;
     document.getElementById('next-match-card').onclick = () => showMatch(u.id);
     ovCountdown();
     ovH2H(u);
@@ -2215,7 +2217,7 @@ async function loadScorers(restoreTab) {
 }
 async function statSeason(sid){
   window._statSeason = sid;
-  document.getElementById('scorers-body').innerHTML = '<div class="loading" style="display:flex"><div class="spinner"></div>불러오는 중...</div>';
+  document.getElementById('scorers-body').innerHTML = '<div class="loading" style="display:flex"><div class="spinner"></div>로딩 중...</div>';
   await loadScorers(window._currentStatTab);
 }
 
@@ -2723,7 +2725,7 @@ async function loadTeamStats() {
 
 async function tsSeason(sid){
   window._tsSeason = sid;
-  document.getElementById('teamstats-content').innerHTML = '<div class="loading" style="display:flex"><div class="spinner"></div>불러오는 중...</div>';
+  document.getElementById('teamstats-content').innerHTML = '<div class="loading" style="display:flex"><div class="spinner"></div>로딩 중...</div>';
   await loadTeamStats();
 }
 
@@ -4013,7 +4015,7 @@ async function showPlayer(playerId) {
   });
   document.getElementById('player-detail').classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'none';
-  document.getElementById('player-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  document.getElementById('player-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
   window.scrollTo(0, 0);   // 목록 스크롤 위치가 남아 뒤로 버튼이 가려지지 않게
 
   let players = [], matchStats = [], votes = [];
@@ -4131,7 +4133,7 @@ async function showMatch(matchId, skipPushState) {
   });
   document.getElementById('match-detail').classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'none';
-  document.getElementById('match-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  document.getElementById('match-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
 
   let matches = [], stats = [], allMatches = [], matchVotes = [], lineupData = null;
   try {
@@ -4505,7 +4507,7 @@ async function myRecordOpen(){
   const pid = myMember.player_id;
   let ov = document.getElementById('my-record');
   if(!ov){ ov = document.createElement('div'); ov.id='my-record'; ov.className='mem-ov'; ov.style.cssText='z-index:9600;background:var(--bg)'; document.body.appendChild(ov); ovPush('my-record'); }
-  ov.innerHTML = `<div style="max-width:440px;margin:0 auto"><button onclick="ovClose('my-record')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button><div style="padding:60px;text-align:center;color:var(--muted)">기록을 불러오는 중...</div></div>`;
+  ov.innerHTML = `<div style="max-width:440px;margin:0 auto"><button onclick="ovClose('my-record')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button><div style="padding:60px;text-align:center;color:var(--muted)">기록을 로딩 중...</div></div>`;
   let me = [], all = [], votes = [], pl = [], lu = [], mt = [], pn = [];
   try{
     [me, all, votes, pl, lu, , mt, pn] = await Promise.all([
@@ -4673,7 +4675,7 @@ async function profileOpen(){
   let ov = document.getElementById('profile-page');
   if(!ov){ ov = document.createElement('div'); ov.id='profile-page'; ov.className='mem-ov'; ov.style.zIndex=9600; document.body.appendChild(ov); ovPush('profile-page'); }
   const head = `<button onclick="ovClose('profile-page')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>`;
-  ov.innerHTML = `<div style="max-width:420px;margin:0 auto">${head}<div style="padding:40px;text-align:center;color:var(--muted)">불러오는 중...</div></div>`;
+  ov.innerHTML = `<div style="max-width:420px;margin:0 auto">${head}<div style="padding:40px;text-align:center;color:var(--muted)">로딩 중...</div></div>`;
   let p = null;
   if(myMember && myMember.player_id){ const r = await api(`players?select=*&id=eq.${myMember.player_id}`); p = r[0] || null; }
   const POS = POS_NAME, FOOT = {right:'오른발',left:'왼발',both:'양발'}, ST = {active:'정상',injured:'부상',resting:'휴식'};
@@ -4963,7 +4965,7 @@ async function newsFetchLink(){
   const inp = document.getElementById('news-link'), msg = document.getElementById('news-link-msg');
   const url = (inp.value||'').trim();
   if(!/^https?:\/\//i.test(url)){ msg.textContent = 'http:// 또는 https:// 로 시작하는 주소를 넣어주세요'; return; }
-  msg.textContent = '불러오는 중...';
+  msg.textContent = '로딩 중...';
   try{
     const r = await fetch('/api/og?url='+encodeURIComponent(url)); const d = await r.json();
     if(d.error) throw new Error(d.error);
@@ -5439,7 +5441,7 @@ async function openLineup(fixed){
   document.body.style.transform = '';
   ov.style.display = 'flex';
   document.body.style.overflow = 'hidden';
-  ov.querySelector('.lu-body').innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">불러오는 중...</div>';
+  ov.querySelector('.lu-body').innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">로딩 중...</div>';
   const [players, prefs] = await Promise.all([
     api('players?select=*&order=number.asc'),
     luGet('prefs')
@@ -6089,13 +6091,13 @@ if ('serviceWorker' in navigator) {
 </body>
 </html>    <!-- 운동장 정보 -->
     <div class="tab-section" id="tab-grounds">
-      <div class="loading" id="grounds-loading"><div class="spinner"></div>불러오는 중...</div>
+      <div class="loading" id="grounds-loading"><div class="spinner"></div>로딩 중...</div>
       <div id="grounds-content" style="display:none;padding:12px"></div>
     </div>
 
     <!-- 상대팀 -->
     <div class="tab-section" id="tab-opponents">
-      <div class="loading" id="opponents-loading"><div class="spinner"></div>불러오는 중...</div>
+      <div class="loading" id="opponents-loading"><div class="spinner"></div>로딩 중...</div>
       <div id="opponents-content" style="display:none;padding:12px"></div>
     </div>
 
