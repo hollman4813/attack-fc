@@ -4249,10 +4249,13 @@ async function showMatch(matchId, skipPushState) {
 
   // 선수 평점
   const att = stats.filter(s=>s.attended).map(s=>({s, r: ratingOfS(s)})).sort((a,b)=>(b.r||0)-(a.r||0) || String(a.s.players?.name).localeCompare(String(b.s.players?.name)));
-  const rateHtml = att.length ? `<div class="mdx-hd"><span>선수</span><span>평점</span><span>어택P</span></div>` + att.map(({s,r})=>{
+  // 용병 (라인업 설정에 등록된 게스트)
+  const guests = ((lineupData && lineupData.cfg && lineupData.cfg.guests) || []);
+  const guestRows = guests.map(g=>`<div class="mdx-row" style="cursor:default"><div class="mdx-p"><span class="mdx-av" style="width:34px;height:34px;font-size:12px;background:#fff6d8;color:#c98a00">용</span><div><h5>${luEsc(g.name||'용병')}<em class="rt-mom" style="background:#eef2f8;color:var(--team-navy)">용병</em></h5><p>${(g.pref&&g.pref.length)?luEsc(g.pref.join(' · ')):'게스트'}</p></div></div><b class="z">-</b><b class="z" style="font-size:20px">-</b></div>`).join('');
+  const rateHtml = (att.length || guests.length) ? `<div class="mdx-hd"><span>선수</span><span>평점</span><span>어택P</span></div>` + att.map(({s,r})=>{
     const p = pOf(s);
     return `<div class="mdx-row" onclick="showPlayer(${p.id})"><div class="mdx-p">${av(p,34)}<div><h5>${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}${s.is_mom?'<em class="rt-mom">MOM</em>':''}</h5><p>${subLine(p)}</p></div></div><b style="color:${rcol(r)}">${r||'-'}</b><b style="font-size:20px">${powerMap[s.player_id]!=null?Math.round(powerMap[s.player_id]):'-'}</b></div>`;
-  }).join('') : '<div class="ovc-empty">참석 정보 없음</div>';
+  }).join('') + guestRows : '<div class="ovc-empty">참석 정보 없음</div>';
 
   // 상대 전적
   const h2hSorted = [...h2h].sort((a,b)=>new Date(b.match_date)-new Date(a.match_date));
@@ -4276,7 +4279,7 @@ async function showMatch(matchId, skipPushState) {
       ${!isUpcoming ? `<section class="ovc"><h3 class="ovc-h"><span>공격 포인트</span></h3>${contribHtml}</section>` : ''}
       ${luViewHtml(lineupData, stats, `${(m.match_date||'').slice(0,10)} vs ${oppName}`, {matchId:m.id, status:m.status, rec:lineupRec, canEdit:canRec && m.status!=='finished'})}
       <div id="md-videos"></div>
-      <section class="ovc mdx-rt"><h3 class="ovc-h"><span>${isUpcoming?'참석 명단':'선수 평점'}</span><span class="mx-rec">참석 <b>${stats.filter(s=>s.attended).length}</b>명</span></h3>${rateHtml}</section>
+      <section class="ovc mdx-rt"><h3 class="ovc-h"><span>${isUpcoming?'참석 명단':'선수 평점'}</span><span class="mx-rec">참석 <b>${stats.filter(s=>s.attended).length + guests.length}</b>명${guests.length?` <small style="font-weight:700">(용병 ${guests.length})</small>`:''}</span></h3>${rateHtml}</section>
       ${btnHtml}
       ${!isUpcoming ? h2hHtml : ''}
       ${mapHtml}
