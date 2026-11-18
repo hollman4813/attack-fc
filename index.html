@@ -3510,13 +3510,19 @@ function rcFrame(ctx, D, title, noScore){
   const g = ctx.createLinearGradient(0,0,0,RC_H); g.addColorStop(0,'#0f2850'); g.addColorStop(1,'#1e4d8c');
   ctx.fillStyle = g; ctx.fillRect(0,0,RC_W,RC_H);
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  if (noScore) {   // 제목·스코어 없이 패널만 크게
+  if (noScore === true) {   // 제목·스코어 없이 패널만 크게
     const P0 = {x:48, y:56, w:RC_W-96, h:RC_H-112};
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
     rcRound(ctx, P0.x, P0.y, P0.w, P0.h, 36); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
     return P0;
   }
   ctx.fillStyle = '#ffd54a'; ctx.font = `800 60px ${RC_F}`; ctx.fillText(title, RC_W/2, 112);
+  if (noScore === 'title') {   // 제목만, 스코어·일자·장소 없음
+    const P1 = {x:48, y:164, w:RC_W-96, h:RC_H-164-56};
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
+    rcRound(ctx, P1.x, P1.y, P1.w, P1.h, 36); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+    return P1;
+  }
   // 스코어 줄
   const cy = 215;
   ctx.save(); ctx.beginPath(); ctx.arc(170, cy, 54, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
@@ -3565,7 +3571,7 @@ function rcTextMid(ctx, t, cx, cy){
 function rcCanvas(){ const cv = document.createElement('canvas'); cv.width = RC_W; cv.height = RC_H; return cv; }
 // 1) MOM TOP 5
 function rcMom(D){
-  const cv = rcCanvas(), ctx = cv.getContext('2d'); const P = rcFrame(ctx, D, 'MOM TOP 5');
+  const cv = rcCanvas(), ctx = cv.getContext('2d'); const P = rcFrame(ctx, D, 'MOM TOP 5', 'title');
   const total = D.votes.find(v=>v.total_participants>0)?.total_participants || 0;
   const sorted = D.votes.filter(v=>v.vote_count>0).sort((a,b)=>b.vote_count-a.vote_count);
   if (!sorted.length) { ctx.fillStyle='#9aa3ad'; ctx.font=`700 34px ${RC_F}`; ctx.textAlign='center'; ctx.fillText('투표 결과가 없어요', RC_W/2, P.y+P.h/2); return cv; }
@@ -3733,7 +3739,7 @@ function rcQuarters(D){
 async function rcBuild(matchId){
   const D = await rcData(matchId);
   const base = `${(D.m.match_date||'').slice(0,10)}_vs_${D.oppName}`.replace(/[^0-9A-Za-z가-힣_]+/g,'_');
-  const cvs = [['MOM_TOP5', rcMom(D)], ['공격포인트', rcPoints(D)], ['쿼터별결과', rcQuarters(D)]];
+  const cvs = [['1_공격포인트', rcPoints(D)], ['2_MOM_TOP5', rcMom(D)], ['3_쿼터별결과', rcQuarters(D)]];
   const out = [];
   for (const [k, cv] of cvs) { const blob = await new Promise(res=>cv.toBlob(res,'image/png')); out.push(new File([blob], `${base}_${k}.png`, {type:'image/png'})); }
   return out;
