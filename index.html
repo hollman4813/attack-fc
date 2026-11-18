@@ -899,6 +899,7 @@
   .tc-stats div{background:#274f88;border-radius:10px;text-align:center;padding:8px 0 5px}
   .tc-stats span{display:block;font-size:11px;font-weight:700;color:var(--team-sky-soft);white-space:nowrap;line-height:14px}
   .tc-stats b{display:block;font-family:var(--font-display);font-size:34px;font-weight:600;line-height:1}
+  .tc-stats.n4{grid-template-columns:repeat(4,1fr)}
   .tc-stats .tc-tot{background:var(--team-gold);color:var(--team-deep)}
   .tc-stats .tc-tot span{color:var(--team-deep);font-weight:800}
   .tc-stats .tc-tot b{font-weight:700}
@@ -5332,7 +5333,7 @@ function mrRender(){
         <div class="tc-ph">${D.p.photo_url?`<img src="${D.p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((D.p.name||'?').charAt(0))}</b>`}</div>
         <div class="tc-a">${D.p.number!=null?`<span class="tc-ano">${D.p.number}</span>`:''}<div class="tc-name${(D.p.name||'').length>4?' long':''}">${luEsc(D.p.name)}</div></div>
       </div>
-      <div class="tc-stats">${[[GP,'출전'],[G,'득점'],[A,'도움'],[MOM,'MOM']].map(([v,l])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}<div class="tc-tot"><span>어택P</span><b>${power!=null?power:'-'}</b></div></div>
+      <div class="tc-stats n4">${[[GP,'출전'],[G,'득점'],[A,'도움'],[MOM,'MOM']].map(([v,l])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>
     </div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px">${pill(currentSeasonId, currentSeasonName)}${seasons.filter(s=>s!==currentSeasonId).map(s=>pill(s,'시즌 '+s)).join('')}${pill('all','통산')}</div>
     ${GP ? `<div class="rs">
