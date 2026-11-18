@@ -841,6 +841,8 @@
   #intro{position:fixed;inset:0;z-index:10000;background:linear-gradient(180deg,var(--team-navy),var(--team-navy-2));color:var(--on-team);overflow:hidden;animation:introOut .38s cubic-bezier(.7,0,.84,0) 2.35s forwards}
   #intro.out{transform:translateY(-100%);visibility:hidden;transition:transform .3s cubic-bezier(.7,0,.84,0),visibility .3s}
   html.intro-on{background:var(--team-navy)}  /* 인트로 동안 사파리 상단바 색 = 인트로 색 */
+  html.top-deep,html.top-deep body{background:#0f2850}
+  html.top-deep #match-detail{background:var(--bg);min-height:100vh}  /* 경기 상세: 상단바 = 짙은 남색, 본문은 밝은 회색 */
   /* 팀명(ATTACK)이 화면 세로 정가운데, 엠블럼은 그 위 */
   .intro-spot{position:absolute;left:50%;top:-6%;width:170%;margin-left:-85%;height:calc(56% + 10px);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(190,225,255,.26) 62%,rgba(190,225,255,0));clip-path:polygon(47.5% 0,52.5% 0,76% 100%,24% 100%);-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent 96%);mask-image:linear-gradient(180deg,#000 55%,transparent 96%);filter:blur(12px);transform-origin:50% 0;animation:introSpot .75s linear .2s both}
   .intro-glow{position:absolute;left:50%;top:calc(50% - 141px);width:440px;height:440px;margin:-220px 0 0 -220px;border-radius:50%;background:radial-gradient(circle,rgba(150,205,255,.42),rgba(124,192,255,.12) 42%,transparent 64%);animation:introGlow .7s var(--ease-out) .55s both}
@@ -4741,6 +4743,13 @@ async function showMatch(matchId, skipPushState) {
   mdVideos(m);
 }
 
+// 경기 상세가 열려 있는 동안 사파리 상단바 색 = 상세 상단(짙은 남색)
+(function(){
+  const md = document.getElementById('match-detail'), tc = document.querySelector('meta[name="theme-color"]');
+  if (!md) return;
+  const sync = () => { const on = md.classList.contains('active'); document.documentElement.classList.toggle('top-deep', on); if (tc) tc.setAttribute('content', on ? '#0f2850' : '#1a3a6b'); };
+  new MutationObserver(sync).observe(md, { attributes:true, attributeFilter:['class'] }); sync();
+})();
 function backToMatches() {
   ['home','match-detail','player-detail','admin-page'].forEach(id=>{
     const el = document.getElementById(id);
