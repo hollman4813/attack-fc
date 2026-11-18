@@ -485,7 +485,7 @@
   .mdx-mom-r b{display:block;font-family:'Teko','Noto Sans KR',sans-serif;font-size:34px;font-weight:600;line-height:1}
   .f-teko .mdx-mom-r b{line-height:.8;padding-top:6px}
   .mdx-mom-r span{font-size:11px;font-weight:700;color:var(--muted)}
-  .mdx-star{display:inline-flex;align-items:center;height:20px;border-radius:5px;padding:0 7px;background:var(--team-gold);color:var(--team-deep);font-size:11px;font-weight:800;margin-bottom:4px;line-height:1}
+  .mdx-star{display:inline-flex;align-items:center;height:20px;border-radius:5px;padding:0 7px;background:var(--team-gold);color:var(--team-deep);font-size:11px;font-weight:800;margin-bottom:4px;line-height:1;text-box:trim-both cap alphabetic}
   .mdx-hd,.mdx-row{display:grid;grid-template-columns:minmax(0,1fr) 40px 40px;align-items:center;column-gap:8px}
   .mdx-rt .mdx-hd,.mdx-rt .mdx-row{grid-template-columns:minmax(0,1fr) 48px 52px}
   .mdx-hd{padding:0 0 6px;font-size:11px;font-weight:700;color:var(--muted);text-align:center}
@@ -622,7 +622,7 @@
   .rt-row>b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:22px;font-weight:600;line-height:1;padding-top:3px;text-align:center;color:var(--team-navy)}
   .rt-row>b.z{color:#cfd6e0}
   .rt-row>b.rt-r{text-align:right;font-size:24px}
-  .rt-mom{font-style:normal;font-size:10px;font-weight:800;color:#c98a00;background:#fff6d8;border-radius:4px;padding:0 5px;margin-left:5px;vertical-align:2px}
+  .rt-mom{font-style:normal;font-size:10px;font-weight:800;color:#c98a00;background:#fff6d8;border-radius:4px;padding:3px 5px;margin-left:5px;vertical-align:2px;display:inline-block;line-height:1;text-box:trim-both cap alphabetic}
   /* 선수 상세: 개인기록 카드 + 기록지 */
   .pd-bar{display:flex;justify-content:space-between;align-items:center;margin:0 2px 10px;min-height:32px}
   .pd-bar>button{background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:6px 0}
@@ -3556,6 +3556,12 @@ async function rcData(matchId){
   try { await document.fonts.load(`600 40px Teko`); await document.fonts.ready; } catch(e){}
   return { m, stats, votes, lu, rec, people, photos, ourImg, oppImg, meta, oppName: m.opponents?.name || m.opponent || '' };
 }
+// 글자 실제 높이(잉크)를 재서 상하 정가운데에 쓰기
+function rcTextMid(ctx, t, cx, cy){
+  ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  const m = ctx.measureText(t), asc = m.actualBoundingBoxAscent || 0, desc = m.actualBoundingBoxDescent || 0;
+  ctx.fillText(t, cx, cy + (asc - desc)/2); ctx.restore();
+}
 function rcCanvas(){ const cv = document.createElement('canvas'); cv.width = RC_W; cv.height = RC_H; return cv; }
 // 1) MOM TOP 5
 function rcMom(D){
@@ -3586,7 +3592,7 @@ function rcMom(D){
       ctx.textAlign = 'left'; ctx.fillStyle = '#0f2850'; ctx.font = `800 44px ${RC_F}`;
       const nmT = rcFit(ctx, p.name || '?', 340); ctx.fillText(nmT, P.x+290, cy - 18);
       ctx.fillStyle = '#7a8699'; ctx.font = `600 26px ${RC_F}`; ctx.fillText(`${p.number!=null?'No.'+p.number+'  ·  ':''}${pct}`, P.x+290, cy + 30);
-      if (top) { ctx.font = `800 44px ${RC_F}`; const bx = P.x+290 + ctx.measureText(nmT).width + 16; rcRound(ctx, bx, cy-36, 104, 36, 8); ctx.fillStyle='#0f2850'; ctx.fill(); ctx.fillStyle='#ffd54a'; ctx.font = `800 22px ${RC_F}`; ctx.fillText('★ MOM', bx+14, cy-17); }
+      if (top) { ctx.font = `800 44px ${RC_F}`; const bx = P.x+290 + ctx.measureText(nmT).width + 16; rcRound(ctx, bx, cy-36, 104, 36, 8); ctx.fillStyle='#0f2850'; ctx.fill(); ctx.fillStyle='#ffd54a'; ctx.font = `800 22px ${RC_F}`; rcTextMid(ctx, '★ MOM', bx+52, cy-18); }
     } else {
       // 동률: 사진 겹쳐 나열 + 이름 줄
       const r = 34, step = 46, show = G.list.slice(0, 5), x0 = P.x+150;
