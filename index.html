@@ -5289,7 +5289,7 @@ function mrRender(){
     const tAvg = tAvgs.length ? tAvgs.reduce((a,b)=>a+b,0)/tAvgs.length : null;
     const rRank = avg!=null && tAvgs.length ? 1 + tAvgs.filter(x=>x>avg+1e-9).length : null;
     const bigR = `<b class="rt-n">${avg!=null?avg.toFixed(1):'-'}</b>`;
-    const head = `<div class="rs-apt">${ttl('평균 평점')}${rRank?`<span class="rs-aprk${rRank<=3?' top':''}">${rRank}위</span>`:''}</div>`;
+    const head = ttl('평균 평점');
     const md = x => `${x.d.getMonth()+1}/${x.d.getDate()}`;
     let b = '';
     if (!rl.length) b = `<div class="rs-ap">${bigR}<div class="rs-apd"><p class="rs-apmsg">평가된 경기가 아직 없어요.</p></div></div>`;
@@ -5341,6 +5341,10 @@ function mrRender(){
     ${card(`${ttl('최근 폼')}<div class="mr-form">${form.map(r=>{ const m=r.matches, d=new Date(m.match_date), k = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; const rt = ratingOf[r.match_id];
       return `<div><u class="${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><b style="color:${rt?rc(rt):'var(--muted)'}">${rt?rt.toFixed(1):'-'}</b><span>${d.getMonth()+1}/${d.getDate()}</span><em>${r.goals?'⚽'+r.goals:''}${r.assists?' 🅰'+r.assists:''}${r.is_mom?' ⭐':''}</em></div>`; }).join('')}</div>`)}
     ${flowL.length>1 ? card(`${ttl(D.scope==='all'?'시즌별 공격포인트':'월별 공격포인트')}<div class="mr-bars">${flowL.map(([k,o])=>`<div><em>${o.g+o.a||''}</em><p><i class="a" style="height:${o.a/flowMax*100}%"></i><i class="g" style="height:${o.g/flowMax*100}%"></i></p><span>${D.scope==='all'?k:k+'월'}</span></div>`).join('')}</div><div class="mr-leg"><span><i class="g"></i>득점</span><span><i class="a"></i>도움</span></div>`) : ''}
+    ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div class="rs-pos">
+      <div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/posList[0][1]); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?g:''}</u>`; }).join('')}</div>
+      <div class="rs-plist">${posList.slice(0,5).map(([g,q],i)=>`<div class="${i===0?'on':''}"><b>${g}</b><span>${fq(q)}</span><em>${Math.round(q/posTotal*100)}%</em></div>`).join('')}</div>
+    </div>` : '<div style="padding:4px 0 6px;font-size:13px;color:var(--muted)">집계된 라인업 기록이 아직 없어요.</div>'}`)}
     ${card(`${ttl('팀 내 순위')}<div class="rs-rank">${ranks.map(([n,r,v])=>`<div class="${r&&r<=3?'top':''}"><span>${n}</span><b>${r?r+'<small>위</small>':'-'}</b><i>${v}${n==='출전'?'경기':n==='득점'?'골':n==='도움'?'개':''}</i></div>`).join('')}</div>`)}
     ${TM ? card(`${ttl('출석')}<div class="rs-rank">${[['참석',GP,`/ ${TM}경기`],['참석률',`${attRate}<small>%</small>`,''],['연속 출석',`${curAtt}<small>경기</small>`,'진행 중'],['최장 연속',`${bestAtt}<small>경기</small>`,attRecord?'<em class="att-rec">신기록 달성 중!</em>':'']].map(([l,v,x])=>`<div><span>${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`) : ''}
     ${card(`${ttl('승부와 기여')}<div style="padding:6px 0 2px">
@@ -5349,10 +5353,6 @@ function mrRender(){
       ${involve!=null?`<div style="margin-top:14px;font-size:12px;color:var(--muted)">내가 뛴 경기 팀 득점 ${teamGoals}골 중 <b style="color:var(--text)">${G+A}골에 관여</b> (득점 ${G} + 도움 ${A})</div><div style="height:8px;background:#eee;border-radius:4px;margin-top:6px;overflow:hidden"><div style="width:${Math.min(100,involve)}%;height:100%;background:var(--skyblue)"></div></div><div style="text-align:right;font-size:12px;font-weight:800;color:var(--skyblue);margin-top:4px">${involve}%</div>`:''}
     </div>`)}
     ${tWith && tWo ? card(`${ttl('내가 뛸 때 vs 안 뛸 때')}<div class="mr-vs"><div class="on"><span>내가 뛴 ${tWith.n}경기</span><b>${tWith.wr}<small>%</small></b><i>승률</i><em>경기당 ${tWith.gf}득 ${tWith.ga}실</em></div><div><span>안 뛴 ${tWo.n}경기</span><b>${tWo.wr}<small>%</small></b><i>승률</i><em>경기당 ${tWo.gf}득 ${tWo.ga}실</em></div></div><div class="rs-note">${tWith.wr>tWo.wr?`내가 뛰면 승률이 <b style="color:#2e7d32">${tWith.wr-tWo.wr}%p</b> 올라가요 💪`:tWith.wr<tWo.wr?`승률 차이 ${tWo.wr-tWith.wr}%p · 다음 경기에서 뒤집어 봐요`:'뛰든 안 뛰든 승률이 같아요'}</div>`) : ''}
-    ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div class="rs-pos">
-      <div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/posList[0][1]); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?g:''}</u>`; }).join('')}</div>
-      <div class="rs-plist">${posList.slice(0,5).map(([g,q],i)=>`<div class="${i===0?'on':''}"><b>${g}</b><span>${fq(q)}</span><em>${Math.round(q/posTotal*100)}%</em></div>`).join('')}</div>
-    </div>` : '<div style="padding:4px 0 6px;font-size:13px;color:var(--muted)">집계된 라인업 기록이 아직 없어요.</div>'}`)}
     ${qMax ? card(`${ttl('쿼터별 공격포인트')}<div class="mr-q">${qs.map((x,i)=>`<div class="${i===qBest?'on':''}"><span>${i+1}Q</span><b>${x.g+x.a}</b><i>⚽${x.g} 🅰${x.a}</i></div>`).join('')}</div><div class="rs-note"><b style="color:var(--text)">${qBest+1}쿼터의 사나이</b> · 쿼터 기록이 있는 ${recGames}경기 기준</div>`) : ''}
     ${combo1.length||combo2.length ? card(`${ttl('득점 콤비')}<div class="mr-combo"><div><span>내 골을 도운 선수</span>${combo1.length?combo1.map(([n,c],i)=>`<p class="${i?'':'on'}"><b>${luEsc(n)}</b><em>${c}</em></p>`).join(''):'<p><i>-</i></p>'}</div><div><span>내가 도운 선수</span>${combo2.length?combo2.map(([n,c],i)=>`<p class="${i?'':'on'}"><b>${luEsc(n)}</b><em>${c}</em></p>`).join(''):'<p><i>-</i></p>'}</div></div>`) : ''}
     ${card(`${ttl('커리어 하이')}<div class="mr-tiles">${[
