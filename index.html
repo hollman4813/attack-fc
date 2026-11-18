@@ -4756,13 +4756,13 @@ async function showMatch(matchId, skipPushState) {
   if (!tint) { tint = document.createElement('div'); tint.id = 'top-tint'; document.body.appendChild(tint); }
   const sync = () => {
     const on = md.classList.contains('active');
-    // 홈화면 앱(상태바 글자 흰색 고정)은 남색 띠, 일반 사파리는 밝은 띠 → 스크롤해도 상태바 영역이 본문과 겹치지 않음
+    // 일반 사파리: 밝은 띠로 상단 색 통일 / 홈화면 앱: 띠 없음(본문이 상태바 아래까지)
     const pwa = window.navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
-    const col = on ? (pwa ? '#0f2850' : '#f4f5f7') : '#1a3a6b';
+    const col = on ? '#f4f5f7' : '#1a3a6b';
     document.documentElement.classList.toggle('top-deep', on);
     const old = document.querySelector('meta[name="theme-color"]');
     if (!old || old.getAttribute('content') !== col) { const m = document.createElement('meta'); m.name = 'theme-color'; m.content = col; if (old) old.remove(); document.head.appendChild(m); }
-    tint.style.background = col; tint.style.display = on ? 'block' : 'none';
+    tint.style.background = col; tint.style.display = (on && !pwa) ? 'block' : 'none';  // 홈화면 앱은 띠 없이 화면 끝까지
   };
   new MutationObserver(sync).observe(md, { attributes:true, attributeFilter:['class'] }); sync();
 })();
