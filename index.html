@@ -926,19 +926,18 @@
 
   /* ── 뱃지 글자 정렬 공통: 뱃지·칩·동그라미 안 글자는 항상 상하좌우 정가운데 ──
      글꼴 위아래 여백(줄 높이)을 잘라내고(text-box) 실제 글자 높이로 가운데 맞춤 → 기기·글꼴이 달라도 같은 위치 */
-  .nm-dd,.mdx-rl,.mdx-star,.hd-season,.rb-btn,.rb-c,.mx-s,.mini-no,.rt-mom,.sq-tag,.lu-gkb,.acct-st,.live-badge,.ss-opt em,.tc-scope,.mr-scope,.lu-chip,.ovy-qb,.ovc-pill,.tc-ano,.sv-ph em,.pd-res,.mr-form u,.rs-pitch u,.fixture-result-badge,.rank-avatar,.sv-av,.mdx-av,.ovl-k,.lu-av,.lu-av i,.lu-nm,.mdx-qs span,.fm-av,.stat-player-avatar,.nm-dd.live{
+  .nm-dd,.mdx-rl,.mdx-star,.hd-season,.rb-btn,.rb-c,.mx-s,.mini-no,.rt-mom,.sq-tag,.lu-gkb,.acct-st,.live-badge,.ss-opt em,.tc-scope,.mr-scope,.lu-chip,.ovy-qb,.ovc-pill,.tc-ano,.sv-ph em,.pd-res,.mr-form u,.rs-pitch u,.fixture-result-badge,.rank-avatar,.sv-av,.mdx-av,.ovl-k,.lu-av,.lu-av i,.mdx-qs span,.fm-av,.stat-player-avatar,.nm-dd.live{
     display:inline-flex; align-items:center; justify-content:center; line-height:1; text-align:center; vertical-align:middle;
   }
   .ovl-k,.lu-av,.sv-av,.mdx-av,.rank-avatar,.fm-av,.stat-player-avatar{ display:flex }
   @supports (text-box: trim-both cap alphabetic){
-    .nm-dd,.mdx-rl,.mdx-star,.hd-season,.rb-btn,.rb-c,.mx-s,.mini-no,.rt-mom,.sq-tag,.lu-gkb,.acct-st,.live-badge,.ss-opt em,.tc-scope,.mr-scope,.lu-chip,.ovy-qb,.ovc-pill,.tc-ano,.sv-ph em,.pd-res,.mr-form u,.rs-pitch u,.fixture-result-badge,.rank-avatar,.sv-av,.mdx-av,.ovl-k>span,.lu-av>span,.lu-av i,.lu-nm .tx,.lu-nm .no,.mdx-qs span,.fm-av,.stat-player-avatar{
+    .nm-dd,.mdx-rl,.mdx-star,.hd-season,.rb-btn,.rb-c,.mx-s,.mini-no,.rt-mom,.sq-tag,.lu-gkb,.acct-st,.live-badge,.ss-opt em,.tc-scope,.mr-scope,.lu-chip,.ovy-qb,.ovc-pill,.tc-ano,.sv-ph em,.pd-res,.mr-form u,.rs-pitch u,.fixture-result-badge,.rank-avatar,.sv-av,.mdx-av,.ovl-k>span,.lu-av>span,.lu-av i,.mdx-qs span,.fm-av,.stat-player-avatar{
       text-box: trim-both cap alphabetic;
     }
     /* 예전 글꼴별 위치 보정(padding)은 필요 없어짐 */
     html.f-teko .sv-ph em, html.f-teko .ovl-k{ padding-top:0 }
     html.f-teko .ovl-k{ height:38px }
     .tc-ano, html.f-teko .tc-ano{ padding:7px 9px 4px }
-    .lu-nm .tx{ padding-bottom:0 }
     .lu-av i{ padding:0 }
     .sq-tag,.rt-mom,.lu-gkb,.acct-st,.live-badge,.ss-opt em,.rb-c{ padding-top:4px; padding-bottom:4px }
     .rb-c{ height:auto }
@@ -947,7 +946,6 @@
     .ovc-pill{ padding:5px 12px 7px }
     .rt-mom,.sq-tag{ padding:3px 5px 5px }
     .nm-dd{ padding-bottom:1.4px; box-sizing:border-box }
-    .lu-nm{ padding-top:2px }
     .rb-btn{ box-sizing:border-box }
     html.f-teko .mx-s{ padding-top:3.6px }
     html.f-teko .rb-btn{ padding-top:4px }
