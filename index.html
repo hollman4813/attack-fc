@@ -3506,11 +3506,20 @@ function rcCircleImg(ctx, im, cx, cy, r, fallbackText){
 }
 function rcFit(ctx, text, maxW){ if (ctx.measureText(text).width <= maxW) return text; let t = text; while (t.length > 1 && ctx.measureText(t+'…').width > maxW) t = t.slice(0,-1); return t + '…'; }
 // 공통 틀: 배경 + 상단 스코어 헤더 + 흰 패널. 패널 영역 {x,y,w,h} 반환
-function rcFrame(ctx, D, title){
+function rcFrame(ctx, D, title, noScore){
   const g = ctx.createLinearGradient(0,0,0,RC_H); g.addColorStop(0,'#0f2850'); g.addColorStop(1,'#1e4d8c');
   ctx.fillStyle = g; ctx.fillRect(0,0,RC_W,RC_H);
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#ffd54a'; ctx.font = `800 60px ${RC_F}`; ctx.fillText(title, RC_W/2, 112);
+  if (noScore) {   // 스코어 없이 제목 + 날짜만, 패널을 위로 넓게
+    ctx.font = `600 26px ${RC_F}`; ctx.fillStyle = '#9cc8f0'; ctx.fillText(`ATTACK FC vs ${D.oppName}  ·  ${D.meta}`, RC_W/2, 160);
+    const P0 = {x:48, y:196, w:RC_W-96, h:RC_H-196-80};
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
+    rcRound(ctx, P0.x, P0.y, P0.w, P0.h, 36); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.font = `600 22px ${RC_F}`; ctx.textAlign = 'center';
+    ctx.fillText('© ATTACK FC', RC_W/2, RC_H-30);
+    return P0;
+  }
   // 스코어 줄
   const cy = 215;
   ctx.save(); ctx.beginPath(); ctx.arc(170, cy, 54, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
@@ -3612,7 +3621,7 @@ function rcPoints(D){
 }
 // 3) 쿼터별 결과 — 쿼터마다 포메이션(미니 피치) + 쿼터 스코어 + 골/도움
 function rcQuarters(D){
-  const cv = rcCanvas(), ctx = cv.getContext('2d'); const P = rcFrame(ctx, D, '쿼터별 결과');
+  const cv = rcCanvas(), ctx = cv.getContext('2d'); const P = rcFrame(ctx, D, '쿼터별 결과', true);
   const plan = (D.lu && D.lu.plan) || [];
   const qs = [0,1,2,3].filter(q=>plan[q] && LU_FORMATIONS[plan[q].formation]);
   if (!qs.length) { ctx.fillStyle='#9aa3ad'; ctx.font=`700 34px ${RC_F}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('쿼터 라인업 기록이 없어요', RC_W/2, P.y+P.h/2); return cv; }
