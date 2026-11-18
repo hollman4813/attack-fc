@@ -3562,32 +3562,48 @@ function rcMom(D){
   const cv = rcCanvas(), ctx = cv.getContext('2d'); const P = rcFrame(ctx, D, 'MOM TOP 5');
   const total = D.votes.find(v=>v.total_participants>0)?.total_participants || 0;
   const sorted = D.votes.filter(v=>v.vote_count>0).sort((a,b)=>b.vote_count-a.vote_count);
-  // 5위와 같은 득표수인 선수까지 모두 포함
-  const cut = sorted.length > 5 ? sorted[4].vote_count : 0;
-  const list = sorted.filter((v,i)=>i<5 || v.vote_count>=cut);
-  if (!list.length) { ctx.fillStyle='#9aa3ad'; ctx.font=`700 34px ${RC_F}`; ctx.textAlign='center'; ctx.fillText('투표 결과가 없어요', RC_W/2, P.y+P.h/2); return cv; }
-  const n = Math.max(5, list.length), rowH = (P.h - 40) / n, k = Math.min(1, rowH / ((P.h - 40) / 5));   // 줄이 늘면 글자·사진도 비율대로
-  const F = v => Math.round(v * Math.max(k, 0.55));
-  let rank = 0, prev = null;
-  list.forEach((v,i)=>{
-    if (v.vote_count !== prev) { rank = i+1; prev = v.vote_count; }
-    const p = D.people[v.player_id] || {name:'?'}, y = P.y + 20 + i*rowH, cy = y + rowH/2;
-    const pr = Math.min(60, rowH*0.36), px = P.x + 120 + pr, tx = px + pr + 30;
-    if (rank === 1) { rcRound(ctx, P.x+18, y+6, P.w-36, rowH-12, 24); ctx.fillStyle = '#fff6d8'; ctx.fill(); }
+  if (!sorted.length) { ctx.fillStyle='#9aa3ad'; ctx.font=`700 34px ${RC_F}`; ctx.textAlign='center'; ctx.fillText('투표 결과가 없어요', RC_W/2, P.y+P.h/2); return cv; }
+  // 득표수가 같은 선수는 한 줄로 묶음 (5위 안에 드는 묶음까지)
+  const groups = []; let idx = 0;
+  sorted.forEach(v=>{ const g = groups[groups.length-1]; if (g && g.votes===v.vote_count) g.list.push(v); else groups.push({votes:v.vote_count, rank:idx+1, list:[v]}); idx++; });
+  const rows = groups.filter(g=>g.rank<=5);
+  const rowH = (P.h - 40) / 5;
+  rows.forEach((G,i)=>{
+    const y = P.y + 20 + i*rowH, cy = y + rowH/2, top = G.rank===1, multi = G.list.length > 1;
+    if (top) { rcRound(ctx, P.x+18, y+8, P.w-36, rowH-16, 24); ctx.fillStyle = '#fff6d8'; ctx.fill(); }
     else if (i) { ctx.strokeStyle = '#eef1f5'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(P.x+40, y); ctx.lineTo(P.x+P.w-40, y); ctx.stroke(); }
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = rank===1 ? '#c98a00' : '#9aa3ad'; ctx.font = `600 ${F(70)}px ${RC_N}`; ctx.fillText(String(rank), P.x+80, cy+F(6));
-    if (rank === 1) { ctx.beginPath(); ctx.arc(px, cy, pr+6, 0, Math.PI*2); ctx.fillStyle = '#ffd54a'; ctx.fill(); }
-    rcCircleImg(ctx, D.photos[v.player_id], px, cy, pr, (p.name||'?').slice(0,1));
-    const big = k >= 0.8;   // 줄이 촘촘하면 이름 한 줄 + 오른쪽 득표만
-    ctx.textAlign = 'left'; ctx.fillStyle = '#0f2850'; ctx.font = `800 ${F(44)}px ${RC_F}`;
-    const nmT = rcFit(ctx, p.name || '?', 340);
-    ctx.fillText(nmT, tx, big ? cy - 18 : cy + 2);
-    if (big) { ctx.fillStyle = '#7a8699'; ctx.font = `600 26px ${RC_F}`; ctx.fillText(`${p.number!=null?'No.'+p.number+'  ·  ':''}득표율 ${total?Math.round(v.vote_count/total*100):0}%`, tx, cy + 30); }
-    ctx.textAlign = 'right'; ctx.fillStyle = rank===1 ? '#c98a00' : '#1a3a6b'; ctx.font = `600 ${F(96)}px ${RC_N}`;
-    ctx.fillText(String(v.vote_count), P.x+P.w-90, cy+F(10));
-    ctx.font = `800 ${F(30)}px ${RC_F}`; ctx.fillText('표', P.x+P.w-48, cy+F(8));
-    if (rank === 1) { ctx.font = `800 ${F(44)}px ${RC_F}`; ctx.textAlign='left'; ctx.textBaseline='middle'; const bx = tx + ctx.measureText(nmT).width + 16, by = big ? cy-36 : cy-16; rcRound(ctx, bx, by, F(104), F(36), 8); ctx.fillStyle='#0f2850'; ctx.fill(); ctx.fillStyle='#ffd54a'; ctx.font = `800 ${F(22)}px ${RC_F}`; ctx.fillText('★ MOM', bx+F(14), by+F(19)); }
+    ctx.fillStyle = top ? '#c98a00' : '#9aa3ad'; ctx.font = `600 70px ${RC_N}`; ctx.fillText(String(G.rank), P.x+80, cy+6);
+    // 득표수 (오른쪽)
+    ctx.textAlign = 'right'; ctx.fillStyle = top ? '#c98a00' : '#1a3a6b'; ctx.font = `600 96px ${RC_N}`;
+    ctx.fillText(String(G.votes), P.x+P.w-90, cy+10);
+    ctx.font = `800 30px ${RC_F}`; ctx.fillText('표', P.x+P.w-48, cy+8);
+    const pct = `득표율 ${total?Math.round(G.votes/total*100):0}%`;
+    if (!multi) {
+      const v = G.list[0], p = D.people[v.player_id] || {name:'?'}, px = P.x+200;
+      if (top) { ctx.beginPath(); ctx.arc(px, cy, 66, 0, Math.PI*2); ctx.fillStyle = '#ffd54a'; ctx.fill(); }
+      rcCircleImg(ctx, D.photos[v.player_id], px, cy, 60, (p.name||'?').slice(0,1));
+      ctx.textAlign = 'left'; ctx.fillStyle = '#0f2850'; ctx.font = `800 44px ${RC_F}`;
+      const nmT = rcFit(ctx, p.name || '?', 340); ctx.fillText(nmT, P.x+290, cy - 18);
+      ctx.fillStyle = '#7a8699'; ctx.font = `600 26px ${RC_F}`; ctx.fillText(`${p.number!=null?'No.'+p.number+'  ·  ':''}${pct}`, P.x+290, cy + 30);
+      if (top) { ctx.font = `800 44px ${RC_F}`; const bx = P.x+290 + ctx.measureText(nmT).width + 16; rcRound(ctx, bx, cy-36, 104, 36, 8); ctx.fillStyle='#0f2850'; ctx.fill(); ctx.fillStyle='#ffd54a'; ctx.font = `800 22px ${RC_F}`; ctx.fillText('★ MOM', bx+14, cy-17); }
+    } else {
+      // 동률: 사진 겹쳐 나열 + 이름 줄
+      const r = 34, step = 46, show = G.list.slice(0, 5), x0 = P.x+150;
+      show.forEach((v,j)=>{ const p = D.people[v.player_id] || {name:'?'}, cx = x0 + r + j*step;
+        ctx.beginPath(); ctx.arc(cx, cy-28, r+4, 0, Math.PI*2); ctx.fillStyle = top ? '#ffd54a' : '#fff'; ctx.fill();
+        rcCircleImg(ctx, D.photos[v.player_id], cx, cy-28, r, (p.name||'?').slice(0,1)); });
+      if (G.list.length > show.length) { const cx = x0 + r + show.length*step; ctx.beginPath(); ctx.arc(cx, cy-28, r, 0, Math.PI*2); ctx.fillStyle = '#eef2f8'; ctx.fill(); ctx.fillStyle = '#51607a'; ctx.font = `800 22px ${RC_F}`; ctx.textAlign = 'center'; ctx.fillText(`+${G.list.length-show.length}`, cx, cy-26); }
+      const tagX = x0 + r + Math.min(G.list.length, show.length+1)*step + 6;
+      ctx.textAlign = 'left'; ctx.fillStyle = '#7a8699'; ctx.font = `700 24px ${RC_F}`;
+      ctx.fillText(top ? `★ 공동 MOM · ${pct}` : `공동 ${G.rank}위 · ${pct}`, Math.min(tagX, P.x+P.w-420), cy-28);
+      // 이름은 줄바꿈해서 전부 (최대 2줄)
+      ctx.fillStyle = '#0f2850'; ctx.font = `800 28px ${RC_F}`;
+      const names = G.list.map(v=>(D.people[v.player_id]||{}).name||'?'), maxW = P.w-330, lines = [''];
+      names.forEach(nm=>{ const t = lines[lines.length-1] ? lines[lines.length-1]+' · '+nm : nm; if (ctx.measureText(t).width <= maxW || !lines[lines.length-1]) lines[lines.length-1] = t; else lines.push(nm); });
+      const L = lines.slice(0,2); if (lines.length > 2) L[1] = rcFit(ctx, L[1]+' · '+lines.slice(2).join(' · '), maxW);
+      L.forEach((t,j)=>ctx.fillText(t, x0, cy+34 + j*34));
+    }
   });
   return cv;
 }
