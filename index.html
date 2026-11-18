@@ -718,6 +718,21 @@
   .rs-rate{display:flex;align-items:center;gap:18px}
   .rs-rate>b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:64px;font-weight:600;line-height:.8;padding-top:8px;flex:none}
   .rs-rule{position:relative;flex:1;padding-top:12px}
+  /* 개인기록: 어택 포인트 (평균 레이팅 카드와 같은 높이) */
+  .rs-apt{display:flex;align-items:flex-start;justify-content:space-between}
+  .rs-aprk{display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 9px;border-radius:6px;background:#eef2f8;color:var(--team-navy);font-size:12px;font-weight:800;text-box:trim-both cap alphabetic}
+  .rs-aprk.top{background:#fff4d1;color:#a66b00}
+  .rs-ap{display:flex;align-items:center;gap:18px;height:59px}
+  .rs-ap>b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:64px;font-weight:600;line-height:.8;padding-top:8px;flex:none;color:var(--team-navy);min-width:96px}
+  .rs-ap>b.z{color:var(--muted);min-width:0}
+  .rs-apd{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+  .rs-apd>div{display:grid;grid-template-columns:52px 1fr 56px;align-items:center;gap:8px;height:13px}
+  .rs-apd span{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+  .rs-apd i{display:block;height:6px;border-radius:3px;background:#e6ebf2;overflow:hidden}
+  .rs-apd u{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--team-navy),var(--team-sky))}
+  .rs-apd em{font-style:normal;text-align:right;font-family:'Teko','Noto Sans KR',sans-serif;font-size:17px;font-weight:600;line-height:1;color:var(--team-deep)}
+  .rs-apd em small{font-size:12px;color:var(--muted);font-weight:500}
+  .rs-apmsg{margin:0;font-size:12px;line-height:1.5;color:var(--muted)}
   .rs-rule>div{height:14px;border-bottom:2px solid #1a3a6b;background:repeating-linear-gradient(90deg,#1a3a6b 0 1px,transparent 1px 10%) left bottom/100% 7px no-repeat,linear-gradient(#1a3a6b,#1a3a6b) right bottom/1px 7px no-repeat,linear-gradient(#1a3a6b,#1a3a6b) 50% bottom/1px 14px no-repeat}
   .rs-rule>i{position:absolute;top:0;margin-left:-7px;border:7px solid transparent;border-top-width:10px;border-bottom:0}
   .rs-rule p{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px}
@@ -2388,12 +2403,17 @@ function renderStatList(tab) {
 const POWER_CFG = { attend:200, streakStep:20, streakMax:100, ratingMax:700, defaultRating:7.0,
   matchWeight:0.8, rateMax:100, cumMax:100, cumTarget:10, shrinkK:4, preJoinFactor:0.7 };
 
-function powerOf(matchAvg, attended, totalGames) {
+// 항목별 점수 (경기 800 + 출석률 100 + 누적출석 100)
+function powerParts(matchAvg, attended, totalGames) {
   const c = POWER_CFG;
   const rate = Math.min(attended / totalGames, 1);           // 시즌 전체 경기 기준 출석률 (입단 전 경기는 팀 평균 참석률로 반영)
   const cumTarget = Math.min(totalGames, c.cumTarget);
   const cum = Math.min(attended, cumTarget) / cumTarget;     // 누적출석 달성도
-  return matchAvg * c.matchWeight + rate * c.rateMax + cum * c.cumMax;
+  return { match: matchAvg * c.matchWeight, rate: rate * c.rateMax, cum: cum * c.cumMax };
+}
+function powerOf(matchAvg, attended, totalGames) {
+  const x = powerParts(matchAvg, attended, totalGames);
+  return x.match + x.rate + x.cum;
 }
 
 // 어택포인트 계산용 원본 데이터 (60초 캐시, 저장하면 비움)
@@ -2466,7 +2486,8 @@ async function calcPowerRanking(sid, cut) {
     // 출석 경기가 적을수록 팀 평균 쪽으로 보정 (적은 경기에서 평점이 높게 나온 효과를 완화)
     const k = POWER_CFG.shrinkK;
     const shrunkAvg = (r.matchAvg * r.attended + teamMatchAvg * k) / (r.attended + k);
-    return { ...r.pl, power: powerOf(shrunkAvg, adjAttended, matches.length), matchAvg: shrunkAvg, attended: r.attended, games: r.eligibleCnt, avgRating: r.avgRating };
+    const parts = powerParts(shrunkAvg, adjAttended, matches.length);
+    return { ...r.pl, power: parts.match + parts.rate + parts.cum, parts, matchAvg: shrunkAvg, attended: r.attended, games: r.eligibleCnt, avgRating: r.avgRating };
   });
   return result.sort((a,b) => b.power - a.power);
 }
@@ -5000,11 +5021,17 @@ async function myRecordOpen(){
   const p = pl[0]; if(!p){ ov.remove(); alert('선수 정보를 불러오지 못했어요.'); return; }
   const fin = r => r.matches && r.matches.status==='finished';
   const plans = {}; (lu||[]).forEach(r=>{ const m = /^match_(\d+)$/.exec(r.key); if(m && r.data && r.data.plan) plans[+m[1]] = r.data.plan; });
-  window._mr = { p, me: me.filter(fin), all: all.filter(fin), votes, plans, matches: (mt||[]).filter(m=>m.status==='finished'), names: Object.fromEntries((pn||[]).map(x=>[x.id,x.name])), scope: currentSeasonId, ranking: null, showAll: false };
+  window._mr = { p, me: me.filter(fin), all: all.filter(fin), votes, plans, matches: (mt||[]).filter(m=>m.status==='finished'), names: Object.fromEntries((pn||[]).map(x=>[x.id,x.name])), scope: currentSeasonId, ranking: null, rankings: {}, showAll: false };
   mrRender();
-  calcPowerRanking().then(r => { if(window._mr){ window._mr.ranking = r; mrRender(); } }).catch(()=>{});
+  mrPower(currentSeasonId);
 }
-function mrScope(v){ window._mr.scope = v==='all' ? 'all' : +v; window._mr.showAll = false; mrRender(); }
+function mrScope(v){ window._mr.scope = v==='all' ? 'all' : +v; window._mr.showAll = false; mrRender(); if(v!=='all') mrPower(+v); }
+// 개인기록: 시즌별 어택포인트 순위 (한 번 계산하면 보관)
+function mrPower(sid){
+  const D = window._mr; if(!D || D.rankings[sid]) return;
+  D.rankings[sid] = 'loading';
+  calcPowerRanking(sid).then(r => { if(window._mr===D){ D.rankings[sid] = r; if(sid===currentSeasonId) D.ranking = r; mrRender(); } }).catch(()=>{ if(window._mr===D) delete D.rankings[sid]; });
+}
 function mrMore(){ window._mr.showAll = true; mrRender(); }
 function mrRender(){
   const D = window._mr, ov = document.getElementById('my-record'); if(!D || !ov) return;
@@ -5030,8 +5057,16 @@ function mrRender(){
   const ratingOf = {}; rated.forEach(x=>ratingOf[x.id]=x.r);
   const rc = v => v>=8?'#2e7d32':v>=6?'#f5a623':'#c62828';
   // 어택포인트 (현재 시즌만)
-  let power = null, prank = null;
-  if(D.ranking && D.scope===currentSeasonId){ const i = D.ranking.findIndex(x=>x.id===D.p.id); if(i>=0){ power = Math.round(D.ranking[i].power); prank = i+1; } }
+  let power = null, prank = null, pme = null;
+  const pList = D.scope==='all' ? null : D.rankings[D.scope];
+  if(Array.isArray(pList)){ const i = pList.findIndex(x=>x.id===D.p.id); if(i>=0){ pme = pList[i]; power = Math.round(pme.power); prank = i+1; } }
+  const apHtml = (()=>{
+    if(D.scope==='all') return `<div class="rs-ap"><b class="z">-</b><div class="rs-apd"><p class="rs-apmsg">어택포인트는 시즌별로 집계돼요.<br>위에서 시즌을 골라 주세요.</p></div></div><div class="rs-note">시즌 기준</div>`;
+    if(pList==='loading' || pList==null) return `<div class="rs-ap"><b class="z">-</b><div class="rs-apd"><p class="rs-apmsg">계산 중...</p></div></div><div class="rs-note">&nbsp;</div>`;
+    if(!pme) return `<div class="rs-ap"><b class="z">-</b><div class="rs-apd"><p class="rs-apmsg">이 시즌에 출석한 경기가 없어요.</p></div></div><div class="rs-note">&nbsp;</div>`;
+    const row = (l,v,max) => `<div><span>${l}</span><i><u style="width:${Math.max(0,Math.min(100,v/max*100))}%"></u></i><em>${Math.round(v)}<small>/${max}</small></em></div>`;
+    return `<div class="rs-ap"><b>${power}</b><div class="rs-apd">${row('경기 점수',pme.parts.match,800)}${row('출석률',pme.parts.rate,100)}${row('누적 출석',pme.parts.cum,100)}</div></div><div class="rs-note">${pList.length}명 중 ${prank}위 · 출석 ${pme.attended}/${pme.games}경기 · 평균 평점 ${pme.avgRating!=null?pme.avgRating.toFixed(1):'-'}</div>`;
+  })();
   // 승무패, 골 관여율
   const W = played.filter(r=>r.matches.result==='Win').length, Dr = played.filter(r=>r.matches.result==='Draw').length, L = played.filter(r=>r.matches.result==='Lose').length;
   const teamGoals = played.reduce((s,r)=>s+(r.matches.our_score||0),0);
@@ -5119,6 +5154,7 @@ function mrRender(){
       <div class="rs-plist">${posList.slice(0,5).map(([g,q],i)=>`<div class="${i===0?'on':''}"><b>${g}</b><span>${fq(q)}</span><em>${Math.round(q/posTotal*100)}%</em></div>`).join('')}</div>
     </div>` : '<div style="padding:4px 0 6px;font-size:13px;color:var(--muted)">집계된 라인업 기록이 아직 없어요.</div>'}`)}
     ${card(`${ttl('평균 레이팅')}<div class="rs-rate"><b style="color:${avg!=null?rc(avg):'var(--muted)'}">${avg!=null?avg.toFixed(1):'-'}</b><div class="rs-rule">${avg!=null?`<i style="left:${Math.min(100,avg*10)}%;border-top-color:${rc(avg)}"></i>`:''}<div></div><p><span>0</span><span>5</span><span>10</span></p></div></div><div class="rs-note">${rated.length?rated.length+'경기 평가 기준':'평가된 경기가 아직 없어요'}</div>`)}
+    ${card(`<div class="rs-apt">${ttl('어택 포인트')}${prank?`<span class="rs-aprk${prank<=3?' top':''}">${prank}위</span>`:''}</div>${apHtml}`)}
     ${card(`${ttl('커리어 하이')}<div class="mr-tiles">${[
       topRated ? ['🏅','최고 평점',topRated.r.toFixed(1),topRatedM?'vs '+luEsc(topRatedM.opponent||''):''] : null,
       bestGame && bestGame.goals>0 ? ['🔥','한 경기 최다 득점',bestGame.goals+'골','vs '+luEsc(bestGame.matches.opponent||'')] : null,
