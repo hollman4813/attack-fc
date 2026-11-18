@@ -2950,8 +2950,8 @@ async function loadTeamStats() {
   // 월별 / 경기장별 / 상대팀별 — 한 카드에서 전환
   const oppRow = name => { const m = matches.find(x=>(x.opponents?.name||x.opponent)===name); return m ? `<span class="mx-e" style="width:24px;height:24px">${oppLogo(m,22)}</span>` : ''; };
   const tbl = (kind, entries) => `<div class="ts-tb" data-k="${kind}"${kind==='month'?'':' hidden'}>
-    <div class="ts-th"><span>${{month:'월',ground:'경기장',opp:'상대팀'}[kind]}</span><span>경기</span><span>득점</span><span>실점</span><span class="w">승</span><span>무</span><span class="l">패</span></div>
-    ${entries.map(([name,s])=>`<div class="ts-tr"><span class="ts-nm">${kind==='opp'?oppRow(name):''}<em>${luEsc(kind==='month'?name.replace(/^\d+년 /,''):name)}</em></span><b class="g">${s.games}</b><b>${s.goals}</b><b>${s.concede}</b><b class="w">${s.wins}</b><b class="d">${s.draws}</b><b class="l">${s.losses}</b></div>`).join('') || '<div class="ovc-empty">데이터 없음</div>'}</div>`;
+    <div class="ts-th"><span>${{month:'월',ground:'경기장',opp:'상대팀'}[kind]}</span><span>경기</span><span class="w">승</span><span>무</span><span class="l">패</span><span>득점</span><span>실점</span></div>
+    ${entries.map(([name,s])=>`<div class="ts-tr"><span class="ts-nm">${kind==='opp'?oppRow(name):''}<em>${luEsc(kind==='month'?name.replace(/^\d+년 /,''):name)}</em></span><b class="g">${s.games}</b><b class="w">${s.wins}</b><b class="d">${s.draws}</b><b class="l">${s.losses}</b><b>${s.goals}</b><b>${s.concede}</b></div>`).join('') || '<div class="ovc-empty">데이터 없음</div>'}</div>`;
   html += `<section class="ovc" id="ts-tables"><h3 class="ovc-h"><span>상세 기록</span><span class="ovc-tg">${[['month','월별'],['ground','경기장'],['opp','상대팀']].map(([k,l],i)=>`<button class="${i?'':'on'}" onclick="tsTab('${k}',this)">${l}</button>`).join('')}</span></h3>
     ${tbl('month', Object.entries(monthMap))}${tbl('ground', grounds)}${tbl('opp', opps)}</section>`;
 
