@@ -4755,11 +4755,14 @@ async function showMatch(matchId, skipPushState) {
   let tint = document.getElementById('top-tint');
   if (!tint) { tint = document.createElement('div'); tint.id = 'top-tint'; document.body.appendChild(tint); }
   const sync = () => {
-    const on = md.classList.contains('active'), col = on ? '#f4f5f7' : '#1a3a6b';  // 경기 상세: 사파리 상단 색 없음(밝은 배경)
+    const on = md.classList.contains('active');
+    // 홈화면 앱(상태바 글자 흰색 고정)은 남색 띠, 일반 사파리는 밝은 띠 → 스크롤해도 상태바 영역이 본문과 겹치지 않음
+    const pwa = window.navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+    const col = on ? (pwa ? '#0f2850' : '#f4f5f7') : '#1a3a6b';
     document.documentElement.classList.toggle('top-deep', on);
     const old = document.querySelector('meta[name="theme-color"]');
     if (!old || old.getAttribute('content') !== col) { const m = document.createElement('meta'); m.name = 'theme-color'; m.content = col; if (old) old.remove(); document.head.appendChild(m); }
-    tint.style.display = 'none';
+    tint.style.background = col; tint.style.display = on ? 'block' : 'none';
   };
   new MutationObserver(sync).observe(md, { attributes:true, attributeFilter:['class'] }); sync();
 })();
