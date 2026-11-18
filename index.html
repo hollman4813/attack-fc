@@ -602,6 +602,10 @@
   .vs-step input{width:44px;height:36px;border:1px solid #e6ebf2;border-radius:10px;text-align:center;font-family:'Teko','Noto Sans KR',sans-serif;font-size:22px;font-weight:600;color:var(--team-deep);-moz-appearance:textfield}
   .vs-step input::-webkit-inner-spin-button,.vs-step input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
   .vs-hint{font-size:11px;color:var(--muted);margin:10px 2px 0}
+  /* 경기 결과 이미지 시트 */
+  .rc-sheet h3{margin:4px 0 12px;font-size:17px;font-weight:800;color:var(--team-deep)}
+  .rc-prev{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}
+  .rc-prev img{flex:none;width:72%;max-width:300px;border-radius:12px;scroll-snap-align:center;box-shadow:0 4px 14px rgba(15,40,80,.15)}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
@@ -3476,9 +3480,187 @@ async function mdVoteSave(matchId){
   try {
     const { momTxt } = await saveVotesFor(matchId, total, tally);
     document.getElementById('vote-sheet')?.remove();
-    showMatch(matchId, true);
-    if (momTxt) setTimeout(()=>alert('저장 완료 ✅\n' + momTxt), 50);
+    await showMatch(matchId, true);
+    rcOpen(matchId);   // MOM까지 끝났으니 결과 이미지 3장 바로 보여주기
   } catch(e) { alert('저장 실패: ' + (e.message||e)); }
+}
+
+/* ── 경기 결과 이미지 3장: MOM TOP 5 · 공격포인트 · 쿼터별 결과 (1080×1350) ── */
+const RC_W = 1080, RC_H = 1350;
+const RC_F = "'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
+const RC_N = "'Teko','Noto Sans KR',sans-serif";
+function rcImg(src){ return new Promise(res=>{ if(!src) return res(null); const im = new Image(); if(/^(https?:|data:)/.test(src) && !src.startsWith(location.origin)) im.crossOrigin = 'anonymous'; im.onload = ()=>res(im); im.onerror = ()=>res(null); setTimeout(()=>res(null), 5000); im.src = src; }); }
+async function rcOppImg(m){
+  const html = oppLogo(m, 160);
+  const sv = /<svg[\s\S]*<\/svg>/.exec(html);
+  if (sv) { let svg = sv[0]; if(!/xmlns=/.test(svg)) svg = svg.replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"'); return rcImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)); }
+  const src = /src="([^"]+)"/.exec(html); return rcImg(src && src[1]);
+}
+function rcRound(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function rcCircleImg(ctx, im, cx, cy, r, fallbackText){
+  ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.closePath();
+  ctx.fillStyle = '#e8f0f8'; ctx.fill(); ctx.clip();
+  if (im) { const s = Math.max(2*r/im.width, 2*r/im.height); const w = im.width*s, h = im.height*s; ctx.drawImage(im, cx-w/2, cy-h/2, w, h); }
+  else { ctx.fillStyle = '#1a3a6b'; ctx.font = `800 ${Math.round(r*0.8)}px ${RC_F}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(fallbackText||'?', cx, cy+2); }
+  ctx.restore();
+}
+function rcFit(ctx, text, maxW){ if (ctx.measureText(text).width <= maxW) return text; let t = text; while (t.length > 1 && ctx.measureText(t+'…').width > maxW) t = t.slice(0,-1); return t + '…'; }
+// 공통 틀: 배경 + 상단 스코어 헤더 + 흰 패널. 패널 영역 {x,y,w,h} 반환
+function rcFrame(ctx, D, title){
+  const g = ctx.createLinearGradient(0,0,0,RC_H); g.addColorStop(0,'#0f2850'); g.addColorStop(1,'#1e4d8c');
+  ctx.fillStyle = g; ctx.fillRect(0,0,RC_W,RC_H);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#ffd54a'; ctx.font = `800 60px ${RC_F}`; ctx.fillText(title, RC_W/2, 112);
+  // 스코어 줄
+  const cy = 215;
+  ctx.save(); ctx.beginPath(); ctx.arc(170, cy, 54, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+  if (D.ourImg) rcCircleImg(ctx, D.ourImg, 170, cy, 54);
+  ctx.save(); ctx.beginPath(); ctx.arc(RC_W-170, cy, 54, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+  if (D.oppImg) ctx.drawImage(D.oppImg, RC_W-170-42, cy-42, 84, 84);
+  ctx.fillStyle = '#fff'; ctx.font = `600 120px ${RC_N}`; ctx.textBaseline = 'middle';
+  ctx.fillText(`${D.m.our_score ?? '-'} : ${D.m.opponent_score ?? '-'}`, RC_W/2, cy + 12);
+  ctx.font = `700 26px ${RC_F}`; ctx.fillStyle = '#dbe7f5';
+  ctx.fillText('ATTACK FC', 170, cy + 86); ctx.fillText(rcFit(ctx, D.oppName, 260), RC_W-170, cy + 86);
+  ctx.font = `600 24px ${RC_F}`; ctx.fillStyle = '#9cc8f0'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(D.meta, RC_W/2, 360);
+  // 흰 패널
+  const P = {x:48, y:396, w:RC_W-96, h:RC_H-396-80};
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
+  rcRound(ctx, P.x, P.y, P.w, P.h, 36); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+  ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.font = `600 22px ${RC_F}`; ctx.textAlign = 'center';
+  ctx.fillText('© ATTACK FC', RC_W/2, RC_H-30);
+  return P;
+}
+async function rcData(matchId){
+  const [mr, stats, votes, lu] = await Promise.all([
+    api(`matches?select=*,grounds(name),opponents(name)&id=eq.${matchId}`),
+    api(`match_stats?select=*,players(id,name,number,photo_url)&match_id=eq.${matchId}`),
+    api(`match_votes?select=*&match_id=eq.${matchId}`),
+    luGet('match_'+matchId).catch(()=>null),
+    oppMapLoad().catch(()=>null)
+  ]);
+  const m = mr[0]; if (!m) throw new Error('경기를 찾을 수 없어요');
+  const rec = await luLoadRec(matchId, lu && lu.rec).catch(()=>null);
+  const people = {};
+  stats.forEach(s=>{ if(s.players) people[s.player_id] = s.players; });
+  ((lu && lu.cfg && lu.cfg.guests) || []).forEach(g=>{ people[g.id] = {id:g.id, name:g.name, guest:true}; });
+  const d = new Date(m.match_date);
+  const meta = `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()} (${'일월화수목금토'[d.getDay()]}) · ${m.grounds?.name || m.ground || ''}`;
+  const photoIds = Object.values(people).filter(p=>p.photo_url).map(p=>p.id);
+  const photos = {}; await Promise.all(photoIds.map(async id=>{ photos[id] = await rcImg(people[id].photo_url); }));
+  const [ourImg, oppImg] = await Promise.all([rcImg('emblem_v4.png'), rcOppImg(m)]);
+  try { await document.fonts.load(`600 40px Teko`); await document.fonts.ready; } catch(e){}
+  return { m, stats, votes, lu, rec, people, photos, ourImg, oppImg, meta, oppName: m.opponents?.name || m.opponent || '' };
+}
+function rcCanvas(){ const cv = document.createElement('canvas'); cv.width = RC_W; cv.height = RC_H; return cv; }
+// 1) MOM TOP 5
+function rcMom(D){
+  const cv = rcCanvas(), ctx = cv.getContext('2d'); const P = rcFrame(ctx, D, 'MOM TOP 5');
+  const total = D.votes.find(v=>v.total_participants>0)?.total_participants || 0;
+  const list = D.votes.filter(v=>v.vote_count>0).sort((a,b)=>b.vote_count-a.vote_count).slice(0,5);
+  if (!list.length) { ctx.fillStyle='#9aa3ad'; ctx.font=`700 34px ${RC_F}`; ctx.textAlign='center'; ctx.fillText('투표 결과가 없어요', RC_W/2, P.y+P.h/2); return cv; }
+  const rowH = (P.h - 40) / 5;
+  let rank = 0, prev = null;
+  list.forEach((v,i)=>{
+    if (v.vote_count !== prev) { rank = i+1; prev = v.vote_count; }
+    const p = D.people[v.player_id] || {name:'?'}, y = P.y + 20 + i*rowH, cy = y + rowH/2;
+    if (rank === 1) { rcRound(ctx, P.x+18, y+8, P.w-36, rowH-16, 24); ctx.fillStyle = '#fff6d8'; ctx.fill(); }
+    else if (i) { ctx.strokeStyle = '#eef1f5'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(P.x+40, y); ctx.lineTo(P.x+P.w-40, y); ctx.stroke(); }
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = rank===1 ? '#c98a00' : '#9aa3ad'; ctx.font = `600 70px ${RC_N}`; ctx.fillText(String(rank), P.x+80, cy+6);
+    if (rank === 1) { ctx.beginPath(); ctx.arc(P.x+200, cy, 66, 0, Math.PI*2); ctx.fillStyle = '#ffd54a'; ctx.fill(); }
+    rcCircleImg(ctx, D.photos[v.player_id], P.x+200, cy, 60, (p.name||'?').slice(0,1));
+    ctx.textAlign = 'left'; ctx.fillStyle = '#0f2850'; ctx.font = `800 44px ${RC_F}`;
+    ctx.fillText(rcFit(ctx, p.name || '?', 360), P.x+290, cy - 18);
+    ctx.fillStyle = '#7a8699'; ctx.font = `600 26px ${RC_F}`;
+    ctx.fillText(`${p.number!=null?'No.'+p.number+'  ·  ':''}득표율 ${total?Math.round(v.vote_count/total*100):0}%`, P.x+290, cy + 30);
+    ctx.textAlign = 'right'; ctx.fillStyle = rank===1 ? '#c98a00' : '#1a3a6b'; ctx.font = `600 96px ${RC_N}`;
+    const vw = ctx.measureText(String(v.vote_count)).width;
+    ctx.fillText(String(v.vote_count), P.x+P.w-90, cy+10);
+    ctx.font = `800 30px ${RC_F}`; ctx.fillText('표', P.x+P.w-48, cy+8);
+    if (rank === 1) { ctx.font = `800 44px ${RC_F}`; ctx.textAlign='left'; ctx.textBaseline='middle'; const bx = P.x+290 + ctx.measureText(rcFit(ctx, p.name||'?', 360)).width + 16; rcRound(ctx, bx, cy-36, 104, 36, 8); ctx.fillStyle='#0f2850'; ctx.fill(); ctx.fillStyle='#ffd54a'; ctx.font = `800 22px ${RC_F}`; ctx.fillText('★ MOM', bx+14, cy-17); }
+  });
+  return cv;
+}
+// 2) 공격포인트 (멤버 = 경기 기록, 용병 = 쿼터 기록)
+function rcPoints(D){
+  const cv = rcCanvas(), ctx = cv.getContext('2d'); const P = rcFrame(ctx, D, '공격포인트');
+  const rows = D.stats.filter(s=>(s.goals||0)+(s.assists||0)>0).map(s=>({id:s.player_id, g:s.goals||0, a:s.assists||0}));
+  if (D.rec) Object.values(D.people).filter(p=>p.guest).forEach(p=>{ let g=0,a=0; for(let q=0;q<4;q++){ const x = luQStat(D.rec,q,p.id); g+=x.g; a+=x.a; } if(g+a) rows.push({id:p.id,g,a}); });
+  rows.sort((x,y)=>(y.g-x.g)||(y.a-x.a));
+  ctx.textBaseline = 'middle';
+  const hy = P.y + 60;
+  ctx.fillStyle = '#9aa3ad'; ctx.font = `700 26px ${RC_F}`;
+  ctx.textAlign = 'left'; ctx.fillText('선수', P.x+60, hy);
+  ctx.textAlign = 'center'; ctx.fillText('골', P.x+P.w-250, hy); ctx.fillText('도움', P.x+P.w-110, hy);
+  if (!rows.length) { ctx.fillStyle='#9aa3ad'; ctx.font=`700 34px ${RC_F}`; ctx.fillText('기록이 없어요', RC_W/2, P.y+P.h/2); return cv; }
+  const n = Math.min(rows.length, 10), avail = P.h - 100 - 20, rowH = Math.min(110, avail / n), r = Math.min(34, rowH*0.36);
+  rows.slice(0,n).forEach((x,i)=>{
+    const p = D.people[x.id] || {name:'?'}, y = P.y + 100 + i*rowH, cy = y + rowH/2;
+    ctx.strokeStyle = '#eef1f5'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(P.x+40, y); ctx.lineTo(P.x+P.w-40, y); ctx.stroke();
+    rcCircleImg(ctx, D.photos[x.id], P.x+60+r, cy, r, p.guest ? '용' : (p.name||'?').slice(0,1));
+    ctx.textAlign = 'left'; ctx.fillStyle = '#0f2850'; ctx.font = `800 ${Math.round(Math.min(40,rowH*0.42))}px ${RC_F}`;
+    const nmX = P.x+60+2*r+24;
+    ctx.fillText(rcFit(ctx, p.name || '?', P.w-2*r-480), nmX, cy+2);
+    if (p.guest) { const w = ctx.measureText(rcFit(ctx, p.name||'?', P.w-2*r-480)).width; ctx.fillStyle = '#c98a00'; ctx.font = `700 22px ${RC_F}`; ctx.fillText('용병', nmX + w + 12, cy+4); }
+    ctx.textAlign = 'center'; ctx.font = `600 ${Math.round(Math.min(68,rowH*0.72))}px ${RC_N}`;
+    ctx.fillStyle = x.g ? '#1a3a6b' : '#cfd6e0'; ctx.fillText(String(x.g), P.x+P.w-250, cy+6);
+    ctx.fillStyle = x.a ? '#1a3a6b' : '#cfd6e0'; ctx.fillText(String(x.a), P.x+P.w-110, cy+6);
+  });
+  if (rows.length > n) { ctx.fillStyle='#9aa3ad'; ctx.font=`600 22px ${RC_F}`; ctx.textAlign='center'; ctx.fillText(`외 ${rows.length-n}명`, RC_W/2, P.y+P.h-16); }
+  return cv;
+}
+// 3) 쿼터별 결과
+function rcQuarters(D){
+  const cv = rcCanvas(), ctx = cv.getContext('2d'); const P = rcFrame(ctx, D, '쿼터별 결과');
+  const plan = (D.lu && D.lu.plan) || [];
+  const qs = [0,1,2,3].filter(q=>plan[q] || (D.rec && luRecOf(D.rec,q).goals.length));
+  if (!D.rec || !qs.length) { ctx.fillStyle='#9aa3ad'; ctx.font=`700 34px ${RC_F}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('쿼터 기록이 없어요', RC_W/2, P.y+P.h/2); return cv; }
+  const rowH = (P.h - 40) / qs.length, nm = id => (D.people[id] && D.people[id].name) || '?';
+  qs.forEach((q,i)=>{
+    const r = luRecOf(D.rec,q), sc = luQScore(r), y = P.y + 20 + i*rowH, cy = y + rowH/2;
+    if (i) { ctx.strokeStyle = '#eef1f5'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(P.x+40, y); ctx.lineTo(P.x+P.w-40, y); ctx.stroke(); }
+    const col = sc.us > sc.them ? '#2e7d32' : sc.us < sc.them ? '#d32f2f' : '#9aa3ad';
+    rcRound(ctx, P.x+40, cy-52, 104, 104, 22); ctx.fillStyle = '#0f2850'; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = `600 60px ${RC_N}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(`${q+1}Q`, P.x+92, cy+6);
+    ctx.fillStyle = col; ctx.font = `600 96px ${RC_N}`; ctx.fillText(`${sc.us}:${sc.them}`, P.x+270, cy+10);
+    const lines = r.goals.map(g => g.og ? (g.s!=null ? `🔴 ${nm(g.s)} (자책)` : '⚽ 상대 자책골') : `⚽ ${nm(g.s)}${g.a!=null?`  🅰 ${nm(g.a)}`:''}`);
+    ctx.textAlign = 'left'; ctx.fillStyle = '#1c2430';
+    const maxL = Math.max(1, Math.floor((rowH-24) / 44)), show = lines.slice(0, maxL);
+    if (lines.length > maxL) show[maxL-1] = `${show[maxL-1]}  외 ${lines.length-maxL+1}`;
+    const fs = 30, lh = 44, top = cy - (show.length-1)*lh/2;
+    ctx.font = `700 ${fs}px ${RC_F}`;
+    if (!show.length) { ctx.fillStyle = '#9aa3ad'; ctx.fillText('득점 없음', P.x+420, cy+2); }
+    show.forEach((t,k)=>ctx.fillText(rcFit(ctx, t, P.w-440), P.x+420, top + k*lh + 2));
+  });
+  return cv;
+}
+async function rcBuild(matchId){
+  const D = await rcData(matchId);
+  const base = `${(D.m.match_date||'').slice(0,10)}_vs_${D.oppName}`.replace(/[^0-9A-Za-z가-힣_]+/g,'_');
+  const cvs = [['MOM_TOP5', rcMom(D)], ['공격포인트', rcPoints(D)], ['쿼터별결과', rcQuarters(D)]];
+  const out = [];
+  for (const [k, cv] of cvs) { const blob = await new Promise(res=>cv.toBlob(res,'image/png')); out.push(new File([blob], `${base}_${k}.png`, {type:'image/png'})); }
+  return out;
+}
+// 미리보기 시트 → 공유/저장 버튼 (공유는 사용자가 누른 순간 바로 실행돼야 해서 미리 만들어 둠)
+async function rcOpen(matchId){
+  document.getElementById('rc-sheet')?.remove();
+  const box = document.createElement('div'); box.id = 'rc-sheet';
+  box.innerHTML = `<div class="lu-shade" onclick="rcClose()"></div><div class="lu-sheetbox rc-sheet"><h3>경기 결과 이미지</h3><div class="rc-prev"><div class="loading" style="position:static;transform:none;margin:20px auto"><div class="spinner"></div>로딩 중...</div></div></div>`;
+  document.body.appendChild(box);
+  let files;
+  try { files = await rcBuild(matchId); } catch(e) { console.error(e); box.querySelector('.rc-prev').innerHTML = `<div class="ovc-empty">이미지를 만들지 못했어요: ${luEsc(e.message||String(e))}</div>`; return; }
+  window._rcFiles = files; window._rcUrls = files.map(f=>URL.createObjectURL(f));
+  box.querySelector('.rc-prev').innerHTML = window._rcUrls.map((u,i)=>`<img src="${u}" alt="${files[i].name}">`).join('');
+  box.querySelector('.rc-sheet').insertAdjacentHTML('beforeend', `<button class="ss-add" onclick="rcShare()">${luIsMobile()?'공유 · 사진 저장 (3장)':'이미지 3장 다운로드'}</button>`);
+}
+function rcClose(){ document.getElementById('rc-sheet')?.remove(); (window._rcUrls||[]).forEach(u=>URL.revokeObjectURL(u)); window._rcUrls = null; window._rcFiles = null; }
+async function rcShare(){
+  const files = window._rcFiles; if (!files) return;
+  try { if (luIsMobile() && navigator.canShare && navigator.canShare({files})) { await navigator.share({files}); return; } }
+  catch(e) { if (e && e.name === 'AbortError') return; }
+  files.forEach((f,i)=>setTimeout(()=>luDl(f, f.name), i*500));
 }
 
 async function saveVotes() {
@@ -4311,7 +4493,7 @@ async function showMatch(matchId, skipPushState) {
     <div class="mdx-map"><iframe src="https://www.google.com/maps?q=${m.grounds.lat},${m.grounds.lng}&z=16&output=embed" loading="lazy" title="경기장 지도"></iframe></div>
     <div class="mdx-addr">📍 ${luEsc(m.grounds.name)}${m.grounds.location ? ' · ' + luEsc(m.grounds.location) : ''}</div></section>` : '';
 
-  const btnHtml = `<button class="mdx-btn" onclick="openLineupForMatch(${m.id})">⚽ ${lineupData&&lineupData.plan?'라인업 수정':'포메이션 · 라인업 만들기'}${isUpcoming?' · 참석 설정':''}</button>`;
+  const btnHtml = (!isUpcoming ? `<button class="mdx-btn" onclick="rcOpen(${m.id})">📸 경기 결과 이미지 (3장)</button>` : '') + `<button class="mdx-btn" onclick="openLineupForMatch(${m.id})">⚽ ${lineupData&&lineupData.plan?'라인업 수정':'포메이션 · 라인업 만들기'}${isUpcoming?' · 참석 설정':''}</button>`;
 
   document.getElementById('match-detail-content').innerHTML = `
     ${heroHtml}
