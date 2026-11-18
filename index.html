@@ -606,6 +606,21 @@
   .rc-sheet h3{margin:4px 0 12px;font-size:17px;font-weight:800;color:var(--team-deep)}
   .rc-prev{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}
   .rc-prev img{flex:none;width:72%;max-width:300px;border-radius:12px;scroll-snap-align:center;box-shadow:0 4px 14px rgba(15,40,80,.15)}
+  /* 평점 근거 (보상) */
+  .mdx-rt .mdx-hd,.mdx-rt .mdx-row{grid-template-columns:minmax(0,1fr) 46px 44px 48px}
+  .rb-cell{display:flex;justify-content:center}
+  .rb-none{color:#cfd6e0;font-weight:700}
+  .rb-btn{border:0;cursor:pointer;min-width:40px;height:24px;padding:0 6px;border-radius:12px;font-family:'Teko','Noto Sans KR',sans-serif;font-size:17px;font-weight:600;line-height:1;background:#eef2f8;color:#51607a;display:inline-flex;align-items:center;justify-content:center;text-box:trim-both cap alphabetic}
+  .rb-btn.p{background:#e8f4ea;color:#2e7d32}.rb-btn.m{background:#fdecec;color:#c62828}
+  #rb-pop{position:fixed;z-index:9600;min-width:180px;max-width:260px;background:#0f2850;color:#fff;border-radius:14px;padding:12px 14px 10px;box-shadow:0 10px 28px rgba(0,0,0,.28);font-size:12px}
+  #rb-pop:after{content:'';position:absolute;top:-6px;left:var(--ax,50%);width:12px;height:12px;background:#0f2850;transform:translateX(-50%) rotate(45deg);border-radius:2px}
+  #rb-pop.up:after{top:auto;bottom:-6px}
+  #rb-pop h6{margin:0 0 8px;font-size:12px;font-weight:800;color:#9cc8f0}
+  #rb-pop .rr{display:flex;justify-content:space-between;gap:16px;padding:3px 0;font-weight:600}
+  #rb-pop .rr b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:17px;font-weight:600;line-height:1}
+  #rb-pop .rr b.p{color:#7ee09a}#rb-pop .rr b.m{color:#ff8a80}
+  #rb-pop .rt{display:flex;justify-content:space-between;margin-top:6px;padding-top:7px;border-top:1px solid rgba(255,255,255,.15);font-weight:800}
+  #rb-pop .rt b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;font-weight:600;color:#ffd54a;line-height:1}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
@@ -904,6 +919,35 @@
   .lu-sheetbox{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:14px 14px 0 0;padding:14px;z-index:601;max-width:600px;margin:0 auto}
   .lu-row{display:flex;align-items:center;padding:10px;border-bottom:1px solid #f0f2f6;cursor:pointer;font-size:14px}
   .lu-x{background:none;border:none;font-size:18px;cursor:pointer}
+
+  /* ── 뱃지 글자 정렬 공통: 뱃지·칩·동그라미 안 글자는 항상 상하좌우 정가운데 ──
+     글꼴 위아래 여백(줄 높이)을 잘라내고(text-box) 실제 글자 높이로 가운데 맞춤 → 기기·글꼴이 달라도 같은 위치 */
+  .nm-dd,.mdx-rl,.mdx-star,.hd-season,.rb-btn,.rb-c,.mx-s,.mini-no,.rt-mom,.sq-tag,.lu-gkb,.acct-st,.live-badge,.ss-opt em,.tc-scope,.mr-scope,.lu-chip,.ovy-qb,.ovc-pill,.tc-ano,.sv-ph em,.pd-res,.mr-form u,.rs-pitch u,.fixture-result-badge,.rank-avatar,.sv-av,.mdx-av,.ovl-k,.lu-av,.lu-av i,.lu-nm,.mdx-qs span,.fm-av,.stat-player-avatar,.nm-dd.live{
+    display:inline-flex; align-items:center; justify-content:center; line-height:1; text-align:center; vertical-align:middle;
+  }
+  .ovl-k,.lu-av,.sv-av,.mdx-av,.rank-avatar,.fm-av,.stat-player-avatar{ display:flex }
+  @supports (text-box: trim-both cap alphabetic){
+    .nm-dd,.mdx-rl,.mdx-star,.hd-season,.rb-btn,.rb-c,.mx-s,.mini-no,.rt-mom,.sq-tag,.lu-gkb,.acct-st,.live-badge,.ss-opt em,.tc-scope,.mr-scope,.lu-chip,.ovy-qb,.ovc-pill,.tc-ano,.sv-ph em,.pd-res,.mr-form u,.rs-pitch u,.fixture-result-badge,.rank-avatar,.sv-av,.mdx-av,.ovl-k>span,.lu-av>span,.lu-av i,.lu-nm .tx,.lu-nm .no,.mdx-qs span,.fm-av,.stat-player-avatar{
+      text-box: trim-both cap alphabetic;
+    }
+    /* 예전 글꼴별 위치 보정(padding)은 필요 없어짐 */
+    html.f-teko .sv-ph em, html.f-teko .ovl-k{ padding-top:0 }
+    html.f-teko .ovl-k{ height:38px }
+    .tc-ano, html.f-teko .tc-ano{ padding:7px 9px 4px }
+    .lu-nm .tx{ padding-bottom:0 }
+    .lu-av i{ padding:0 }
+    .sq-tag,.rt-mom,.lu-gkb,.acct-st,.live-badge,.ss-opt em,.rb-c{ padding-top:4px; padding-bottom:4px }
+    .rb-c{ height:auto }
+    /* 글꼴별 미세 보정 (실측: 한글은 cap 기준보다 살짝 아래, Teko 숫자는 살짝 위로 잡힘) */
+    .mdx-rl,.mdx-qs span{ padding-bottom:2px; box-sizing:border-box }
+    .ovc-pill{ padding:5px 12px 7px }
+    .rt-mom,.sq-tag{ padding:3px 5px 5px }
+    .nm-dd{ padding-bottom:1.4px; box-sizing:border-box }
+    .lu-nm{ padding-top:2px }
+    .rb-btn{ box-sizing:border-box }
+    html.f-teko .mx-s{ padding-top:3.6px }
+    html.f-teko .rb-btn{ padding-top:4px }
+  }
 </style>
 </head>
 <body>
@@ -2858,6 +2902,48 @@ function ratingFor(v, st, pid, position){
   }
   return Math.max(1, Math.min(10, Math.round(r * 10) / 10));
 }
+// 평점 근거: ratingFor 와 같은 계산을 항목별로 나눠서 반환 [{k:'득표', v:+0.4}, ...]
+function ratingParts(v, st, pid, position){
+  st = st || {};
+  const m = (v && v.matches) || {}, c = RATING_CFG, out = [];
+  const our = m.our_score, them = m.opponent_score ?? m.goals_conceded;
+  const vote = (calcMatchAdjustedRate(v.vote_count, v.total_participants) * 100 - 66.5) / 22;
+  out.push({k:'득표', v:vote});
+  if (st.goals) out.push({k:`골${st.goals>1?'×'+st.goals:''}`, v:st.goals*0.2});
+  if (st.assists) out.push({k:`도움${st.assists>1?'×'+st.assists:''}`, v:st.assists*0.2});
+  if (st.is_mom) out.push({k:'MOM', v:0.5});
+  if (our!=null && them!=null){
+    if (our > them) out.push({k:'승리', v:c.win});
+    else if (our < them){ out.push({k:'패배', v:c.lose}); if (them-our >= c.bigLossDiff) out.push({k:'대패', v:c.bigLoss}); }
+  }
+  const qs = ratingDefQuarters(v.match_id, pid, them);
+  if (qs){
+    const clean = qs.filter(x=>x===0).length, conc = qs.reduce((a,b)=>a+b,0);
+    if (clean) out.push({k:`무실점 ${clean}Q`, v:Math.min(clean*c.cleanQ, c.cleanMax)});
+    if (conc) out.push({k:`실점 ${conc}`, v:Math.max(conc*c.concededQ, c.concededMax)});
+  } else if (ratingIsDef(v, position)){
+    const g = them ?? 0, b = g===0 ? 1.0 : g===1 ? 0.5 : g===2 ? 0.2 : 0;
+    if (b) out.push({k:g===0?'무실점':`수비 (실점 ${g})`, v:b});
+  }
+  return out.filter(x=>Math.abs(x.v) >= 0.05).map(x=>({k:x.k, v:Math.round(x.v*10)/10}));
+}
+// 보상 버튼 → 풍선 팝업
+function rbPop(btn, pid){
+  const old = document.getElementById('rb-pop');
+  if (old) { const same = old.dataset.pid == pid; old.remove(); if (same) return; }
+  const d = (window._rbParts||{})[pid]; if (!d) return;
+  const el = document.createElement('div'); el.id = 'rb-pop'; el.dataset.pid = pid;
+  el.innerHTML = `<h6>${luEsc(d.name||'')} 평점 근거</h6><div class="rr"><span>기본</span><b>7.0</b></div>` +
+    d.parts.map(x=>`<div class="rr"><span>${luEsc(x.k)}</span><b class="${x.v>0?'p':'m'}">${x.v>0?'+':''}${x.v.toFixed(1)}</b></div>`).join('') +
+    `<div class="rt"><span>평점</span><b>${d.r}</b></div>`;
+  document.body.appendChild(el);
+  const r = btn.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
+  let left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width/2 - w/2));
+  let top = r.bottom + 10; if (top + h > window.innerHeight - 8) { top = r.top - h - 10; el.classList.add('up'); }
+  el.style.left = left + 'px'; el.style.top = top + 'px'; el.style.setProperty('--ax', (r.left + r.width/2 - left) + 'px');
+  const close = e => { if (e && e.type==='click' && (el.contains(e.target) || btn.contains(e.target))) return; el.remove(); document.removeEventListener('click', close, true); window.removeEventListener('scroll', close, true); };
+  setTimeout(()=>{ document.addEventListener('click', close, true); window.addEventListener('scroll', close, true); }, 0);
+}
 function calcRating(voteCount, totalParticipants, goalsConceded, isDefender, goals, assists, isMom) {
   const adjustedRate = calcMatchAdjustedRate(voteCount, totalParticipants);
 
@@ -4500,6 +4586,12 @@ async function showMatch(matchId, skipPushState) {
     const vv = Object.assign({}, v, { total_participants: totalParticipants, is_defender: isDefender, matches: { our_score: m.our_score, opponent_score: m.opponent_score ?? goalsConceded } });
     return ratingFor(vv, statData, playerId, null).toFixed(1);
   }
+  function getMatchParts(playerId, isDefender, goalsConceded) {
+    const v = voteMap[playerId]; if (!v || totalParticipants === 0) return null;
+    const statData = stats.find(x=>x.player_id===playerId) || {};
+    const vv = Object.assign({}, v, { total_participants: totalParticipants, is_defender: isDefender, matches: { our_score: m.our_score, opponent_score: m.opponent_score ?? goalsConceded } });
+    return ratingParts(vv, statData, playerId, null);
+  }
   // 누적 어택포인트 점수 (현재 시즌 기준)
   const powerMap = {};
   try {
@@ -4582,10 +4674,14 @@ async function showMatch(matchId, skipPushState) {
   const att = stats.filter(s=>s.attended).map(s=>({s, r: ratingOfS(s)})).sort((a,b)=>(b.r||0)-(a.r||0) || String(a.s.players?.name).localeCompare(String(b.s.players?.name)));
   // 용병 (라인업 설정에 등록된 게스트)
   const guests = ((lineupData && lineupData.cfg && lineupData.cfg.guests) || []);
-  const guestRows = guests.map(g=>`<div class="mdx-row" style="cursor:default"><div class="mdx-p"><span class="mdx-av" style="width:34px;height:34px;font-size:12px;background:#fff6d8;color:#c98a00">용</span><div><h5>${luEsc(g.name||'용병')}<em class="rt-mom" style="background:#eef2f8;color:var(--team-navy)">용병</em></h5><p>${(g.pref&&g.pref.length)?luEsc(g.pref.join(' · ')):'게스트'}</p></div></div><b class="z">-</b><b class="z" style="font-size:20px">-</b></div>`).join('');
-  const rateHtml = (att.length || guests.length) ? `<div class="mdx-hd"><span>선수</span><span>평점</span><span>어택P</span></div>` + att.map(({s,r})=>{
+  const guestRows = guests.map(g=>`<div class="mdx-row" style="cursor:default"><div class="mdx-p"><span class="mdx-av" style="width:34px;height:34px;font-size:12px;background:#fff6d8;color:#c98a00">용</span><div><h5>${luEsc(g.name||'용병')}<em class="rt-mom" style="background:#eef2f8;color:var(--team-navy)">용병</em></h5><p>${(g.pref&&g.pref.length)?luEsc(g.pref.join(' · ')):'게스트'}</p></div></div><span class="rb-cell"><span class="rb-none">-</span></span><b class="z">-</b><b class="z" style="font-size:20px">-</b></div>`).join('');
+  const rateHtml = (att.length || guests.length) ? `<div class="mdx-hd"><span>선수</span><span>보상</span><span>평점</span><span>어택P</span></div>` + att.map(({s,r})=>{
     const p = pOf(s);
-    return `<div class="mdx-row" onclick="showPlayer(${p.id})"><div class="mdx-p">${av(p,34)}<div><h5>${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}${s.is_mom?'<em class="rt-mom">MOM</em>':''}</h5><p>${subLine(p)}</p></div></div><b style="color:${rcol(r)}">${r||'-'}</b><b style="font-size:20px">${powerMap[s.player_id]!=null?Math.round(powerMap[s.player_id]):'-'}</b></div>`;
+    const parts = r ? (getMatchParts(s.player_id, voteMap[s.player_id]?.is_defender ?? ['GK','DF'].includes(s.players?.position), goalsConceded) || []) : [];
+    (window._rbParts = window._rbParts || {})[s.player_id] = { parts, r, name: p.name };
+    const net = Math.round(parts.reduce((a,x)=>a+x.v,0)*10)/10;
+    const rbBtn = parts.length ? `<button class="rb-btn ${net>0?'p':net<0?'m':''}" onclick="event.stopPropagation();rbPop(this,${s.player_id})" aria-label="평점 근거 보기">${net>0?'+':''}${net}</button>` : '<span class="rb-none">-</span>';
+    return `<div class="mdx-row" onclick="showPlayer(${p.id})"><div class="mdx-p">${av(p,34)}<div><h5>${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}${s.is_mom?'<em class="rt-mom">MOM</em>':''}</h5><p>${subLine(p)}</p></div></div><span class="rb-cell">${rbBtn}</span><b style="color:${rcol(r)}">${r||'-'}</b><b style="font-size:20px">${powerMap[s.player_id]!=null?Math.round(powerMap[s.player_id]):'-'}</b></div>`;
   }).join('') + guestRows : '<div class="ovc-empty">참석 정보 없음</div>';
 
   // 상대 전적
