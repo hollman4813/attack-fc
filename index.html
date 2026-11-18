@@ -625,6 +625,11 @@
   #rb-pop .rr b.p{color:#7ee09a}#rb-pop .rr b.m{color:#ff8a80}
   #rb-pop .rt{display:flex;justify-content:space-between;margin-top:6px;padding-top:7px;border-top:1px solid rgba(255,255,255,.15);font-weight:800}
   #rb-pop .rt b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;font-weight:600;color:#ffd54a;line-height:1}
+  .ap-cell{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .ap-cell b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;font-weight:600;line-height:1;color:var(--team-navy)}
+  .ap-d{display:inline-flex;align-items:center;justify-content:center;height:16px;min-width:26px;padding:0 4px;border-radius:8px;font-family:'Teko','Noto Sans KR',sans-serif;font-size:14px;font-weight:600;line-height:1;background:#eef2f8;color:#7a8699;box-sizing:border-box;text-box:trim-both cap alphabetic}
+  .ap-d.p{background:#e8f4ea;color:#2e7d32}.ap-d.m{background:#fdecec;color:#c62828}.ap-d.n{font-family:'Noto Sans KR',sans-serif;font-size:9px;font-weight:800;background:#fff6d8;color:#c98a00}
+  html.f-teko .ap-d:not(.n){padding-top:2px}
   .ov-copy{text-align:center;font-size:11px;color:var(--muted);padding:18px 12px calc(24px + env(safe-area-inset-bottom,0px))}
   .ov-hd{display:flex;justify-content:space-between;align-items:baseline}
   .ov-hd a{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;color:var(--skyblue);cursor:pointer}
@@ -1745,6 +1750,8 @@ function busyStart(method){
   if (L.el && Date.now()-L.t < 10000 && document.contains(L.el) && !_busy.btns.has(L.el)) { L.el.classList.add('is-busy'); L.el.setAttribute('aria-busy','true'); _busy.btns.add(L.el); }
 }
 function busyEnd(){
+  // 저장이 끝나면 점수 계산 캐시를 비워서 평점·어택포인트·통계가 바로 갱신되게
+  try { _pwRaw = {}; window._powerList = null; window._powerCache = {}; window._ssCache = {}; if (typeof allStats!=='undefined') allStats = []; _rctx = null; ['overview','scorers','teamstats','squad'].forEach(k=>{ if (typeof loaded!=='undefined') loaded[k] = false; }); } catch(e){}
   if (--_busy.n > 0) return;
   _busy.n = 0;
   document.documentElement.classList.remove('net-busy');
@@ -2384,15 +2391,27 @@ function powerOf(matchAvg, attended, totalGames) {
   return matchAvg * c.matchWeight + rate * c.rateMax + cum * c.cumMax;
 }
 
-async function calcPowerRanking(sid) {
-  sid = sid || currentSeasonId;
-  await ratingCtxLoad();
-  const [matches, allMS, allV, players] = await Promise.all([
-    api(`matches?select=id,match_date&status=eq.finished&season_id=eq.${sid}&order=match_date.asc`),
+// 어택포인트 계산용 원본 데이터 (60초 캐시, 저장하면 비움)
+let _pwRaw = {};
+function powerRaw(sid){
+  const c = _pwRaw[sid];
+  if (c && Date.now() - c.at < 60000) return c.p;
+  const p = Promise.all([
+    api(`matches?select=id,match_date&status=eq.finished&season_id=eq.${sid}&order=match_date.asc,id.asc`),
     api('match_stats?select=player_id,match_id,attended,goals,assists,is_mom'),
     api('match_votes?select=player_id,match_id,vote_count,total_participants,is_defender,matches(goals_conceded,our_score,opponent_score)'),
     api('players?select=id,name,number,photo_url,position,sub_position1,sub_position2,join_date')
-  ]);
+  ]).catch(e=>{ delete _pwRaw[sid]; throw e; });
+  _pwRaw[sid] = { at: Date.now(), p };
+  return p;
+}
+// cut: {matchId, inclusive} → 그 경기 직전/직후 시점의 어택포인트
+async function calcPowerRanking(sid, cut) {
+  sid = sid || currentSeasonId;
+  await ratingCtxLoad();
+  let [matches, allMS, allV, players] = await powerRaw(sid);
+  if (cut) { const ix = matches.findIndex(m=>m.id===cut.matchId); if (ix >= 0) matches = matches.slice(0, cut.inclusive ? ix+1 : ix); }
+  if (!matches.length) return [];
   const matchIds = new Set(matches.map(m=>m.id));
   const msMap = {}, vMap = {};
   allMS.forEach(x => { if (matchIds.has(x.match_id)) msMap[x.player_id+'_'+x.match_id] = x; });
@@ -4595,9 +4614,14 @@ async function showMatch(matchId, skipPushState) {
     return ratingParts(vv, statData, playerId, null);
   }
   // 누적 어택포인트 점수 (현재 시즌 기준)
-  const powerMap = {};
+  const powerMap = {}, powerDelta = {}, powerNew = {};
   try {
-    (await calcPowerRanking()).forEach(x => powerMap[x.id] = x.power);
+    if (m.status === 'finished') {
+      // 이 경기 직후 시점 점수 + 직전 대비 변화
+      const [after, before] = await Promise.all([calcPowerRanking(m.season_id, {matchId:m.id, inclusive:true}), calcPowerRanking(m.season_id, {matchId:m.id, inclusive:false})]);
+      const bMap = {}; before.forEach(x => bMap[x.id] = x.power);
+      after.forEach(x => { powerMap[x.id] = x.power; powerDelta[x.id] = Math.round(x.power) - Math.round(bMap[x.id] ?? 0); powerNew[x.id] = bMap[x.id] == null; });
+    } else (await calcPowerRanking()).forEach(x => powerMap[x.id] = x.power);
   } catch(e) { console.error('어택포인트 로드 실패:', e); }
   const goalsConceded = m.opponent_score || 0;
   const d = new Date(m.match_date);
@@ -4683,7 +4707,7 @@ async function showMatch(matchId, skipPushState) {
     (window._rbParts = window._rbParts || {})[s.player_id] = { parts, r, name: p.name };
     const net = Math.round(parts.reduce((a,x)=>a+x.v,0)*10)/10;
     const rbBtn = parts.length ? `<button class="rb-btn ${net>0?'p':net<0?'m':''}" onclick="event.stopPropagation();rbPop(this,${s.player_id})" aria-label="평점 상세 보기">${net>0?'+':''}${net}</button>` : '<span class="rb-none">-</span>';
-    return `<div class="mdx-row mdx-nogo"><div class="mdx-p"><span class="mdx-go" onclick="showPlayer(${p.id})">${av(p,34)}</span><div><h5><span class="mdx-go" onclick="showPlayer(${p.id})">${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}</span>${s.is_mom?'<em class="rt-mom">MOM</em>':''}</h5><p>${subLine(p)}</p></div></div><span class="rb-cell">${rbBtn}</span><b style="color:${rcol(r)}">${r||'-'}</b><b style="font-size:20px">${powerMap[s.player_id]!=null?Math.round(powerMap[s.player_id]):'-'}</b></div>`;
+    return `<div class="mdx-row mdx-nogo"><div class="mdx-p"><span class="mdx-go" onclick="showPlayer(${p.id})">${av(p,34)}</span><div><h5><span class="mdx-go" onclick="showPlayer(${p.id})">${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}</span>${s.is_mom?'<em class="rt-mom">MOM</em>':''}</h5><p>${subLine(p)}</p></div></div><span class="rb-cell">${rbBtn}</span><b style="color:${rcol(r)}">${r||'-'}</b><span class="ap-cell"><b>${powerMap[s.player_id]!=null?Math.round(powerMap[s.player_id]):'-'}</b>${powerDelta[s.player_id]!=null && !powerNew[s.player_id] ? `<span class="ap-d ${powerDelta[s.player_id]>0?'p':powerDelta[s.player_id]<0?'m':''}">${powerDelta[s.player_id]>0?'+':''}${powerDelta[s.player_id]}</span>` : (powerNew[s.player_id] ? '<span class="ap-d n">NEW</span>' : '')}</span></div>`;
   }).join('') + guestRows : '<div class="ovc-empty">참석 정보 없음</div>';
 
   // 상대 전적
