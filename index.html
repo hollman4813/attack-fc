@@ -722,7 +722,7 @@
   .rs-apt{display:flex;align-items:flex-start;justify-content:space-between}
   .rs-aprk{display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 9px;border-radius:6px;background:#eef2f8;color:var(--team-navy);font-size:12px;font-weight:800;text-box:trim-both cap alphabetic}
   .rs-aprk.top{background:#fff4d1;color:#a66b00}
-  .rs-ap{display:flex;align-items:center;gap:18px;height:59px}
+  .rs-ap{display:flex;align-items:center;gap:18px;height:59px;margin-bottom:24px}  /* 서브 텍스트 없이도 평균 레이팅 카드와 같은 높이·숫자 위치 */
   .rs-ap>b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:64px;font-weight:600;line-height:.8;padding-top:8px;flex:none;color:var(--team-navy);min-width:96px}
   .rs-ap>b.z{color:var(--muted);min-width:0}
   .rs-apd{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -5061,11 +5061,11 @@ function mrRender(){
   const pList = D.scope==='all' ? null : D.rankings[D.scope];
   if(Array.isArray(pList)){ const i = pList.findIndex(x=>x.id===D.p.id); if(i>=0){ pme = pList[i]; power = Math.round(pme.power); prank = i+1; } }
   const apHtml = (()=>{
-    if(D.scope==='all') return `<div class="rs-ap"><b class="z">-</b><div class="rs-apd"><p class="rs-apmsg">어택포인트는 시즌별로 집계돼요.<br>위에서 시즌을 골라 주세요.</p></div></div><div class="rs-note">시즌 기준</div>`;
-    if(pList==='loading' || pList==null) return `<div class="rs-ap"><b class="z">-</b><div class="rs-apd"><p class="rs-apmsg">계산 중...</p></div></div><div class="rs-note">&nbsp;</div>`;
-    if(!pme) return `<div class="rs-ap"><b class="z">-</b><div class="rs-apd"><p class="rs-apmsg">이 시즌에 출석한 경기가 없어요.</p></div></div><div class="rs-note">&nbsp;</div>`;
+    if(D.scope==='all') return `<div class="rs-ap"><b class="z">-</b><div class="rs-apd"><p class="rs-apmsg">어택포인트는 시즌별로 집계돼요.<br>위에서 시즌을 골라 주세요.</p></div></div>`;
+    if(pList==='loading' || pList==null) return `<div class="rs-ap"><b class="z">-</b><div class="rs-apd"><p class="rs-apmsg">계산 중...</p></div></div>`;
+    if(!pme) return `<div class="rs-ap"><b class="z">-</b><div class="rs-apd"><p class="rs-apmsg">이 시즌에 출석한 경기가 없어요.</p></div></div>`;
     const row = (l,v,max) => `<div><span>${l}</span><i><u style="width:${Math.max(0,Math.min(100,v/max*100))}%"></u></i><em>${Math.round(v)}<small>/${max}</small></em></div>`;
-    return `<div class="rs-ap"><b>${power}</b><div class="rs-apd">${row('경기 점수',pme.parts.match,800)}${row('출석률',pme.parts.rate,100)}${row('누적 출석',pme.parts.cum,100)}</div></div><div class="rs-note">${pList.length}명 중 ${prank}위 · 출석 ${pme.attended}/${pme.games}경기 · 평균 평점 ${pme.avgRating!=null?pme.avgRating.toFixed(1):'-'}</div>`;
+    return `<div class="rs-ap"><b>${power}</b><div class="rs-apd">${row('경기 점수',pme.parts.match,800)}${row('출석률',pme.parts.rate,100)}${row('누적 출석',pme.parts.cum,100)}</div></div>`;
   })();
   // 승무패, 골 관여율
   const W = played.filter(r=>r.matches.result==='Win').length, Dr = played.filter(r=>r.matches.result==='Draw').length, L = played.filter(r=>r.matches.result==='Lose').length;
