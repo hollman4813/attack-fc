@@ -3517,8 +3517,8 @@ function rcFrame(ctx, D, title, noScore){
     return P0;
   }
   if (noScore === 'round') {   // 시즌 라운드 표시 + 제목
-    ctx.fillStyle = '#9cc8f0'; ctx.font = `800 26px ${RC_F}`; ctx.fillText(`${D.seasonLabel}${D.round?` ${D.round} ROUND`:''}`, RC_W/2, 58);
-    ctx.fillStyle = '#ffd54a'; ctx.font = `800 56px ${RC_F}`; ctx.fillText(title, RC_W/2, 118);
+    ctx.fillStyle = '#9cc8f0'; ctx.font = `800 26px ${RC_F}`; ctx.fillText(`${D.seasonLabel}${D.round?` ${D.round} ROUND`:''}`, RC_W/2, 50);
+    ctx.fillStyle = '#ffd54a'; ctx.font = `800 56px ${RC_F}`; ctx.fillText(title, RC_W/2, 130);
   } else { ctx.fillStyle = '#ffd54a'; ctx.font = `800 60px ${RC_F}`; ctx.fillText(title, RC_W/2, 112); }
   if (noScore === 'title') {   // 제목만, 스코어·일자·장소 없음
     const P1 = {x:48, y:164, w:RC_W-96, h:RC_H-164-56};
