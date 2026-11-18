@@ -2933,7 +2933,7 @@ function rbPop(btn, pid){
   if (old) { const same = old.dataset.pid == pid; old.remove(); if (same) return; }
   const d = (window._rbParts||{})[pid]; if (!d) return;
   const el = document.createElement('div'); el.id = 'rb-pop'; el.dataset.pid = pid;
-  el.innerHTML = `<h6>${luEsc(d.name||'')} 평점 근거</h6><div class="rr"><span>기본</span><b>7.0</b></div>` +
+  el.innerHTML = `<h6>${luEsc(d.name||'')} 평점 상세</h6><div class="rr"><span>기본</span><b>7.0</b></div>` +
     d.parts.map(x=>`<div class="rr"><span>${luEsc(x.k)}</span><b class="${x.v>0?'p':'m'}">${x.v>0?'+':''}${x.v.toFixed(1)}</b></div>`).join('') +
     `<div class="rt"><span>평점</span><b>${d.r}</b></div>`;
   document.body.appendChild(el);
@@ -4680,7 +4680,7 @@ async function showMatch(matchId, skipPushState) {
     const parts = r ? (getMatchParts(s.player_id, voteMap[s.player_id]?.is_defender ?? ['GK','DF'].includes(s.players?.position), goalsConceded) || []) : [];
     (window._rbParts = window._rbParts || {})[s.player_id] = { parts, r, name: p.name };
     const net = Math.round(parts.reduce((a,x)=>a+x.v,0)*10)/10;
-    const rbBtn = parts.length ? `<button class="rb-btn ${net>0?'p':net<0?'m':''}" onclick="event.stopPropagation();rbPop(this,${s.player_id})" aria-label="평점 근거 보기">${net>0?'+':''}${net}</button>` : '<span class="rb-none">-</span>';
+    const rbBtn = parts.length ? `<button class="rb-btn ${net>0?'p':net<0?'m':''}" onclick="event.stopPropagation();rbPop(this,${s.player_id})" aria-label="평점 상세 보기">${net>0?'+':''}${net}</button>` : '<span class="rb-none">-</span>';
     return `<div class="mdx-row" onclick="showPlayer(${p.id})"><div class="mdx-p">${av(p,34)}<div><h5>${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}${s.is_mom?'<em class="rt-mom">MOM</em>':''}</h5><p>${subLine(p)}</p></div></div><span class="rb-cell">${rbBtn}</span><b style="color:${rcol(r)}">${r||'-'}</b><b style="font-size:20px">${powerMap[s.player_id]!=null?Math.round(powerMap[s.player_id]):'-'}</b></div>`;
   }).join('') + guestRows : '<div class="ovc-empty">참석 정보 없음</div>';
 
