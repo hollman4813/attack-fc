@@ -844,9 +844,6 @@
   #intro{position:fixed;inset:0;z-index:10000;background:linear-gradient(180deg,var(--team-navy),var(--team-navy-2));color:var(--on-team);overflow:hidden;animation:introOut .38s cubic-bezier(.7,0,.84,0) 2.35s forwards}
   #intro.out{transform:translateY(-100%);visibility:hidden;transition:transform .3s cubic-bezier(.7,0,.84,0),visibility .3s}
   html.intro-on{background:var(--team-navy)}  /* 인트로 동안 사파리 상단바 색 = 인트로 색 */
-  /* 위쪽(상단바·당겨서 늘어나는 영역)만 남색, 아래쪽은 원래 밝은 배경 */
-  html.top-deep{background:#0f2850 linear-gradient(#0f2850 0 50%,var(--bg) 50% 100%) no-repeat;background-attachment:fixed}
-  html.top-deep body{background:var(--bg)}
   #top-tint{position:fixed;left:0;right:0;top:0;height:max(1px,env(safe-area-inset-top,0px));z-index:9400;pointer-events:none;display:none}
   html.top-deep #match-detail{background:var(--bg);min-height:100vh}  /* 경기 상세: 상단바 = 짙은 남색, 본문은 밝은 회색 */
   /* 팀명(ATTACK)이 화면 세로 정가운데, 엠블럼은 그 위 */
@@ -4758,11 +4755,11 @@ async function showMatch(matchId, skipPushState) {
   let tint = document.getElementById('top-tint');
   if (!tint) { tint = document.createElement('div'); tint.id = 'top-tint'; document.body.appendChild(tint); }
   const sync = () => {
-    const on = md.classList.contains('active'), col = on ? '#0f2850' : '#1a3a6b';
+    const on = md.classList.contains('active'), col = on ? '#f4f5f7' : '#1a3a6b';  // 경기 상세: 사파리 상단 색 없음(밝은 배경)
     document.documentElement.classList.toggle('top-deep', on);
     const old = document.querySelector('meta[name="theme-color"]');
     if (!old || old.getAttribute('content') !== col) { const m = document.createElement('meta'); m.name = 'theme-color'; m.content = col; if (old) old.remove(); document.head.appendChild(m); }
-    tint.style.background = col; tint.style.display = on ? 'block' : 'none';
+    tint.style.display = 'none';
   };
   new MutationObserver(sync).observe(md, { attributes:true, attributeFilter:['class'] }); sync();
 })();
