@@ -3635,57 +3635,91 @@ function rcPoints(D){
   if (rows.length > n) { ctx.fillStyle='#9aa3ad'; ctx.font=`600 22px ${RC_F}`; ctx.textAlign='center'; ctx.fillText(`외 ${rows.length-n}명`, RC_W/2, P.y+P.h-16); }
   return cv;
 }
-// 3) 쿼터별 결과 — 쿼터마다 포메이션(미니 피치) + 쿼터 스코어 + 골/도움
+// 3) 쿼터별 결과 — 경기 상세(일정) 라인업과 같은 모양의 피치 4개
+function rcBubble(ctx, D, o, k){
+  // o: {cx, cy(원 중심), pid, number, name, photo, g, a, og, sub:{name, g, a, og}|null, pos}
+  const R = 23*k, BW = 3*k;
+  // 원 + 사진/번호
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.28)'; ctx.shadowBlur = 8*k; ctx.shadowOffsetY = 3*k;
+  ctx.beginPath(); ctx.arc(o.cx, o.cy, R, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+  if (o.photo) rcCircleImg(ctx, o.photo, o.cx, o.cy, R - BW);
+  else {
+    const g = ctx.createLinearGradient(o.cx-R*0.4, o.cy-R, o.cx+R*0.4, o.cy+R); g.addColorStop(0,'#2a78c8'); g.addColorStop(1,'#143a70');
+    ctx.beginPath(); ctx.arc(o.cx, o.cy, R - BW, 0, Math.PI*2); ctx.fillStyle = g; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = `800 ${15*k}px ${RC_F}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(o.number ?? ''), o.cx, o.cy + k);
+  }
+  // 배지 (골: 오른쪽 아래, 도움: 왼쪽 아래, 교체: 왼쪽 위)
+  const badge = (x, y, t, bg) => { ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 3*k; ctx.shadowOffsetY = k;
+    ctx.beginPath(); ctx.arc(x, y, 11*k, 0, Math.PI*2); ctx.fillStyle = bg || '#fff'; ctx.fill(); ctx.restore();
+    ctx.fillStyle = bg === '#e5484d' ? '#fff' : '#111'; ctx.font = `${(t==='↻'?13:14)*k}px ${RC_F}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t, x, y + k*0.5); };
+  const by = o.cy + R + 4*k - 11*k;
+  const gl = [...Array(Math.min(o.g||0,5)).fill(['⚽']), ...Array(Math.min(o.og||0,5)).fill(['⚽','#e5484d'])];
+  gl.forEach((x,i)=>badge(o.cx + R - 13*k + 11*k + i*9*k, by, x[0], x[1]));
+  for (let i = Math.min(o.a||0,5)-1; i >= 0; i--) badge(o.cx - R + 13*k - 11*k - i*9*k, by, '👟');
+  if (o.sub) badge(o.cx - R - 7*k + 11*k, o.cy - R - 4*k + 11*k, '↻', '#e5484d');
+  // 이름 알약
+  let y = o.cy + R + 4*k;
+  ctx.font = `700 ${11*k}px ${RC_F}`;
+  const no = o.photo && o.number != null ? String(o.number) : '';
+  ctx.font = `500 ${11*k}px ${RC_F}`; const nw = no ? ctx.measureText(no).width + 3*k : 0;
+  ctx.font = `700 ${11*k}px ${RC_F}`; const nm = rcFit(ctx, o.name || '?', 78*k - 16*k - nw), tw = ctx.measureText(nm).width;
+  const pw = Math.min(78*k, nw + tw + 16*k), ph = 19*k;
+  rcRound(ctx, o.cx - pw/2, y, pw, ph, ph/2); ctx.fillStyle = 'rgba(8,40,26,.5)'; ctx.fill();
+  ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  let tx = o.cx - (nw + tw)/2;
+  if (no) { ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.font = `500 ${11*k}px ${RC_F}`; ctx.fillText(no, tx, y + ph/2 + 0.5*k); tx += nw; }
+  ctx.fillStyle = '#fff'; ctx.font = `700 ${11*k}px ${RC_F}`; ctx.fillText(nm, tx, y + ph/2 + 0.5*k);
+  y += ph + k;
+  // 교체 선수 (이름 + 자기 기록은 아랫줄)
+  ctx.textAlign = 'center';
+  const shadowText = (t, yy, font, col) => { ctx.font = font; ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 2*k; ctx.shadowOffsetY = k; ctx.fillStyle = col; ctx.fillText(t, o.cx, yy); ctx.restore(); };
+  if (o.sub) {
+    ctx.font = `700 ${10*k}px ${RC_F}`;
+    shadowText(rcFit(ctx, '↻ ' + o.sub.name, 96*k), y + 6.5*k, `700 ${10*k}px ${RC_F}`, '#ffe27a'); y += 13*k;
+    const ev = '⚽'.repeat(o.sub.g||0) + '🔴'.repeat(o.sub.og||0) + '👟'.repeat(o.sub.a||0);
+    if (ev) { shadowText(ev, y + 6.5*k, `${10*k}px ${RC_F}`, '#ffe27a'); y += 13*k; }
+  }
+  // 포지션
+  ctx.save(); ctx.font = `700 ${9*k}px ${RC_F}`; ctx.fillStyle = 'rgba(255,255,255,.7)'; if ('letterSpacing' in ctx) ctx.letterSpacing = `${0.5*k}px`;
+  ctx.fillText(o.pos || '', o.cx, y + 6*k); ctx.restore();
+}
+function rcPitch(ctx, x, y, w, h, k){
+  ctx.save(); rcRound(ctx, x, y, w, h, 14*k); ctx.clip();
+  for (let i = 0; i < 8; i++) { ctx.fillStyle = i%2 ? '#48a671' : '#3f9a66'; ctx.fillRect(x, y + i*h/8, w, h/8 + 1); }
+  ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2*k;
+  ctx.beginPath(); ctx.moveTo(x, y + h/2); ctx.lineTo(x + w, y + h/2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(x + w/2, y + h/2, w*0.13, 0, Math.PI*2); ctx.stroke();
+  rcRound(ctx, x + w*0.24, y + h*0.85, w*0.52, h*0.15 + 10*k, 6*k); ctx.stroke();
+  rcRound(ctx, x + w*0.24, y - 10*k, w*0.52, h*0.15 + 10*k, 6*k); ctx.stroke();
+  ctx.restore();
+  ctx.save(); rcRound(ctx, x + k, y + k, w - 2*k, h - 2*k, 14*k); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2*k; ctx.stroke(); ctx.restore();
+}
 function rcQuarters(D){
   const cv = rcCanvas(), ctx = cv.getContext('2d'); const P = rcFrame(ctx, D, '쿼터별 결과', true);
   const plan = (D.lu && D.lu.plan) || [];
   const qs = [0,1,2,3].filter(q=>plan[q] && LU_FORMATIONS[plan[q].formation]);
   if (!qs.length) { ctx.fillStyle='#9aa3ad'; ctx.font=`700 34px ${RC_F}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('쿼터 라인업 기록이 없어요', RC_W/2, P.y+P.h/2); return cv; }
-  const nm = id => (D.people[id] && D.people[id].name) || '?';
-  const GAP = 18, PAD = 22, cw = (P.w - PAD*2 - GAP)/2, ch = (P.h - PAD*2 - GAP)/2;
+  const pp = id => D.people[id] || {name:'?'};
+  const PAD = 22, GAP = 18, HEAD = 52;
+  const cellW = (P.w - PAD*2 - GAP)/2, cellH = (P.h - PAD*2 - GAP)/2;
+  const ph = cellH - HEAD, pw = Math.min(cellW, ph*5/7), k = pw / 300;   // 상세 화면 피치(약 300px 폭) 대비 배율
   qs.forEach((q, i)=>{
-    const e = plan[q], fm = LU_FORMATIONS[e.formation], r = D.rec ? luRecOf(D.rec,q) : {goals:[],them:0}, sc = luQScore(r);
-    const x0 = P.x + PAD + (i%2)*(cw+GAP), y0 = P.y + PAD + Math.floor(i/2)*(ch+GAP);
-    // 머리줄: 1Q · 스코어 · 포메이션
-    const col = sc.us > sc.them ? '#2e7d32' : sc.us < sc.them ? '#d32f2f' : '#9aa3ad';
-    rcRound(ctx, x0, y0, 66, 44, 10); ctx.fillStyle = '#0f2850'; ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = `600 36px ${RC_N}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(`${q+1}Q`, x0+33, y0+25);
-    ctx.fillStyle = col; ctx.font = `600 50px ${RC_N}`; ctx.textAlign = 'left'; ctx.fillText(D.rec ? `${sc.us}:${sc.them}` : '-', x0+80, y0+27);
-    ctx.fillStyle = '#9aa3ad'; ctx.font = `700 20px ${RC_F}`; ctx.textAlign = 'right'; ctx.fillText(e.formation, x0+cw, y0+24);
-    // 피치
-    const py = y0 + 56, ph = ch - 56;
-    rcRound(ctx, x0, py, cw, ph, 16); const pg = ctx.createLinearGradient(0,py,0,py+ph); pg.addColorStop(0,'#3f9a62'); pg.addColorStop(1,'#2f8352'); ctx.fillStyle = pg; ctx.fill();
-    ctx.save(); rcRound(ctx, x0, py, cw, ph, 16); ctx.clip();
-    for (let k=0;k<6;k++) if(k%2){ ctx.fillStyle='rgba(255,255,255,.05)'; ctx.fillRect(x0, py+k*ph/6, cw, ph/6); }
-    ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(x0, py+ph/2); ctx.lineTo(x0+cw, py+ph/2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(x0+cw/2, py+ph/2, ph*0.12, 0, Math.PI*2); ctx.stroke();
-    ctx.strokeRect(x0+cw*0.25, py+ph-ph*0.16, cw*0.5, ph*0.16+2); ctx.strokeRect(x0+cw*0.25, py-2, cw*0.5, ph*0.16+2);
-    ctx.restore();
-    const R = 22;
-    fm.forEach(([k,g,fx,fy])=>{
-      const sl = (e.slots||{})[k]; if(!sl || sl.p==null) return;
-      const px = x0 + cw*Math.max(10,Math.min(90,fx))/100, pyy = py + 14 + (ph-58)*fy/100;
-      const p = D.people[sl.p] || {}, sub = sl.s!=null && sl.s!==sl.p ? sl.s : null;
-      const ph0 = D.photos[sl.p];
-      ctx.beginPath(); ctx.arc(px, pyy, R+2.5, 0, Math.PI*2); ctx.fillStyle = g==='GK' ? '#ffd54a' : '#fff'; ctx.fill();
-      if (ph0) rcCircleImg(ctx, ph0, px, pyy, R);   // 선수 사진
-      else {
-        ctx.beginPath(); ctx.arc(px, pyy, R, 0, Math.PI*2); ctx.fillStyle = g==='GK' ? '#ffd54a' : '#1a3a6b'; ctx.fill();
-        ctx.fillStyle = g==='GK' ? '#0f2850' : '#fff'; ctx.font = `600 24px ${RC_N}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(p.guest ? '용' : (p.number!=null ? String(p.number) : nm(sl.p).slice(0,1)), px, pyy+ (p.guest?0:3));
-      }
-      // 이름 (+교체) — 사진이 있으면 등번호를 이름 앞에
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.font = `700 15px ${RC_F}`; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,40,20,.55)'; ctx.fillStyle = '#fff';
-      const t1 = rcFit(ctx, (ph0 && p.number!=null ? p.number+' ' : '') + nm(sl.p), 96); ctx.strokeText(t1, px, pyy+R+12); ctx.fillText(t1, px, pyy+R+12);
-      if (sub != null) { ctx.fillStyle = '#ffe27a'; ctx.font = `700 13px ${RC_F}`; const t2 = rcFit(ctx, '교체 '+nm(sub), 96); ctx.strokeText(t2, px, pyy+R+28); ctx.fillText(t2, px, pyy+R+28); }
-      // 골·도움 아이콘 (선발 + 교체 각자)
-      if (D.rec) {
-        const st = luQStat(D.rec,q,sl.p), ss = sub!=null ? luQStat(D.rec,q,sub) : {g:0,a:0};
-        const ev = '⚽'.repeat(Math.min(st.g+ss.g,4)) + '🅰'.repeat(Math.min(st.a+ss.a,4));
-        if (ev) { ctx.font = `14px ${RC_F}`; ctx.textAlign = 'left'; ctx.fillText(ev, px+R-4, pyy-R+2); ctx.textAlign = 'center'; }
-      }
+    const e = plan[q], r = D.rec ? luRecOf(D.rec,q) : {goals:[],them:0}, sc = luQScore(r);
+    const cx0 = P.x + PAD + (i%2)*(cellW+GAP), cy0 = P.y + PAD + Math.floor(i/2)*(cellH+GAP);
+    const x0 = cx0 + (cellW - pw)/2;
+    // 머리줄: 1Q · 포메이션 · 쿼터 스코어 (상세 화면 쿼터 탭과 같은 정보)
+    rcRound(ctx, x0, cy0, 64, 40, 10); ctx.fillStyle = '#0f2850'; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = `600 34px ${RC_N}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(`${q+1}Q`, x0+32, cy0+23);
+    ctx.fillStyle = '#7a8699'; ctx.font = `700 22px ${RC_F}`; ctx.textAlign = 'left'; ctx.fillText(e.formation, x0+76, cy0+21);
+    if (D.rec) { const col = sc.us > sc.them ? '#2e7d32' : sc.us < sc.them ? '#d32f2f' : '#9aa3ad'; ctx.fillStyle = col; ctx.font = `600 46px ${RC_N}`; ctx.textAlign = 'right'; ctx.fillText(`${sc.us}:${sc.them}`, x0+pw, cy0+25); }
+    const y0 = cy0 + HEAD;
+    rcPitch(ctx, x0, y0, pw, ph, k);
+    luSlots(e.formation).forEach(sl=>{
+      const x = (e.slots||{})[sl.id] || {}; if (x.p == null) return;
+      const p = pp(x.p), sub = x.s != null && x.s !== x.p ? pp(x.s) : null;
+      const st = D.rec ? luQStat(D.rec,q,x.p) : {g:0,a:0,og:0}, ss = sub && D.rec ? luQStat(D.rec,q,x.s) : {g:0,a:0,og:0};
+      rcBubble(ctx, D, { cx: x0 + pw*sl.x/100, cy: y0 + ph*sl.y/100 - 14*k, number: p.guest ? '용' : p.number, name: p.name, photo: D.photos[x.p],
+        g: st.g, a: st.a, og: st.og, sub: sub ? {name: sub.name, g: ss.g, a: ss.a, og: ss.og} : null, pos: sl.id }, k);
     });
   });
   return cv;
