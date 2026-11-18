@@ -732,13 +732,16 @@
   .rs-apd u{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--team-navy),var(--team-sky))}
   .rs-apd em{font-style:normal;text-align:right;font-family:'Teko','Noto Sans KR',sans-serif;font-size:17px;font-weight:600;line-height:1;color:var(--team-deep)}
   .rs-apd em small{font-size:12px;color:var(--muted);font-weight:500}
-  .mx-c{display:grid;grid-template-columns:104px minmax(0,1fr);gap:8px 16px;align-items:center}
-  .mx-t{background:#f4f7fb;border-radius:12px;padding:10px 12px 9px;display:flex;flex-direction:column}
-  .mx-t span{font-size:11px;font-weight:700;color:var(--muted)}
-  .mx-t b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:38px;font-weight:600;line-height:.8;padding-top:10px;color:var(--team-navy)}
-  .mx-n{margin:0;font-size:12px;color:var(--muted)}
-  .mx-bars{gap:9px}
-  .mx-bars>div{grid-template-columns:50px minmax(0,1fr) 52px;gap:8px}
+  .mx-c{display:grid;grid-template-columns:76px 82px minmax(0,1fr);gap:8px;align-items:stretch}
+  .mx-t{background:#f4f7fb;border-radius:12px;padding:10px 10px 9px;display:flex;flex-direction:column;justify-content:space-between}
+  .mx-t span{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
+  .mx-t b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:36px;font-weight:600;line-height:.8;padding-top:10px;color:var(--team-navy)}
+  .mx-bars{gap:6px;justify-content:center;padding-left:6px}
+  .mx-bars>div{display:grid;grid-template-columns:1fr auto;grid-template-areas:'l v' 'b b';gap:2px 6px;height:auto}
+  .mx-bars>div>span{grid-area:l;font-size:10.5px}
+  .mx-bars>div>em{grid-area:v;font-size:15px}
+  .mx-bars>div>em small{font-size:10px}
+  .mx-bars>div>i{grid-area:b;height:4px}
   .rs-apmsg{margin:0;font-size:12px;line-height:1.5;color:var(--muted)}
   .rs-rule>div{height:14px;border-bottom:2px solid #1a3a6b;background:repeating-linear-gradient(90deg,#1a3a6b 0 1px,transparent 1px 10%) left bottom/100% 7px no-repeat,linear-gradient(#1a3a6b,#1a3a6b) right bottom/1px 7px no-repeat,linear-gradient(#1a3a6b,#1a3a6b) 50% bottom/1px 14px no-repeat}
   .rs-rule>i{position:absolute;top:0;margin-left:-7px;border:7px solid transparent;border-top-width:10px;border-bottom:0}
@@ -5147,8 +5150,9 @@ function mrRender(){
   const rkB = prank?`<span class="rs-aprk${prank<=3?' top':''}">${prank}위</span>`:'';
   const apMix = card(`<div class="rs-apt">${ttl('평점 · 어택 포인트')}${rkB}</div>
       <div class="mx-c">
-        <div class="mx-t"><span>평균 평점</span><b>${avg!=null?avg.toFixed(1):'-'}</b></div><p class="mx-n">${rated.length?rated.length+'경기 평가 기준':'평가된 경기가 아직 없어요'}</p>
-        <div class="mx-t"><span>어택 포인트</span><b>${power!=null?power:'-'}</b></div><div class="rs-apd mx-bars">${apRows || '<p class="rs-apmsg">'+(D.scope==='all'?'어택포인트는 시즌별로 집계돼요.':Array.isArray(pList)?'이 시즌에 출석한 경기가 없어요.':'계산 중...')+'</p>'}</div>
+        <div class="mx-t"><span>평균 평점</span><b>${avg!=null?avg.toFixed(1):'-'}</b></div>
+        <div class="mx-t"><span>어택 포인트</span><b>${power!=null?power:'-'}</b></div>
+        <div class="rs-apd mx-bars">${apRows || '<p class="rs-apmsg">'+(D.scope==='all'?'어택포인트는 시즌별로 집계돼요.':Array.isArray(pList)?'이 시즌에 출석한 경기가 없어요.':'계산 중...')+'</p>'}</div>
       </div>`);
   ov.innerHTML = `<div style="max-width:440px;margin:0 auto;padding-bottom:40px">
     <button onclick="ovClose('my-record')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>
