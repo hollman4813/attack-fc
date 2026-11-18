@@ -3641,18 +3641,23 @@ function rcQuarters(D){
     ctx.beginPath(); ctx.arc(x0+cw/2, py+ph/2, ph*0.12, 0, Math.PI*2); ctx.stroke();
     ctx.strokeRect(x0+cw*0.25, py+ph-ph*0.16, cw*0.5, ph*0.16+2); ctx.strokeRect(x0+cw*0.25, py-2, cw*0.5, ph*0.16+2);
     ctx.restore();
-    const R = 19;
+    const R = 22;
     fm.forEach(([k,g,fx,fy])=>{
       const sl = (e.slots||{})[k]; if(!sl || sl.p==null) return;
       const px = x0 + cw*Math.max(10,Math.min(90,fx))/100, pyy = py + 14 + (ph-58)*fy/100;
       const p = D.people[sl.p] || {}, sub = sl.s!=null && sl.s!==sl.p ? sl.s : null;
-      ctx.beginPath(); ctx.arc(px, pyy, R+2, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill();
-      ctx.beginPath(); ctx.arc(px, pyy, R, 0, Math.PI*2); ctx.fillStyle = g==='GK' ? '#ffd54a' : '#1a3a6b'; ctx.fill();
-      ctx.fillStyle = g==='GK' ? '#0f2850' : '#fff'; ctx.font = `600 24px ${RC_N}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(p.guest ? '용' : (p.number!=null ? String(p.number) : nm(sl.p).slice(0,1)), px, pyy+ (p.guest?0:3));
-      // 이름 (+교체)
+      const ph0 = D.photos[sl.p];
+      ctx.beginPath(); ctx.arc(px, pyy, R+2.5, 0, Math.PI*2); ctx.fillStyle = g==='GK' ? '#ffd54a' : '#fff'; ctx.fill();
+      if (ph0) rcCircleImg(ctx, ph0, px, pyy, R);   // 선수 사진
+      else {
+        ctx.beginPath(); ctx.arc(px, pyy, R, 0, Math.PI*2); ctx.fillStyle = g==='GK' ? '#ffd54a' : '#1a3a6b'; ctx.fill();
+        ctx.fillStyle = g==='GK' ? '#0f2850' : '#fff'; ctx.font = `600 24px ${RC_N}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(p.guest ? '용' : (p.number!=null ? String(p.number) : nm(sl.p).slice(0,1)), px, pyy+ (p.guest?0:3));
+      }
+      // 이름 (+교체) — 사진이 있으면 등번호를 이름 앞에
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.font = `700 15px ${RC_F}`; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,40,20,.55)'; ctx.fillStyle = '#fff';
-      const t1 = rcFit(ctx, nm(sl.p), 92); ctx.strokeText(t1, px, pyy+R+12); ctx.fillText(t1, px, pyy+R+12);
+      const t1 = rcFit(ctx, (ph0 && p.number!=null ? p.number+' ' : '') + nm(sl.p), 96); ctx.strokeText(t1, px, pyy+R+12); ctx.fillText(t1, px, pyy+R+12);
       if (sub != null) { ctx.fillStyle = '#ffe27a'; ctx.font = `700 13px ${RC_F}`; const t2 = rcFit(ctx, '교체 '+nm(sub), 96); ctx.strokeText(t2, px, pyy+R+28); ctx.fillText(t2, px, pyy+R+28); }
       // 골·도움 아이콘 (선발 + 교체 각자)
       if (D.rec) {
