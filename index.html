@@ -611,7 +611,7 @@
   .mdx-go{cursor:pointer;display:inline-flex;align-items:center;flex:none}
   h5 .mdx-go{display:inline}
   /* 평점 근거 (보상) */
-  .mdx-rt .mdx-hd,.mdx-rt .mdx-row{grid-template-columns:minmax(0,1fr) 44px 40px 78px}
+  .mdx-rt .mdx-hd,.mdx-rt .mdx-row{grid-template-columns:minmax(0,1fr) 50px 50px 44px}
   .rb-cell{display:flex;justify-content:center}
   .rb-none{color:#cfd6e0;font-weight:700}
   .rb-btn{border:0;cursor:pointer;min-width:40px;height:24px;padding:0 6px;border-radius:12px;font-family:'Teko','Noto Sans KR',sans-serif;font-size:17px;font-weight:600;line-height:1;background:#eef2f8;color:#51607a;display:inline-flex;align-items:center;justify-content:center;text-box:trim-both cap alphabetic}
@@ -625,8 +625,11 @@
   #rb-pop .rr b.p{color:#7ee09a}#rb-pop .rr b.m{color:#ff8a80}
   #rb-pop .rt{display:flex;justify-content:space-between;margin-top:6px;padding-top:7px;border-top:1px solid rgba(255,255,255,.15);font-weight:800}
   #rb-pop .rt b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;font-weight:600;color:#ffd54a;line-height:1}
-  .ap-cell{display:flex;align-items:center;justify-content:flex-start;gap:4px;padding-left:6px}
-  .ap-cell b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;font-weight:600;line-height:1;color:var(--team-navy)}
+  .mdx-row>b.ap-n{font-size:20px;text-align:center}
+  .ap-dc{display:flex;justify-content:flex-start}
+  .rb-rate{border:0;cursor:pointer;background:#f4f7fb;border-radius:10px;height:30px;width:46px;margin:0 auto;font-family:'Teko','Noto Sans KR',sans-serif;font-size:24px;font-weight:600;line-height:1;display:inline-flex;align-items:center;justify-content:center;text-box:trim-both cap alphabetic;box-sizing:border-box}
+  html.f-teko .rb-rate{padding-top:4px}
+  .rb-rate:active{background:#e6edf6}
   .ap-d{display:inline-flex;align-items:center;justify-content:center;height:16px;min-width:26px;padding:0 4px;border-radius:8px;font-family:'Teko','Noto Sans KR',sans-serif;font-size:14px;font-weight:600;line-height:1;background:#eef2f8;color:#7a8699;box-sizing:border-box;text-box:trim-both cap alphabetic}
   .ap-d.p{background:#e8f4ea;color:#2e7d32}.ap-d.m{background:#fdecec;color:#c62828}.ap-d.n{font-family:'Noto Sans KR',sans-serif;font-size:9px;font-weight:800;background:#fff6d8;color:#c98a00}
   html.f-teko .ap-d:not(.n){padding-top:2px}
@@ -4702,14 +4705,14 @@ async function showMatch(matchId, skipPushState) {
   const att = stats.filter(s=>s.attended).map(s=>({s, r: ratingOfS(s)})).sort((a,b)=>(b.r||0)-(a.r||0) || String(a.s.players?.name).localeCompare(String(b.s.players?.name)));
   // 용병 (라인업 설정에 등록된 게스트)
   const guests = ((lineupData && lineupData.cfg && lineupData.cfg.guests) || []);
-  const guestRows = guests.map(g=>`<div class="mdx-row" style="cursor:default"><div class="mdx-p"><span class="mdx-av" style="width:34px;height:34px;font-size:12px;background:#fff6d8;color:#c98a00">용</span><div><h5>${luEsc(g.name||'용병')}<em class="rt-mom" style="background:#eef2f8;color:var(--team-navy)">용병</em></h5><p>${(g.pref&&g.pref.length)?luEsc(g.pref.join(' · ')):'게스트'}</p></div></div><span class="rb-cell"><span class="rb-none">-</span></span><b class="z">-</b><b class="z" style="font-size:20px">-</b></div>`).join('');
-  const rateHtml = (att.length || guests.length) ? `<div class="mdx-hd"><span>선수</span><span>보상</span><span>평점</span><span>어택P</span></div>` + att.map(({s,r})=>{
+  const guestRows = guests.map(g=>`<div class="mdx-row" style="cursor:default"><div class="mdx-p"><span class="mdx-av" style="width:34px;height:34px;font-size:12px;background:#fff6d8;color:#c98a00">용</span><div><h5>${luEsc(g.name||'용병')}<em class="rt-mom" style="background:#eef2f8;color:var(--team-navy)">용병</em></h5><p>${(g.pref&&g.pref.length)?luEsc(g.pref.join(' · ')):'게스트'}</p></div></div><b class="z">-</b><b class="z ap-n">-</b><span></span></div>`).join('');
+  const rateHtml = (att.length || guests.length) ? `<div class="mdx-hd"><span>선수</span><span>평점</span><span>어택P</span><span></span></div>` + att.map(({s,r})=>{
     const p = pOf(s);
     const parts = r ? (getMatchParts(s.player_id, voteMap[s.player_id]?.is_defender ?? ['GK','DF'].includes(s.players?.position), goalsConceded) || []) : [];
     (window._rbParts = window._rbParts || {})[s.player_id] = { parts, r, name: p.name };
     const net = Math.round(parts.reduce((a,x)=>a+x.v,0)*10)/10;
     const rbBtn = parts.length ? `<button class="rb-btn ${net>0?'p':net<0?'m':''}" onclick="event.stopPropagation();rbPop(this,${s.player_id})" aria-label="평점 상세 보기">${net>0?'+':''}${net}</button>` : '<span class="rb-none">-</span>';
-    return `<div class="mdx-row mdx-nogo"><div class="mdx-p"><span class="mdx-go" onclick="showPlayer(${p.id})">${av(p,34)}</span><div><h5><span class="mdx-go" onclick="showPlayer(${p.id})">${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}</span>${s.is_mom?'<em class="rt-mom">MOM</em>':''}</h5><p>${subLine(p)}</p></div></div><span class="rb-cell">${rbBtn}</span><b style="color:${rcol(r)}">${r||'-'}</b><span class="ap-cell"><b>${powerMap[s.player_id]!=null?Math.round(powerMap[s.player_id]):'-'}</b>${powerDelta[s.player_id]!=null && !powerNew[s.player_id] ? `<span class="ap-d ${powerDelta[s.player_id]>0?'p':powerDelta[s.player_id]<0?'m':''}">${powerDelta[s.player_id]>0?'+':''}${powerDelta[s.player_id]}</span>` : (powerNew[s.player_id] ? '<span class="ap-d n">NEW</span>' : '')}</span></div>`;
+    return `<div class="mdx-row mdx-nogo"><div class="mdx-p"><span class="mdx-go" onclick="showPlayer(${p.id})">${av(p,34)}</span><div><h5><span class="mdx-go" onclick="showPlayer(${p.id})">${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}</span>${s.is_mom?'<em class="rt-mom">MOM</em>':''}</h5><p>${subLine(p)}</p></div></div>${parts.length ? `<button class="rb-rate" style="color:${rcol(r)}" onclick="event.stopPropagation();rbPop(this,${s.player_id})" aria-label="평점 상세 보기">${r}</button>` : `<b style="color:${rcol(r)}">${r||'-'}</b>`}<b class="ap-n">${powerMap[s.player_id]!=null?Math.round(powerMap[s.player_id]):'-'}</b><span class="ap-dc">${powerDelta[s.player_id]!=null && !powerNew[s.player_id] ? `<span class="ap-d ${powerDelta[s.player_id]>0?'p':powerDelta[s.player_id]<0?'m':''}">${powerDelta[s.player_id]>0?'+':''}${powerDelta[s.player_id]}</span>` : (powerNew[s.player_id] ? '<span class="ap-d n">NEW</span>' : '')}</span></div>`;
   }).join('') + guestRows : '<div class="ovc-empty">참석 정보 없음</div>';
 
   // 상대 전적
