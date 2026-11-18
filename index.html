@@ -4706,7 +4706,7 @@ async function showMatch(matchId, skipPushState) {
   // 용병 (라인업 설정에 등록된 게스트)
   const guests = ((lineupData && lineupData.cfg && lineupData.cfg.guests) || []);
   const guestRows = guests.map(g=>`<div class="mdx-row" style="cursor:default"><div class="mdx-p"><span class="mdx-av" style="width:34px;height:34px;font-size:12px;background:#fff6d8;color:#c98a00">용</span><div><h5>${luEsc(g.name||'용병')}<em class="rt-mom" style="background:#eef2f8;color:var(--team-navy)">용병</em></h5><p>${(g.pref&&g.pref.length)?luEsc(g.pref.join(' · ')):'게스트'}</p></div></div><b class="z">-</b><b class="z ap-n">-</b><span></span></div>`).join('');
-  const rateHtml = (att.length || guests.length) ? `<div class="mdx-hd"><span>선수</span><span>평점</span><span>어택P</span><span></span></div>` + att.map(({s,r})=>{
+  const rateHtml = (att.length || guests.length) ? `<div class="mdx-hd"><span>선수</span><span>평점</span><span>어택P</span><span>변동</span></div>` + att.map(({s,r})=>{
     const p = pOf(s);
     const parts = r ? (getMatchParts(s.player_id, voteMap[s.player_id]?.is_defender ?? ['GK','DF'].includes(s.players?.position), goalsConceded) || []) : [];
     (window._rbParts = window._rbParts || {})[s.player_id] = { parts, r, name: p.name };
