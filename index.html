@@ -3511,11 +3511,9 @@ function rcFrame(ctx, D, title, noScore){
   ctx.fillStyle = g; ctx.fillRect(0,0,RC_W,RC_H);
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   if (noScore) {   // 제목·스코어 없이 패널만 크게
-    const P0 = {x:48, y:56, w:RC_W-96, h:RC_H-56-80};
+    const P0 = {x:48, y:56, w:RC_W-96, h:RC_H-112};
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
     rcRound(ctx, P0.x, P0.y, P0.w, P0.h, 36); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
-    ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.font = `600 22px ${RC_F}`; ctx.textAlign = 'center';
-    ctx.fillText('© ATTACK FC', RC_W/2, RC_H-30);
     return P0;
   }
   ctx.fillStyle = '#ffd54a'; ctx.font = `800 60px ${RC_F}`; ctx.fillText(title, RC_W/2, 112);
