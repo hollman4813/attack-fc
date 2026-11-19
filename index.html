@@ -5432,7 +5432,6 @@ function mrRender(){
       ${prof.info}
       <div class="tc-stats n4">${[[GP,'출전'],[G,'득점'],[A,'도움'],[MOM,'MOM']].map(([v,l])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>
     </div>
-    ${tgCard ? `<div class="rs" style="margin-top:14px">${tgCard}</div>` : ''}
     <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px">${pill(currentSeasonId, currentSeasonName)}${seasons.filter(s=>s!==currentSeasonId).map(s=>pill(s,'시즌 '+s)).join('')}${pill('all','통산')}</div>
     ${GP ? `<div class="rs">
     ${apMix}
@@ -5446,6 +5445,7 @@ function mrRender(){
     </div>` : '<div style="padding:4px 0 6px;font-size:13px;color:var(--muted)">집계된 라인업 기록이 아직 없어요.</div>'}`)}
     ${card(`${ttl('팀 내 순위')}<div class="rs-rank">${ranks.map(([n,r,v])=>`<div class="${r&&r<=3?'top':''}"><span>${n}</span><b>${r?r+'<small>위</small>':'-'}</b><i>${v}${n==='출전'?'경기':n==='득점'?'골':n==='도움'?'개':''}</i></div>`).join('')}</div>`)}
     ${TM ? card(`${ttl('출석')}<div class="rs-rank">${[['참석',GP,`/ ${TM}경기`],['참석률',`${attRate}<small>%</small>`,''],['연속 출석',`${curAtt}<small>경기</small>`,'진행 중'],['최장 연속',`${bestAtt}<small>경기</small>`,attRecord?'<em class="att-rec">신기록 달성 중!</em>':'']].map(([l,v,x])=>`<div><span>${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`) : ''}
+    ${tgCard}
     ${card(`${ttl('승부와 기여')}<div style="padding:6px 0 2px">
       <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;background:#eee">${total?`<div style="width:${W/total*100}%;background:#2e7d32"></div><div style="width:${Dr/total*100}%;background:#9e9e9e"></div><div style="width:${L/total*100}%;background:#c62828"></div>`:''}</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px"><span style="color:#2e7d32;font-weight:700">${W}승</span><span style="color:#757575;font-weight:700">${Dr}무</span><span style="color:#c62828;font-weight:700">${L}패</span><span style="color:var(--muted)">승률 ${total?Math.round(W/total*100):0}%</span></div>
