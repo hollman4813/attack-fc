@@ -2661,7 +2661,7 @@ function statGo(tab) {
 
 /* ── 스쿼드 ── */
 async function loadSquad() {
-  const [players] = await Promise.all([api('players?select=*&order=number.asc'), injLoad(true).catch(()=>({}))]);
+  const [players] = await Promise.all([api('players?select=*&order=number.asc'), injLoad(true).catch(()=>({})), ratingCtxLoad().catch(()=>null)]);
   if (!allStats.length) allStats = (await seasonData(currentSeasonId)).stats;
   window._sqPlayers = players;
   squadRender();
@@ -2676,7 +2676,31 @@ const POS_NAME = {GK:'Goalkeeper', DF:'Defender', MF:'Midfielder', FW:'Forward'}
 // 세부 포지션 표시 이름 — 화면 전체 공통
 const SUB_POS_NAME = {GK:'Goalkeeper', CB:'Centre-Back', FB:'Full-Back', CDM:'Defensive Midfielder', CM:'Central Midfielder', CAM:'Attacking Midfielder', CF:'Centre-Forward', WF:'Wing Forward'};
 // 선수 포지션 한 줄 표기 (세부 포지션 우선, 없으면 대분류 코드)
-function posShort(p){ return [p.sub_position1, p.sub_position2].filter(Boolean).join(' · ') || p.position || '-'; }
+// 라인업 기록 기반 주·서브 포지션: 5쿼터 이상 뛴 자리 중 가장 많이 뛴 곳 = 주, 다음 = 서브 (교체 출전 0.5쿼터)
+const AUTO_POS_MIN_Q = 5;
+const LU_TO_SUB = {GK:'GK', CB:'CB', LB:'FB', RB:'FB', DM:'CDM', CM:'CM', CAM:'CAM', LM:'WF', RM:'WF', LW:'WF', RW:'WF', ST:'CF'};
+const SUB_TO_CAT = {GK:'GK', CB:'DF', FB:'DF', CDM:'MF', CM:'MF', CAM:'MF', CF:'FW', WF:'FW'};
+function autoPosCalc(plans){
+  const q = {};
+  Object.values(plans||{}).forEach(plan => (plan||[]).forEach(e => { const fm = e && LU_FORMATIONS[e.formation]; if(!fm) return;
+    Object.keys(e.slots||{}).forEach(k => { const sl = e.slots[k], def = fm.find(x=>x[0]===k); if(!sl || !def) return; const g = LU_TO_SUB[def[1]]; if(!g) return;
+      const add = (pid, w) => { if(pid==null) return; const o = q[pid] || (q[pid] = {}); o[g] = (o[g]||0) + w; };
+      if (sl.s && sl.s !== sl.p) { add(sl.p, .5); add(sl.s, .5); } else add(sl.p, 1); }); }));
+  const out = {};
+  Object.entries(q).forEach(([pid, o]) => {
+    const L = Object.entries(o).filter(x=>x[1] >= AUTO_POS_MIN_Q).sort((a,b)=>b[1]-a[1]);
+    if (L.length) out[pid] = { main: L[0][0], sub: L[1] ? L[1][0] : null, cat: SUB_TO_CAT[L[0][0]] };
+  });
+  return out;
+}
+// 화면 표시용 포지션: 라인업 기록이 충분하면 그걸로, 아니면 등록된 포지션
+function posOf(p){
+  const a = p && window._autoPos && window._autoPos[p.id];
+  if (!a) return { cat: p.position, list: [p.sub_position1, p.sub_position2].filter(Boolean) };
+  const reg = [p.sub_position1, p.sub_position2].filter(x => x && x !== a.main);
+  return { cat: a.cat, list: [a.main, a.sub || reg[0]].filter(Boolean) };
+}
+function posShort(p){ const o = posOf(p); return o.list.join(' · ') || o.cat || '-'; }
 
 function squadRender(){
   const players = window._sqPlayers || [];
@@ -2688,7 +2712,7 @@ function squadRender(){
   const active = players.filter(p=>!p.status || p.status==='active');
   const inactive = players.filter(p=>p.status==='injured'||p.status==='resting');
   const groups = {GK:[],DF:[],MF:[],FW:[],etc:[]};
-  active.forEach(p=>(p.position&&groups[p.position]?groups[p.position]:groups.etc).push(p));
+  active.forEach(p=>{ const c = posOf(p).cat; (c&&groups[c]?groups[c]:groups.etc).push(p); });
   Object.values(groups).forEach(arr=>arr.sort((a,b)=>(a.number??999)-(b.number??999) || a.name.localeCompare(b.name,'ko')));
   const num = v => (v==null||v==='') ? '-' : v;
   const row = p => {
@@ -2710,7 +2734,7 @@ function squadRender(){
   let html = '';
   const keys = cur==='all' ? [...posOrder,'etc'] : [cur];
   keys.forEach(k=>{ if(groups[k] && groups[k].length) html += sec(k, groups[k]); });
-  const inact = inactive.filter(p=>cur==='all' || p.position===cur).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  const inact = inactive.filter(p=>cur==='all' || posOf(p).cat===cur).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   const hurt = inact.filter(p=>p.status==='injured'), rest = inact.filter(p=>p.status==='resting');
   if (hurt.length) html += sec('x', hurt, '부상');
   if (rest.length) html += sec('x', rest, '휴식');
@@ -3046,7 +3070,7 @@ async function ratingCtxLoad(force){
     const plans = {}, recs = {};
     (mrows||[]).forEach(r=>{ const m = /^match_(\d+)$/.exec(r.key); if(!m || !r.data) return; if(r.data.plan) plans[+m[1]] = r.data.plan; if(Array.isArray(r.data.rec)) recs[+m[1]] = JSON.parse(JSON.stringify(r.data.rec)); });
     (rrows||[]).forEach(r=>{ const m = /^rec_(\d+)_(\d)$/.exec(r.key); if(!m) return; const id=+m[1], q=+m[2]; (recs[id] = recs[id] || [null,null,null,null])[q] = {them:(r.data&&r.data.them)||0, goals:(r.data&&r.data.goals)||[]}; });
-    _rctx = { plans, recs }; _rctxAt = Date.now(); _rctxP = null; return _rctx;
+    _rctx = { plans, recs }; _rctxAt = Date.now(); _rctxP = null; window._autoPos = autoPosCalc(plans); return _rctx;
   })();
   return _rctxP;
 }
@@ -4678,9 +4702,9 @@ function pdRender(){
   const footMap = {left:'왼발', right:'오른발', both:'양발'};
   const posMap = POS_NAME;
   const jd = p.join_date ? new Date(p.join_date) : null;
-  const subPos = [p.sub_position1, p.sub_position2].filter(Boolean);
+  const pof = posOf(p), subPos = pof.list;
   const st = p.status||'active';
-  const posLine = [posMap[p.position]||p.position, ...subPos].filter(Boolean).join(' · ');
+  const posLine = [posMap[pof.cat]||pof.cat, ...subPos].filter(Boolean).join(' · ');
   const stTag = st==='injured' ? ' <span class="sq-tag hurt">부상</span>' : st==='resting' ? ' <span class="sq-tag rest">휴식</span>' : '';
   const nick = p.nickname ? ` <span class="sq-tag role">${luEsc(p.nickname)}</span>` : '';
   // 포지션: 라인업 기록(쿼터 단위) 우선, 없으면 등록된 세부 포지션
