@@ -698,6 +698,15 @@
   .sq-tag.role{color:#c98a00;background:#fff6d8}
   .sq-tag.hurt{color:#c62828;background:#ffebee}
   .sq-inj{color:#c62828;font-weight:600}
+  .tg-hero{display:flex;align-items:baseline;gap:6px;margin-top:2px}
+  .tg-hero b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:60px;font-weight:600;line-height:.8;padding-top:8px;color:var(--team-navy)}
+  .tg-hero span{font-size:15px;font-weight:800;color:var(--team-deep)}
+  .tg-sub{margin:8px 0 14px;font-size:12px;color:var(--muted)}
+  .tg-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .tg-kpi>div{background:#f4f7fb;border-radius:10px;padding:9px 4px 8px;text-align:center;display:flex;flex-direction:column;gap:6px}
+  .tg-kpi span{font-size:10.5px;color:var(--muted);font-weight:700;white-space:nowrap}
+  .tg-kpi b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:22px;font-weight:600;line-height:.8;color:var(--team-deep)}
+  .tg-kpi small{font-family:'Noto Sans KR',sans-serif;font-size:10px;color:var(--muted);font-weight:600;margin-left:2px}
   .sq-tag.rest{color:#8a6d00;background:#fff8e1}
   .sq-st{display:flex;gap:2px;flex:none;text-align:center}
   .sq-st>div{width:32px}
@@ -4682,6 +4691,22 @@ function recTable(list, ratingOf){
     return `<div class="rt-row"><u class="pd-res ${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><div class="rt-m"><div class="pd-opp">${luEsc(m.opponent||'')}${r.is_mom?'<em class="rt-mom">MOM</em>':''}</div><div class="pd-sub">${d.getFullYear()!==yr?d.getFullYear()+'. ':''}${d.getMonth()+1}/${d.getDate()} · ${m.our_score??'-'}:${m.opponent_score??'-'}</div></div>${n(r.goals)}${n(r.assists)}<b class="rt-r" style="color:${rt?rc(rt):'var(--muted)'}">${rt?rt.toFixed(1):'-'}</b></div>`;
   }).join('');
 }
+// 선수 프로필 한 줄(포지션·별명·상태) + 정보 4칸(나이·주발·입단·국가) — 플레이어 카드·개인기록 공통
+function plyProfile(p){
+  let age = '-';
+  if (p.birth_date) { const t = new Date(), b = new Date(p.birth_date); age = t.getFullYear()-b.getFullYear(); if (t.getMonth()<b.getMonth() || (t.getMonth()===b.getMonth() && t.getDate()<b.getDate())) age--; age += `세<small class="pd-by">(${b.getFullYear()}.${String(b.getMonth()+1).padStart(2,'0')})</small>`; }
+  const footMap = {left:'왼발', right:'오른발', both:'양발'};
+  const jd = p.join_date ? new Date(p.join_date) : null;
+  const pof = posOf(p), st = p.status||'active';
+  const posLine = [POS_NAME[pof.cat]||pof.cat, ...pof.list].filter(Boolean).join(' · ');
+  const inj = st==='injured' && typeof injInfo==='function' ? injInfo(p.id) : null;
+  const stTag = inj ? ` <span class="sq-tag hurt">${inj.tag}</span>` : st==='resting' ? ' <span class="sq-tag rest">휴식</span>' : '';
+  const nick = p.nickname ? ` <span class="sq-tag role">${luEsc(p.nickname)}</span>` : '';
+  return {
+    pos: `<div class="pd-pos">${luEsc(posLine)}${nick}${stTag}</div>`,
+    info: `<div class="pd-info">${[['나이',age],['주발',footMap[p.dominant_foot]||'-'],['입단',jd?`${jd.getFullYear()}.${String(jd.getMonth()+1).padStart(2,'0')}`:'-'],['국가',p.nationality||'-']].map(([l,v])=>`<div><span>${l}</span><b>${l==='나이'?v:luEsc(String(v))}</b></div>`).join('')}</div>`
+  };
+}
 function pdMore(){ if(window._pd){ window._pd.showAll = true; pdRender(); } }
 function pdRender(){
   const D = window._pd; if(!D) return;
@@ -5188,13 +5213,13 @@ async function myRecordOpen(){
       api(`${LU_STORE}?select=key,data&key=like.match_*`).catch(()=>[]),
       ratingCtxLoad(),
       api('matches?select=id,match_date,opponent,result,season_id,status,our_score,opponent_score').catch(()=>[]),
-      api('players?select=id,name').catch(()=>[])
+      api('players?select=id,name,join_date,status').catch(()=>[])
     ]);
   }catch(e){}
   const p = pl[0]; if(!p){ ov.remove(); alert('선수 정보를 불러오지 못했어요.'); return; }
   const fin = r => r.matches && r.matches.status==='finished';
   const plans = {}; (lu||[]).forEach(r=>{ const m = /^match_(\d+)$/.exec(r.key); if(m && r.data && r.data.plan) plans[+m[1]] = r.data.plan; });
-  window._mr = { p, me: me.filter(fin), all: all.filter(fin), votes, plans, matches: (mt||[]).filter(m=>m.status==='finished'), names: Object.fromEntries((pn||[]).map(x=>[x.id,x.name])), scope: currentSeasonId, ranking: null, rankings: {}, showAll: false };
+  window._mr = { p, me: me.filter(fin), all: all.filter(fin), votes, plans, matches: (mt||[]).filter(m=>m.status==='finished'), names: Object.fromEntries((pn||[]).map(x=>[x.id,x.name])), roster: pn||[], scope: currentSeasonId, ranking: null, rankings: {}, showAll: false };
   mrRender();
   mrPower(currentSeasonId);
 }
@@ -5374,6 +5399,26 @@ function mrRender(){
     rtCard = card(head + b);
   }
   const apMix = card(`<div class="rs-apt">${ttl('어택 포인트')}${rkB}</div>${body}`);
+  const prof = plyProfile(D.p);
+  // 함께한 시간 (입단일 기준, 시즌 선택과 무관)
+  let tgCard = '';
+  if (D.p.join_date) {
+    const jd = new Date(D.p.join_date), now = new Date(); jd.setHours(0,0,0,0); now.setHours(0,0,0,0);
+    const days = Math.round((now-jd)/864e5) + 1;
+    if (days > 0) {
+      let y = now.getFullYear()-jd.getFullYear(), mo = now.getMonth()-jd.getMonth(); if (now.getDate() < jd.getDate()) mo--; if (mo < 0) { y--; mo += 12; }
+      const span = y ? `${y}년${mo?` ${mo}개월`:''}` : mo ? `${mo}개월` : `${days}일`;
+      const nextY = y + 1, ann = new Date(jd); ann.setFullYear(jd.getFullYear()+nextY); const dd = Math.round((ann-now)/864e5);
+      const career = D.me.filter(r=>r.attended).length;
+      const ros = (D.roster||[]).filter(x=>x.join_date && x.status!=='left').sort((a,b)=>new Date(a.join_date)-new Date(b.join_date));
+      const sen = ros.findIndex(x=>x.id===D.p.id);
+      const jdTxt = `${jd.getFullYear()}.${String(jd.getMonth()+1).padStart(2,'0')}.${String(jd.getDate()).padStart(2,'0')}`;
+      tgCard = `<section class="rs-sec tg"><h3 class="rs-ttl">ATTACK FC와 함께한 시간</h3>
+        <div class="tg-hero"><b>${days.toLocaleString()}</b><span>일째</span></div>
+        <p class="tg-sub">${jdTxt} 입단 · ${span}</p>
+        <div class="tg-kpi"><div><span>함께 뛴 경기</span><b>${career}<small>경기</small></b></div><div><span>팀 내 고참 순위</span><b>${sen>=0?sen+1:'-'}<small>/ ${ros.length}명</small></b></div><div><span>${nextY}주년까지</span><b>D-${dd}</b></div></div></section>`;
+    }
+  }
   ov.innerHTML = `<div style="max-width:440px;margin:0 auto;padding-bottom:40px">
     <button onclick="ovClose('my-record')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>
     <div class="tc">
@@ -5381,10 +5426,13 @@ function mrRender(){
       <div class="tc-top"><span class="tc-tag"><img src="emblem_v4.png" alt=""><span>MY RECORD</span></span><span class="tc-scope">${D.scope==='all'?'통산':D.scope===currentSeasonId?luEsc(currentSeasonName):'시즌 '+D.scope}</span></div>
       <div class="tc-id">
         <div class="tc-ph">${D.p.photo_url?`<img src="${D.p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((D.p.name||'?').charAt(0))}</b>`}</div>
-        <div class="tc-a">${D.p.number!=null?`<span class="tc-ano">${D.p.number}</span>`:''}<div class="tc-name${(D.p.name||'').length>4?' long':''}">${luEsc(D.p.name)}</div></div>
+        <div style="min-width:0"><div class="tc-a">${D.p.number!=null?`<span class="tc-ano">${D.p.number}</span>`:''}<div class="tc-name${(D.p.name||'').length>4?' long':''}">${luEsc(D.p.name)}</div></div>
+        ${prof.pos}</div>
       </div>
+      ${prof.info}
       <div class="tc-stats n4">${[[GP,'출전'],[G,'득점'],[A,'도움'],[MOM,'MOM']].map(([v,l])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>
     </div>
+    ${tgCard ? `<div class="rs" style="margin-top:14px">${tgCard}</div>` : ''}
     <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px">${pill(currentSeasonId, currentSeasonName)}${seasons.filter(s=>s!==currentSeasonId).map(s=>pill(s,'시즌 '+s)).join('')}${pill('all','통산')}</div>
     ${GP ? `<div class="rs">
     ${apMix}
