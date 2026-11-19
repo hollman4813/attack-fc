@@ -1718,6 +1718,7 @@
             <option value="active">정상</option>
             <option value="injured">부상</option>
             <option value="resting">휴식</option>
+            <option value="left">탈퇴</option>
           </select>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
@@ -1836,7 +1837,7 @@
           </select>
         </div>
         <div style="font-size:11px;color:var(--lose);margin-bottom:12px;padding:8px 12px;background:#ffebee;border-radius:6px">
-          ⚠️ 탈퇴 시 해당 선수의 모든 기록이 함께 삭제됩니다.
+          탈퇴하면 스쿼드·참석 명단에서 빠지고, 사진·생일·지역·별명과 카카오 연결 계정이 삭제돼요.<br>이름·등번호와 경기 기록은 팀 기록으로 남아요. 되돌리려면 선수 정보 수정에서 상태를 '정상'으로 바꾸세요.
         </div>
         <button onclick="deletePlayer()" style="width:100%;padding:10px;background:var(--lose);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">선수 탈퇴 처리</button>
       </div>
@@ -2699,7 +2700,7 @@ function squadRender(){
   keys.forEach(k=>{ if(groups[k] && groups[k].length) html += sec(k, groups[k]); });
   const inact = inactive.filter(p=>cur==='all' || p.position===cur).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   if (inact.length) html += sec('x', inact, '부상 · 휴식');
-  const total = players.length;
+  const total = players.filter(p=>p.status!=='left').length;
   const chips = ['all',...posOrder].map(k=>`<button class="sq-chip${cur===k?' on':''}" onclick="squadFilter('${k}')">${k==='all'?'전체':k}</button>`).join('');
   document.getElementById('squad-list').innerHTML =
     (isAdmin?`<div class="adm-bar" style="padding:0 0 10px">${admIcon('＋','admAddPlayer()','선수 등록','선수 등록')}</div>`:'') +
@@ -3451,12 +3452,12 @@ async function loadAdminData() {
   // 선수 정보 수정용
   const epSel = document.getElementById('ep-select');
   epSel.innerHTML = '<option value="">선수를 선택하세요</option>' +
-    players.map(p=>`<option value="${p.id}">#${p.number} ${p.name}</option>`).join('');
+    players.map(p=>`<option value="${p.id}">#${p.number} ${p.name}${p.status==='left'?' (탈퇴)':''}</option>`).join('');
 
   // 탈퇴용
   const delSel = document.getElementById('del-player-select');
   delSel.innerHTML = '<option value="">선수를 선택하세요</option>' +
-    players.map(p=>`<option value="${p.id}">#${p.number} ${p.name}</option>`).join('');
+    players.filter(p=>p.status!=='left').map(p=>`<option value="${p.id}">#${p.number} ${p.name}</option>`).join('');
 }
 
 function loadStatPlayers() {
@@ -4059,7 +4060,7 @@ async function loadAttendedPlayers() {
   } else {
     // 참석 데이터 없으면 전체 선수
     playerSel.innerHTML = '<option value="">선수를 선택하세요 (참석 미입력)</option>' +
-      allPlayers.map(p=>`<option value="${p.id}">#${p.number} ${p.name}</option>`).join('');
+      allPlayers.filter(p=>p.status!=='left').map(p=>`<option value="${p.id}">#${p.number} ${p.name}</option>`).join('');
   }
   document.getElementById('a-stat-hint').textContent = '';
 }
@@ -4073,7 +4074,7 @@ async function loadAttendance() {
   const attendedSet = new Set(existing.filter(s=>s.attended).map(s=>s.player_id));
 
   const list = document.getElementById('a-attendance-list');
-  list.innerHTML = allPlayers.map(p => `
+  list.innerHTML = allPlayers.filter(p=>p.status!=='left'||attendedSet.has(p.id)).map(p => `
     <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${attendedSet.has(p.id)?'#e8f5fb':'#f8f9fb'};border:1px solid ${attendedSet.has(p.id)?'var(--skyblue)':'var(--border)'};border-radius:8px;cursor:pointer;font-size:13px;font-weight:${attendedSet.has(p.id)?'600':'400'}" onclick="updateAttendCount()">
       <input type="checkbox" value="${p.id}" ${attendedSet.has(p.id)?'checked':''} style="width:16px;height:16px;accent-color:var(--skyblue);flex-shrink:0">
       <span style="color:var(--muted);font-size:11px;min-width:20px">#${p.number}</span>
@@ -4531,41 +4532,22 @@ async function updatePlayer() {
 async function deletePlayer() {
   const id = document.getElementById('del-player-select').value;
   if (!id) { alert('선수를 선택해주세요!'); return; }
-
   const p = allPlayers.find(x=>x.id===parseInt(id));
   if (!p) return;
-
-  const confirm1 = confirm(`${p.name} 선수를 탈퇴 처리하시겠습니까?
-
-⚠️ 해당 선수의 모든 경기 기록도 삭제됩니다.`);
-  if (!confirm1) return;
-
-  const confirm2 = confirm(`정말로 삭제하시겠습니까?
-이 작업은 되돌릴 수 없습니다.`);
-  if (!confirm2) return;
-
-  // match_stats 먼저 삭제
-  await fetch(`${SUPA_URL}/rest/v1/match_stats?player_id=eq.${id}`, {
-    method: 'DELETE',
-    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
-  });
-
-  // players 삭제
-  const res = await fetch(`${SUPA_URL}/rest/v1/players?id=eq.${id}`, {
-    method: 'DELETE',
-    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
-  });
-
-  if (res.ok) {
-    alert(`${p.name} 선수 탈퇴 처리 완료! ✅`);
-    document.getElementById('del-player-select').value = '';
-    await loadAdminData();
-    loaded['squad'] = false;
-    loaded['overview'] = false;
-    allStats = []; window._ssCache = {};
-  } else {
-    alert('오류가 발생했어요.');
+  if (!confirm(`${p.name} 선수를 탈퇴 처리할까요?\n\n· 스쿼드·참석 명단에서 빠져요\n· 사진·생일·지역·별명, 카카오 연결 계정은 삭제돼요\n· 이름·등번호와 경기 기록은 팀 기록으로 남아요`)) return;
+  try {
+    await rpc('admin_retire_player', { p_player: p.id, p_retire: true });
+  } catch(e) {
+    const missing = /admin_retire_player|function|schema cache/i.test(e.message||'');
+    alert(missing ? '탈퇴 처리 기능이 아직 준비되지 않았어요.\nSupabase SQL Editor에서 supabase/retire_player.sql 을 먼저 실행해 주세요.' : '탈퇴 처리하지 못했어요.\n' + e.message);
+    return;
   }
+  alert(`${p.name} 선수 탈퇴 처리 완료! ✅`);
+  document.getElementById('del-player-select').value = '';
+  await loadAdminData();
+  loaded['squad'] = false;
+  loaded['overview'] = false;
+  allStats = []; window._ssCache = {};
 }
 
 function exitAdmin() {
@@ -6306,7 +6288,7 @@ function luRenderMatch(){
   const c = LU.cfg;
   if(LU.plan && LU.att.length) h += luRenderPlan();
   h += `<div class="lu-card"><div style="font-size:13px;font-weight:700;margin-bottom:2px">참석 인원 <span style="color:var(--skyblue)">${LU.att.length}명</span></div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${LU.loadedPlayers.map(p=>{const on=LU.attSet.has(p.id);return `<div onclick="luToggleAtt(${p.id},${!on})" style="padding:7px 4px;text-align:center;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid ${on?'var(--skyblue)':'var(--border)'};background:${on?'#e8f5fb':'#f8f9fb'};font-weight:${on?700:400};color:${on?'var(--text)':'var(--muted)'}">${luEsc(p.name)}</div>`}).join('')}</div></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${LU.loadedPlayers.filter(p=>p.status!=='left'||LU.attInit.has(p.id)).map(p=>{const on=LU.attSet.has(p.id);return `<div onclick="luToggleAtt(${p.id},${!on})" style="padding:7px 4px;text-align:center;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid ${on?'var(--skyblue)':'var(--border)'};background:${on?'#e8f5fb':'#f8f9fb'};font-weight:${on?700:400};color:${on?'var(--text)':'var(--muted)'}">${luEsc(p.name)}</div>`}).join('')}</div></div>
     <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)">
       <div style="font-size:13px;font-weight:700;margin-bottom:6px">용병 추가</div>
       ${(c.guests||[]).map(g=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fff7e0;border-radius:8px;margin-bottom:6px;font-size:13px"><b style="flex:1">${luEsc(g.name)} <span style="font-weight:400;font-size:11px;color:var(--muted)">${(g.pref||[]).join(' · ')||'포지션 미정'}</span></b><button class="lu-x" style="font-size:15px" onclick="luRemoveGuest(${g.id})">✕</button></div>`).join('')}
