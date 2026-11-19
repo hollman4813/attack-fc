@@ -446,6 +446,7 @@
   .mx-cal{flex:none;width:34px;height:34px;border-radius:50%;border:0;background:#eef2f8;color:var(--team-deep);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
   .mx-cal svg{width:17px;height:17px}
   .mx-up .nm-dd{height:24px}
+  .mx-up .mx-t p{white-space:normal;line-height:1.4;word-break:keep-all}
   /* 경기 상세 */
   .mdx-hero{background:linear-gradient(180deg,var(--team-deep),var(--team-navy) 70%,#1e4d8c);padding:calc(16px + env(safe-area-inset-top,0px)) 16px 20px;color:#fff}
   .mdx-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
@@ -733,10 +734,10 @@
   .rs-apd em{font-style:normal;text-align:right;font-family:'Teko','Noto Sans KR',sans-serif;font-size:17px;font-weight:600;line-height:1;color:var(--team-deep)}
   .rs-apd em small{font-size:12px;color:var(--muted);font-weight:500}
   .mx-c{display:grid;grid-template-columns:76px 82px minmax(0,1fr);gap:8px;align-items:stretch}
-  .mx-t{background:#f4f7fb;border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-align:center}
-  .mx-t span{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
-  .mx-t b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:36px;font-weight:600;line-height:1;color:var(--team-navy);text-box:trim-both cap alphabetic}
-  html.f-teko .mx-t b{padding-top:3px}
+  .mr-tile{background:#f4f7fb;border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-align:center}
+  .mr-tile span{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
+  .mr-tile b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:36px;font-weight:600;line-height:1;color:var(--team-navy);text-box:trim-both cap alphabetic}
+  html.f-teko .mr-tile b{padding-top:3px}
   .mx-bars{gap:6px;justify-content:center;padding-left:6px}
   .mx-bars>div{display:grid;grid-template-columns:1fr auto;grid-template-areas:'l v' 'b b';gap:2px 6px;height:auto}
   .mx-bars>div>span{grid-area:l;font-size:10.5px}
@@ -744,7 +745,7 @@
   .mx-bars>div>em small{font-size:10px}
   .mx-bars>div>i{grid-area:b;height:4px}
   .mx-c2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-  .mx-c2 .mx-t{padding:12px 6px}
+  .mx-c2 .mr-tile{padding:12px 6px}
   .mx-sb{display:flex;height:14px;border-radius:7px;overflow:hidden;background:#e6ebf2}
   .mx-sb i{display:block;height:100%}
   .mx-stk .r,.mx-sb .r{background:var(--team-gold)}
@@ -5268,7 +5269,7 @@ function mrRender(){
   const apMsg = '<p class="rs-apmsg">'+(D.scope==='all'?'어택포인트는 시즌별로 집계돼요.':Array.isArray(pList)?'이 시즌에 출석한 경기가 없어요.':'계산 중...')+'</p>';
   const P = pme && pme.parts, R1 = n => Math.round(n);
   const attSum = P ? P.att + P.streak + P.rate + P.cum : 0;
-  const tiles = `<div class="mx-t"><span>평균 평점</span><b>${avg!=null?avg.toFixed(1):'-'}</b></div><div class="mx-t"><span>어택 포인트</span><b>${power!=null?power:'-'}</b></div>`;
+  const tiles = `<div class="mr-tile"><span>평균 평점</span><b>${avg!=null?avg.toFixed(1):'-'}</b></div><div class="mr-tile"><span>어택 포인트</span><b>${power!=null?power:'-'}</b></div>`;
   const AV = window._apv || '3';  // 개인기록 어택포인트 표시: 3 = 1000점 띠 + 항목별 점수
   const big = `<b class="ap1-n${power==null?' z':''}">${power!=null?power:'-'}</b>`;
   const segs = P ? [['r','평점',P.rating,560],['a1','경기 출석',P.att,160],['a2','연속 출석',P.streak,80],['a3','출석률',P.rate,100],['a4','누적 출석',P.cum,100]] : [];
