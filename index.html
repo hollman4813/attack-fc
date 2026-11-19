@@ -2383,7 +2383,7 @@ function mxRender(){
   if(upcoming.length){
     html += `<section class="ovc"><h3 class="ovc-h"><span>다가오는 경기</span></h3><div class="mx-list">${upcoming.map(m=>{
       const d = new Date(m.match_date), nm = m.opponents?.name||m.opponent||'';
-      return `<div class="mx-r mx-up" onclick="showMatch(${m.id})">${mxDate(d)}<span class="mx-e">${oppLogo(m,34)}</span><div class="mx-t"><h4>${luEsc(nm)}</h4><p>${m.match_time?m.match_time+' · ':''}${luEsc(m.grounds?.name||m.ground||'장소 미정')}</p></div><span class="mx-side">${mxDday(m)}<button class="mx-cal" onclick="event.stopPropagation();addToCalendar(${m.id})" title="캘린더에 추가" aria-label="캘린더에 추가">${MX_CAL_SVG}</button></span></div>`;
+      return `<div class="mx-r mx-up" onclick="showMatch(${m.id})">${mxDate(d)}<span class="mx-e">${oppLogo(m,34)}</span><div class="mx-t"><h4>${luEsc(nm)}</h4><p>${luEsc(m.grounds?.name||m.ground||'장소 미정')}${m.match_time?' · '+m.match_time:''}</p></div><span class="mx-side">${mxDday(m)}<button class="mx-cal" onclick="event.stopPropagation();addToCalendar(${m.id})" title="캘린더에 추가" aria-label="캘린더에 추가">${MX_CAL_SVG}</button></span></div>`;
     }).join('')}</div></section>`;
   }
   const years = [...new Set(finished.map(m=>new Date(m.match_date).getFullYear()))].sort((a,b)=>b-a);
