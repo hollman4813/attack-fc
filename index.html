@@ -1091,6 +1091,10 @@
     html.f-teko .mx-s{ padding-top:3.6px }
     html.f-teko .rb-btn{ padding-top:4px }
   }
+  .nw-share{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:32px;padding:0 12px;border:0;border-radius:16px;background:#eef2f8;color:var(--team-navy);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  .nw-share:active{background:#dfe6f1}
+  #nw-toast{position:fixed;left:50%;bottom:calc(32px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);z-index:9800;background:rgba(15,40,80,.94);color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+  #nw-toast.on{opacity:1;transform:translate(-50%,0)}
 </style>
 </head>
 <body>
@@ -5622,18 +5626,52 @@ async function loadNews(){
     window[c.list] = posts;
     box.innerHTML = `<div class="ovc ovb"><h3 class="ovc-h"><span><i class="ovb-ic" aria-hidden="true">${b==='news'?'📢':'📋'}</i>${c.title}</span>${admIcon('✏️',`newsEdit(null,true,'${b}')`,c.nm+' 쓰기',c.write)}</h3>${posts.length ? posts.map((p,i)=>newsRowHtml(p,i,b)).join('') : `<div class="ovc-empty">${c.empty}</div>`}</div>`;
   }
+  if (!window._deepDone) { window._deepDone = true; newsDeepLink(); }
 }
 function newsOpen(i, b){
   b = b||'news';
   const p = (window[BOARDS[b].list]||[])[i]; if(!p) return;
   let ov = document.getElementById('news-overlay');
   if(!ov){ ov = document.createElement('div'); ov.id='news-overlay'; ov.style.cssText='position:fixed;inset:0;z-index:9000;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain'; document.documentElement.appendChild(ov); }
-  ov.innerHTML = `<div style="position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center"><button onclick="newsClose()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">← 닫기</button><span style="margin-left:auto">${admIcon('✏️',`newsClose();newsEdit(${i},true,'${b}')`,'수정','수정')}</span></div>
+  ov.innerHTML = `<div style="position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center"><button onclick="newsClose()" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;cursor:pointer;padding:6px 0">← 닫기</button><span style="margin-left:auto;display:flex;align-items:center;gap:8px"><button class="nw-share" onclick="newsShare(${i},'${b}')" aria-label="공유하기"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>공유</button>${admIcon('✏️',`newsClose();newsEdit(${i},true,'${b}')`,'수정','수정')}</span></div>
     ${p.photo?`<div style="padding:14px 16px 0"><img src="${p.photo}" referrerpolicy="no-referrer" onerror="this.parentNode.remove()" style="max-width:100%;width:auto;height:auto;max-height:55vh;display:block;margin:0 auto;border-radius:10px" alt=""></div>`:''}
     <div style="padding:18px 16px 60px"><div style="font-size:19px;font-weight:800;line-height:1.35;color:var(--text)">${luEsc(p.title)}</div><div style="font-size:12px;color:var(--muted);margin:6px 0 16px">${newsDateTxt(p.date)}</div><div style="font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap">${newsLinkify(p.body)}</div>${(p.link&&/^https?:\/\//.test(p.link))?`<a href="${luEsc(p.link)}" target="_blank" rel="noopener noreferrer" onclick="return newsGo(this)" style="display:block;margin-top:22px;padding:13px;text-align:center;background:var(--skyblue);color:#fff;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">원문 보기 ↗ ${luEsc(p.source||'')}</a>`:''}</div>`;
   const wasOpen = ov.style.display==='block';
   ov.style.display='block'; ov.scrollTop=0; document.body.style.overflow='hidden';
   if(!wasOpen) ovPush('news-overlay');
+}
+// 게시글 공유: 링크 미리보기(제목·사진)가 붙는 /api/p 주소를 공유 → 열면 그 글이 바로 열림
+async function newsShare(i, b){
+  const p = (window[BOARDS[b||'news'].list]||[])[i]; if(!p || !p.key) return;
+  const url = `${location.origin}/api/p?k=${encodeURIComponent(p.key)}`;
+  if (navigator.share) {
+    try { await navigator.share({ title: p.title, text: `[ATTACK FC] ${p.title}`, url }); return; }
+    catch(e) { if (e && e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(url); nwToast('링크를 복사했어요'); }
+  catch(e) { prompt('아래 링크를 복사해 주세요', url); }
+}
+function nwToast(t){
+  let el = document.getElementById('nw-toast');
+  if(!el){ el = document.createElement('div'); el.id='nw-toast'; document.documentElement.appendChild(el); }
+  el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('on'), 1800);
+}
+// 공유 링크(?post=키)로 들어오면 그 글을 바로 연다
+async function newsDeepLink(){
+  const k = new URLSearchParams(location.search).get('post');
+  if (!k || !/^(news|info)_\d+$/.test(k)) return;
+  history.replaceState(history.state, '', location.pathname + location.hash);
+  const b = k.startsWith('info_') ? 'info' : 'news', c = BOARDS[b];
+  try {
+    const list = window[c.list] = window[c.list] || [];
+    let i = list.findIndex(x=>x.key===k);
+    if (i < 0) {
+      const rows = await api(`${LU_STORE}?select=key,data&key=eq.${encodeURIComponent(k)}`);
+      if (!rows || !rows[0] || !rows[0].data || !rows[0].data.title) { nwToast('글을 찾을 수 없어요'); return; }
+      list.push({ key: rows[0].key, ...rows[0].data }); i = list.length - 1;
+    }
+    newsOpen(i, b);
+  } catch(e) {}
 }
 function newsHide(){ const ov=document.getElementById('news-overlay'); if(ov) ov.style.display='none'; document.body.style.overflow=''; }
 function newsClose(){ newsHide(); if(history.state&&history.state.page==='ov') history.back(); }
