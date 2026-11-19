@@ -697,6 +697,7 @@
   .sq-tag{display:inline-block;font-size:10px;font-weight:800;border-radius:4px;padding:0 5px;margin-left:5px;vertical-align:1px}
   .sq-tag.role{color:#c98a00;background:#fff6d8}
   .sq-tag.hurt{color:#c62828;background:#ffebee}
+  .sq-inj{color:#c62828;font-weight:600}
   .sq-tag.rest{color:#8a6d00;background:#fff8e1}
   .sq-st{display:flex;gap:2px;flex:none;text-align:center}
   .sq-st>div{width:32px}
@@ -1714,12 +1715,22 @@
         </div>
         <div style="margin-bottom:10px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">상태</div>
-          <select id="ep-status" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+          <select id="ep-status" onchange="epInjToggle()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
             <option value="active">정상</option>
             <option value="injured">부상</option>
             <option value="resting">휴식</option>
             <option value="left">탈퇴</option>
           </select>
+          <div id="ep-inj" style="display:none;margin-top:8px;padding:10px;background:#fff5f5;border:1px solid #ffcdd2;border-radius:8px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">부상 부위</div>
+                <select id="ep-inj-part" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff"><option value="">선택</option><option>발목</option><option>무릎</option><option>햄스트링</option><option>허벅지</option><option>종아리</option><option>사타구니</option><option>발·발가락</option><option>허리</option><option>어깨</option><option>손·손목</option><option>머리</option><option>기타</option></select></div>
+              <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">기간</div>
+                <select id="ep-inj-weeks" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff"><option value="0">미정</option><option value="1">1주</option><option value="2">2주</option><option value="3">3주</option><option value="4">4주</option><option value="5">5주</option><option value="6">6주</option><option value="8">8주</option><option value="10">10주</option><option value="12">12주</option><option value="16">16주</option><option value="24">24주</option></select></div>
+            </div>
+            <div style="margin-top:8px"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">부상일</div>
+              <input id="ep-inj-since" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff"></div>
+          </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
@@ -2650,7 +2661,7 @@ function statGo(tab) {
 
 /* ── 스쿼드 ── */
 async function loadSquad() {
-  const players = await api('players?select=*&order=number.asc');
+  const [players] = await Promise.all([api('players?select=*&order=number.asc'), injLoad(true).catch(()=>({}))]);
   if (!allStats.length) allStats = (await seasonData(currentSeasonId)).stats;
   window._sqPlayers = players;
   squadRender();
@@ -2683,14 +2694,15 @@ function squadRender(){
   const row = p => {
     const s = sm[p.name]||{}, x = pw[p.id]||{};
     const st = p.status||'active';
-    const stTag = st==='injured' ? '<span class="sq-tag hurt">부상</span>' : st==='resting' ? '<span class="sq-tag rest">휴식</span>' : '';
+    const inj = st==='injured' ? injInfo(p.id) : null;
+    const stTag = inj ? `<span class="sq-tag hurt">${inj.tag}</span>` : st==='resting' ? '<span class="sq-tag rest">휴식</span>' : '';
     const role = p.nickname ? `<span class="sq-tag role">${luEsc(p.nickname)}</span>` : '';
     const sub = posShort(p);
     const photo = p.photo_url ? `<img src="${p.photo_url}" referrerpolicy="no-referrer" alt="">` : `<b>${luEsc(p.name.slice(0,1))}</b>`;
     return `<div class="sq-row" onclick="showPlayer(${p.id})">
       <span class="sq-no">${p.number ?? '-'}</span>
       <div class="sq-ph">${photo}</div>
-      <div class="sq-id"><div class="sq-nm"><span>${luEsc(p.name)}</span>${role}${stTag}</div><div class="sq-pos">${luEsc(sub)}</div></div>
+      <div class="sq-id"><div class="sq-nm"><span>${luEsc(p.name)}</span>${role}${stTag}</div><div class="sq-pos">${luEsc(sub)}${inj&&inj.sub?`<span class="sq-inj"> · ${luEsc(inj.sub)}</span>`:''}</div></div>
       <div class="sq-st"><div class="ap"><b>${x.power!=null?Math.round(x.power):'-'}</b><span>어택P</span></div></div>
     </div>`;
   };
@@ -4437,6 +4449,19 @@ async function addPlayer() {
   }
 }
 
+// 부상 정보: { 선수id: { part, weeks, since } }
+async function injLoad(fresh){
+  if (!fresh && window._injMap) return window._injMap;
+  const d = await luGet('injuries'); window._injMap = (d && typeof d === 'object') ? d : {}; return window._injMap;
+}
+function epInjToggle(){ const el = document.getElementById('ep-inj'); if (el) el.style.display = document.getElementById('ep-status').value === 'injured' ? 'block' : 'none'; }
+// 부상 표기: 태그 "부상 3주", 보조 "발목 · 12/10 복귀 예정"
+function injInfo(pid){
+  const j = (window._injMap||{})[pid]; if (!j) return { tag:'부상', sub:'' };
+  let sub = j.part || '';
+  if (j.weeks && j.since) { const r = new Date(j.since); r.setDate(r.getDate() + j.weeks*7); sub += (sub?' · ':'') + `${r.getMonth()+1}/${r.getDate()} 복귀 예정`; }
+  return { tag: j.weeks ? `부상 ${j.weeks}주` : '부상', sub };
+}
 function loadEditPlayer() {
   const id = parseInt(document.getElementById('ep-select').value);
   const p = allPlayers.find(pl=>pl.id===id);
@@ -4460,6 +4485,11 @@ function loadEditPlayer() {
   document.getElementById('ep-join-date').value = p.join_date || '';
   document.getElementById('ep-nationality').value = p.nationality || '대한민국';
   document.getElementById('ep-status').value = p.status || 'active';
+  injLoad().then(m=>{ const j = m[p.id] || {};
+    document.getElementById('ep-inj-part').value = j.part || '';
+    document.getElementById('ep-inj-weeks').value = String(j.weeks || 0);
+    document.getElementById('ep-inj-since').value = j.since || new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+    epInjToggle(); });
 }
 
 async function updatePlayer() {
@@ -4517,9 +4547,17 @@ async function updatePlayer() {
   });
 
   if (res.ok) {
+    // 부상 부위·기간 (lineup_store 'injuries')
+    try {
+      const m = { ...(await injLoad(true)) };
+      if (body.status === 'injured') m[id] = { part: document.getElementById('ep-inj-part').value || '', weeks: +document.getElementById('ep-inj-weeks').value || 0, since: document.getElementById('ep-inj-since').value || '' };
+      else delete m[id];
+      await luPut('injuries', m); window._injMap = m;
+    } catch(e) {}
     alert('선수 정보 저장 완료! ✅');
     document.getElementById('ep-select').value = '';
     ['ep-position','ep-foot','ep-status'].forEach(i=>document.getElementById(i).value='');
+    epInjToggle();
     document.getElementById('ep-number').value = '';
     ['ep-birth','ep-nickname','ep-nationality','ep-join-date','ep-region'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('ep-sub1').value = '';
