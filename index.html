@@ -889,9 +889,14 @@
   .rK b{grid-column:1;font-size:13px;font-weight:800;color:var(--team-deep)}
   .rK em{grid-column:2;grid-row:1 / 3;align-self:center;font-style:normal;font-family:'Teko','Noto Sans KR',sans-serif;font-size:22px;font-weight:600;color:#8a94a6}
   .rK .p em{color:#2e7d32}.rK .m em{color:#c62828}
+  .rK em{text-align:right}
+  .rK em small{display:block;font-family:'Noto Sans KR',sans-serif;font-size:9.5px;font-weight:600;color:var(--muted);text-align:right;margin-top:2px}
+  .rK em.pm{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:18px}
+  .rK em.pm i{font-style:normal;line-height:1}.rK em.pm i.p{color:#2e7d32}.rK em.pm i.m{color:#c62828}
   .rK-v{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:8px 11px;border-radius:10px;background:#f4f7fb}
   .rK-v span{font-size:12px;font-weight:700;color:var(--team-deep)}.rK-v small{font-weight:500;color:var(--muted);margin-left:4px}
   .rK-v em{font-style:normal;font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;font-weight:600;color:#8a94a6}
+  .rK-v em{text-align:right}.rK-v em small{display:block;font-family:'Noto Sans KR',sans-serif;font-size:9.5px;font-weight:600;color:var(--muted);margin-top:2px}
   .rK-v em.p{color:#2e7d32}.rK-v em.m{color:#c62828}
   .rM{margin-top:4px}
   .rM .t{display:flex;align-items:baseline;gap:8px}
@@ -5570,11 +5575,12 @@ function mrRender(){
       b = `<div class="ap3-top">${bigR}<span>/ 10</span></div><div class="rt-kpi">${[['최고',hi.toFixed(1)],['최저',lo.toFixed(1)],['팀 평균',tAvg!=null?tAvg.toFixed(1):'-'],['평가 경기',rl.length]].map(([l,v])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>`;
     } else if ('abcdefghijklmnopqrstuvwxyABCDEFGHJKMN'.includes(rtv)) {
       // 평점 상세: 경기당 평균 가감 + 실제 기록
-      const C = { vote:0, goal:0, ast:0, mom:0, res:0, def:0 }; const R = { votes:0, goals:0, ast:0, mom:0, w:0, d:0, l:0, cleanQ:0 };
+      const C = { vote:0, goal:0, ast:0, mom:0, res:0, def:0 }, CP = { vote:0, atk:0, mom:0, res:0, def:0 }, CM = { vote:0, atk:0, mom:0, res:0, def:0 }; const R = { votes:0, goals:0, ast:0, mom:0, w:0, d:0, l:0, cleanQ:0 };
       rl.forEach(x=>{ const v = D.votes.find(y=>y.match_id===x.id), st = msByMatch[x.id]||{}; if(!v) return;
         R.votes += v.vote_count||0; R.goals += st.goals||0; R.ast += st.assists||0; if(st.is_mom) R.mom++;
         const mm = v.matches||{}, o = mm.our_score, t = mm.opponent_score ?? mm.goals_conceded; if(o!=null && t!=null){ o>t?R.w++:o<t?R.l++:R.d++; }
         ratingParts(v, st, D.p.id, D.p.position).forEach(p=>{ const k = p.k;
+          const ck = k==='득표'?'vote':/^(골|도움)/.test(k)?'atk':k==='MOM'?'mom':/승리|패배|대패/.test(k)?'res':'def'; (p.v>0?CP:CM)[ck] += p.v;
           if(k==='득표') C.vote+=p.v; else if(/^골/.test(k)) C.goal+=p.v; else if(/^도움/.test(k)) C.ast+=p.v; else if(k==='MOM') C.mom+=p.v;
           else if(/승리|패배|대패/.test(k)) C.res+=p.v; else { C.def+=p.v; const m2 = /무실점 (\d+)/.exec(k); if(m2) R.cleanQ += +m2[1]; } }); });
       const n = rl.length, A = k => C[k]/n, sg = v => (v>0.049?'+':'')+v.toFixed(1), cl = v => v>0.049?'p':v<-0.049?'m':'z';
@@ -5663,7 +5669,12 @@ function mrRender(){
         } else if (rtv==='K') { // 포인트 카드 4칸 (실제 기록 + 점수)
           const cards = [['atk','공격 포인트',`${R.goals}골 ${R.ast}도움`],['def','수비 포인트',`무실점 ${R.cleanQ}쿼터`],['res','승리 포인트',`${R.w}승 ${R.d}무 ${R.l}패`],['mom','MOM',`${R.mom}회`]];
           const vv = Math.round(A('vote')*10)/10;
-          b = head + `<div class="rK">${cards.map(([k,l,raw])=>{ const v=Math.round(A(k)*10)/10; return `<div class="${cl(v)}"><span>${l}</span><b>${raw}</b><em>${sg(v)}</em></div>`; }).join('')}</div><div class="rK-v"><span>🗳️ 득표 <small>경기당 ${(R.votes/n).toFixed(1)}표</small></span><em class="${cl(vv)}">${sg(vv)}</em></div>`;
+          const KV = window._kv || '1',  /* 1 = 시즌 합계 + 경기당 작게 */ f1 = v => (v>0.049?'+':'')+v.toFixed(1), f2 = v => (v>0.0049?'+':'')+v.toFixed(2);
+          const val = k => { const avgV = A(k), tot = CP[k]+CM[k];
+            if (KV==='1') return { c: cl(Math.round(tot*10)/10), h: `<em>${f1(tot)}<small>경기당 ${f2(avgV)}</small></em>` };
+            if (KV==='2') return { c: cl(Math.round(tot*10)/10), h: `<em class="pm">${CP[k]?`<i class="p">+${CP[k].toFixed(1)}</i>`:''}${CM[k]?`<i class="m">${CM[k].toFixed(1)}</i>`:''}${!CP[k]&&!CM[k]?'0.0':''}</em>` };
+            return { c: Math.abs(avgV)<0.005?'z':avgV>0?'p':'m', h: `<em>${f2(avgV)}</em>` }; };
+          b = head + `<div class="rK k${KV}">${cards.map(([k,l,raw])=>{ const o = val(k); return `<div class="${o.c}"><span>${l}</span><b>${raw}</b>${o.h}</div>`; }).join('')}</div><div class="rK-v"><span>🗳️ 득표 <small>경기당 ${(R.votes/n).toFixed(1)}표</small></span><em class="${KV==='3'?cl(vv):cl(Math.round((CP.vote+CM.vote)*10)/10)}">${KV==='3'?sg(vv):f1(CP.vote+CM.vote)}${KV==='3'?'':`<small>경기당 ${f2(A('vote'))}</small>`}</em></div>`;
         } else if (rtv==='M') { // 득표 미터 + 나머지 막대
           const part = rl.reduce((t,x)=>{ const v = D.votes.find(y=>y.match_id===x.id); return t + ((v&&v.total_participants)||0); },0) / n;
           const per = R.votes/n, pct = part ? Math.min(100, per/part*100) : 0, vv = Math.round(A('vote')*10)/10;
