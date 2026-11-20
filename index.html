@@ -780,7 +780,7 @@
   .ap-5{gap:4px}.ap-5>div{grid-template-columns:52px 1fr 54px}
   .ap-2{gap:10px}
   .ap3-top{display:flex;align-items:baseline;gap:6px}
-  .ap3-top span{font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;color:var(--muted)}
+  .ap3-top>span{font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;color:var(--muted)}
   .mx-stk{margin-top:14px}
   .ap4{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:center;margin-top:4px}
   .ap-dn{width:120px;height:120px}
@@ -828,6 +828,149 @@
   .rt7-c .rt-sp{flex:none;width:100%;height:50px}
   .rt7-c p{display:flex;justify-content:space-between;margin:4px 0 0;font-size:10px;color:var(--muted)}
   .rt7-c p .ta{color:#b58a00;font-weight:700}
+  .ra-list{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+  .ra-list>div{display:grid;grid-template-columns:92px 1fr 40px;gap:8px;align-items:center}
+  .ra-list span{font-size:12px;font-weight:700;color:var(--team-deep);display:flex;align-items:baseline;gap:5px;white-space:nowrap}
+  .ra-list span small{font-size:10px;font-weight:500;color:var(--muted)}
+  .ra-list i{position:relative;height:8px;background:#eef2f8;border-radius:4px}
+  .ra-list i:after{content:'';position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:#b9c3d3}
+  .ra-list u{position:absolute;top:0;bottom:0;border-radius:4px}
+  .ra-list u.p{left:50%;background:#2e7d32}.ra-list u.m{right:50%;background:#c62828}
+  .ra-list b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:18px;font-weight:600;line-height:1;text-align:right;color:var(--muted)}
+  .ra-list b.p{color:#2e7d32}.ra-list b.m{color:#c62828}
+  .ra-list.rq>div{grid-template-columns:46px 1fr 40px}
+  .ra-list.rq.raw>div{grid-template-columns:92px 1fr 40px}
+  .ra-list.rq i{height:10px;border-radius:5px}
+  .ra-list.rq u{border-radius:5px}
+  .rt-vs{margin-left:auto;align-self:center;font-style:normal;font-size:12px;font-weight:800;padding:6px 10px;border-radius:14px}
+  .rt-vs.p{background:#eaf5ec;color:#2e7d32}.rt-vs.m{background:#fdecec;color:#c62828}
+  .ra-list.rq>div.best{background:#f1f8f2;border-radius:10px;margin:0 -8px;padding:6px 8px}
+  .ra-list.rq>div.best span{color:#2e7d32}
+  .ra-list.rq.ic>div{grid-template-columns:70px 1fr 40px}
+  .ra-list .ic{font-style:normal;font-size:14px;margin-right:4px}
+  .ru-hero{display:flex;align-items:baseline;gap:6px;margin:0 -16px 4px;padding:16px 16px 14px;background:linear-gradient(135deg,var(--team-deep),var(--team-navy));border-radius:14px}
+  .ru-hero .rt-n{color:#fff}.ru-hero>span{font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;color:rgba(255,255,255,.6)}
+  .ru-hero .rt-vs.p{background:rgba(126,224,154,.18);color:#7ee09a}.ru-hero .rt-vs.m{background:rgba(255,138,128,.18);color:#ff8a80}
+  .rw-h{align-items:flex-end}
+  .rw-sp{margin-left:auto;width:150px;flex:none}
+  .rw-sp svg{display:block;width:150px;height:54px;overflow:visible}
+  .rw-sp polyline{fill:none;stroke:var(--team-sky);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+  .rw-sp .ar{fill:rgba(46,134,222,.12)}
+  .rw-sp circle{fill:#fff;stroke:var(--team-sky);stroke-width:1.6}
+  .rw-sp circle.last{fill:var(--team-navy);stroke:#fff;stroke-width:2}
+  .rw-sp p{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0 0;font-size:10px;color:var(--muted);font-weight:700}
+  .rw-sp p b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:15px;font-weight:600;color:var(--team-deep);line-height:1}
+  .ru-hero .rw-sp polyline{stroke:#9cc8f0}.ru-hero .rw-sp .ar{fill:rgba(156,200,240,.15)}
+  .ru-hero .rw-sp circle{fill:var(--team-navy);stroke:#9cc8f0}.ru-hero .rw-sp circle.last{fill:#ffd54a;stroke:var(--team-navy)}
+  .ru-hero .rw-sp p{color:rgba(255,255,255,.6)}.ru-hero .rw-sp p b{color:#fff}
+  .gA{display:flex;align-items:flex-end;gap:5px;height:54px}
+  .gA i{flex:1;border-radius:4px 4px 2px 2px}
+  .gB{display:flex;gap:5px;height:54px;align-items:center}
+  .rw-sp.rv:has(.gB){align-self:center}
+  .gB b{flex:1;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Teko','Noto Sans KR',sans-serif;font-size:16px;font-weight:600;opacity:.85}
+  .gB b.on{height:42px;opacity:1;box-shadow:0 3px 8px rgba(15,40,80,.25)}
+  .rw-sp.rv{width:160px}
+  .rw-sp.rv p span:last-child{font-weight:500}
+  .rw-sp.rv .gC circle{stroke:#fff;stroke-width:1.5}
+  .rw-sp.rv svg.gF{width:120px;height:70px}
+  .rw-sp.rv svg.gC,.rw-sp.rv svg.gE{width:160px}
+  .ap3-top.rw-h{margin-bottom:10px}
+  .gC{display:block;width:150px;height:54px;overflow:visible}
+  .gC line{stroke-width:2.5;stroke-linecap:round}.gC line.base{stroke:#d5dbe5;stroke-width:1;stroke-dasharray:3 3}
+  .gD{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;height:54px;align-items:center}
+  .gD i{height:28px;border-radius:6px}
+  .gD i.on{height:40px;box-shadow:0 3px 8px rgba(15,40,80,.25)}
+  .gE{display:block;width:150px;height:54px}
+  .gE path{fill:rgba(30,111,176,.18);stroke:var(--team-sky);stroke-width:2;stroke-linejoin:round}
+  .gF{display:block;width:120px;height:70px;margin:0 auto}
+  .gF path{fill:none;stroke-width:10;stroke-linecap:round}.gF .bg{stroke:#eef2f8}
+  .gF text{font-family:'Teko','Noto Sans KR',sans-serif;font-size:22px;font-weight:600;fill:var(--team-deep);text-anchor:middle}
+  .ra-base,.ra-sum{padding:4px 0}.ra-base{border-bottom:1px dashed #e3e8ef}.ra-sum{border-top:1px solid #e3e8ef;padding-top:8px}
+  .ra-base b,.ra-sum b{color:var(--team-deep)!important}
+  .rb-band{display:flex;height:16px;border-radius:8px;overflow:hidden;background:#eef2f8;margin-top:14px}
+  .rb-band i{display:block;height:100%}
+  .rb-band .base{background:#1a3a6b}.rb-band .minus{background:repeating-linear-gradient(45deg,#e57373 0 4px,#ef9a9a 4px 8px)}
+  .rb-scale{position:relative;height:14px;margin-top:4px;font-size:10px;color:var(--muted)}
+  .rb-scale span{position:absolute;left:0}.rb-scale span:last-child{left:auto;right:0}
+  .rb-scale span[style]{transform:translateX(-50%);font-weight:700;color:var(--team-deep)}
+  .rb-lg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 8px;margin-top:10px}
+  .rb-lg>div{display:grid;grid-template-columns:8px auto 1fr;grid-template-rows:auto auto;column-gap:5px;align-items:center}
+  .rb-lg u{width:8px;height:8px;border-radius:2px}
+  .rb-lg span{font-size:11px;font-weight:700;color:var(--team-deep)}
+  .rb-lg b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:17px;font-weight:600;line-height:1;text-align:right;color:var(--muted)}
+  .rb-lg b.p{color:#2e7d32}.rb-lg b.m{color:#c62828}
+  .rb-lg small{grid-column:2 / 4;font-size:10px;color:var(--muted)}
+  .rc-base{margin-left:auto;font-style:normal;font-size:12px;font-weight:700;color:var(--muted);align-self:center}
+  .rc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px}
+  .rc-grid>div{border-radius:10px;padding:9px 6px 8px;text-align:center;display:flex;flex-direction:column;gap:5px;background:#f4f7fb}
+  .rc-grid>div.p{background:#eaf5ec}.rc-grid>div.m{background:#fdecec}
+  .rc-grid span{font-size:11px;font-weight:700;color:var(--muted)}
+  .rc-grid b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:24px;font-weight:600;line-height:.8;color:var(--team-deep)}
+  .rc-grid .p b{color:#2e7d32}.rc-grid .m b{color:#c62828}
+  .rc-grid small{font-size:10px;color:var(--muted)}
+  .rd-grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .rd-grid>div{background:#f4f7fb;border-radius:9px;padding:7px 4px;display:flex;flex-direction:column;align-items:center;gap:5px}
+  .rd-grid span{font-size:10.5px;font-weight:700;color:var(--muted)}
+  .rd-grid b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:19px;font-weight:600;line-height:.8;color:#8a94a6}
+  .rd-grid .p{background:#eaf5ec}.rd-grid .p b{color:#2e7d32}.rd-grid .m{background:#fdecec}.rd-grid .m b{color:#c62828}
+  .re-row{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:14px}
+  .re-row>div{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 0;border-radius:10px;background:#f4f7fb}
+  .re-row i{font-style:normal;font-size:16px;line-height:1}
+  .re-row b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:18px;font-weight:600;line-height:.8;color:#8a94a6}
+  .re-row span{font-size:10px;font-weight:700;color:var(--muted)}
+  .re-row .p b{color:#2e7d32}.re-row .m b{color:#c62828}
+  .rf-cols{flex:1;display:grid;grid-template-columns:repeat(6,1fr);gap:4px;height:92px}
+  .rf-cols>div{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .rf-cols em{font-style:normal;font-family:'Teko','Noto Sans KR',sans-serif;font-size:15px;line-height:1;color:#8a94a6}
+  .rf-cols .p em{color:#2e7d32}.rf-cols .m em{color:#c62828}
+  .rf-cols i{position:relative;flex:1;width:12px}
+  .rf-cols i:before{content:'';position:absolute;left:-6px;right:-6px;top:50%;height:1px;background:#d5dbe5}
+  .rf-cols u{position:absolute;left:0;right:0;border-radius:3px;background:#cfd6e0}
+  .rf-cols .p u{background:#2e7d32}.rf-cols .m u{background:#c62828}
+  .rf-cols span{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap}
+  .rg-box{flex:1;display:flex;flex-direction:column;gap:8px}
+  .rg-box>div{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+  .rg-box .h{font-size:10.5px;font-weight:800;width:42px}
+  .rg-box .h.p{color:#2e7d32}.rg-box .h.m{color:#c62828}
+  .rg-box em{font-style:normal;font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:12px;background:#f4f7fb;color:var(--muted)}
+  .rg-box em.p{background:#eaf5ec;color:#2e7d32}.rg-box em.m{background:#fdecec;color:#c62828}
+  .rh{display:grid;grid-template-columns:104px 1fr;gap:18px;align-items:center}
+  .rh svg{width:104px;height:104px}
+  .rh .t{font-family:'Teko','Noto Sans KR',sans-serif;font-size:34px;font-weight:600;fill:var(--team-navy);text-anchor:middle;dominant-baseline:middle}
+  .rh-l{display:flex;flex-direction:column;gap:8px}
+  .rh-l>div{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:6px}
+  .rh-l i{font-style:normal;font-size:16px}
+  .rh-l span{font-size:13px;font-weight:700;color:var(--team-deep)}
+  .rh-l b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;font-weight:600;line-height:1;color:#8a94a6}
+  .rh-l .p b{color:#2e7d32}.rh-l .m b{color:#c62828}
+  .ri-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .ri-row span{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border-radius:14px;font-size:12px;font-weight:700;background:#f4f7fb;color:var(--muted)}
+  .ri-row span.p{background:#eaf5ec;color:#2e7d32}.ri-row span.m{background:#fdecec;color:#c62828}
+  .ri-row b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:16px;font-weight:600;line-height:1}
+  .rj-lg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px}
+  .rj-lg.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 10px}
+  .rj-lg span{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--team-deep);white-space:nowrap}
+  .rj-lg u{width:8px;height:8px;border-radius:2px;flex:none}
+  .rj-lg b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:17px;font-weight:600;line-height:1;color:#8a94a6}
+  .rj-lg.g3 b{margin-left:auto}
+  .rj-lg b.p{color:#2e7d32}.rj-lg b.m{color:#c62828}
+  .ro-band{position:relative;height:18px;margin-top:16px;border-radius:9px;background:#eef2f8;overflow:hidden}
+  .ro-band i{position:absolute;top:0;bottom:0;left:0}
+  .ro-band .base{background:#c9d4e6}
+  .ro-band i.neg{background:repeating-linear-gradient(45deg,var(--mc) 0 3px,#fff 3px 6px)}
+  .ro-band s{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:var(--team-gold)}
+  .ro-band b.me{position:absolute;top:0;bottom:0;width:3px;margin-left:-1.5px;background:var(--team-navy)}
+  .ro-ax{position:relative;height:14px;margin-top:4px;font-size:10px;color:var(--muted)}
+  .ro-ax span{position:absolute;transform:translateX(-50%)}
+  .ro-ax span:first-child{transform:none}.ro-ax span:nth-child(3){transform:translateX(-100%)}
+  .ro-ax .ta{color:#b58a00;font-weight:700}
+  .rm-band{display:flex;gap:2px;height:16px;margin-top:16px;border-radius:8px;overflow:hidden}
+  .rm-band i{display:block;height:100%}
+  .rl-bar{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:16px;height:16px}
+  .rl-bar>div{display:flex;background:#eef2f8;overflow:hidden}
+  .rl-bar .l{justify-content:flex-end;border-radius:8px 0 0 8px}.rl-bar .r{border-radius:0 8px 8px 0}
+  .rl-bar i{display:block;height:100%}
+  .rl-ax{display:flex;justify-content:space-between;margin-top:4px;font-size:10px;font-weight:700;color:var(--muted)}
   .rt-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px}
   .rt-kpi>div{background:#f4f7fb;border-radius:10px;padding:9px 4px;text-align:center;display:flex;flex-direction:column;gap:6px}
   .rt-kpi span{font-size:10.5px;color:var(--muted);font-weight:700}
@@ -5355,7 +5498,7 @@ function mrRender(){
         <div><h6>출석 점수</h6><p><b>${R1(attSum)}</b><small>/440</small></p><div class="rs-apd mx-bars">${segs.slice(1).map(([,l,v,m])=>bar(l,v,m,`${R1(v)}<small>/${m}</small>`)).join('')}</div></div></div>`
   : `<div class="ap6">${big}<div class="ap6-g"><i><u style="width:${power/10}%"></u></i><p><span>0</span><span>1000</span></p></div></div><div class="ap6-t mx-stk">${[['평점 점수',P.rating,560,'r'],['출석 점수',attSum,440,'a1']].map(([l,v,m,c])=>`<div class="h"><u class="${c}"></u><span>${l}</span><b>${R1(v)}<small> / ${m}</small></b></div>`).join('')}${segs.slice(1).map(([,l,v,m])=>`<div><span>${l}</span><b>${R1(v)}<small> / ${m}</small></b></div>`).join('')}</div>`;
   // 평점 카드 (시안)
-  const rtv = window._rtv || '7';  // 개인기록 평균 평점: 7 = 숫자 + 추이 꺾은선 + 숫자 4칸
+  const rtv = window._rtv || 'B';  // 개인기록 평균 평점: B = 숫자 + 최근 5경기 점수 칩 + 항목별 가감 막대
   let rtCard = '';
   if (rtv) {
     const rc2 = v => v>=8?'#2e7d32':v>=7?'var(--team-navy)':v>=6?'#f5a623':'#c62828';
@@ -5378,6 +5521,157 @@ function mrRender(){
       b = `<div class="rs-ap ap-h">${bigR}<div class="rt-cols">${L.map(x=>`<div><em>${x.r.toFixed(1)}</em><i><u style="height:${Math.max(6,(x.r-4)/6*100)}%;background:${rc2(x.r)}"></u></i><span>${md(x)}</span></div>`).join('')}</div></div>`;
     } else if (rtv==='3') { // 숫자 타일
       b = `<div class="ap3-top">${bigR}<span>/ 10</span></div><div class="rt-kpi">${[['최고',hi.toFixed(1)],['최저',lo.toFixed(1)],['팀 평균',tAvg!=null?tAvg.toFixed(1):'-'],['평가 경기',rl.length]].map(([l,v])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>`;
+    } else if ('abcdefghijklmnopqrstuvwxyABCDEF'.includes(rtv)) {
+      // 평점 상세: 경기당 평균 가감 + 실제 기록
+      const C = { vote:0, goal:0, ast:0, mom:0, res:0, def:0 }; const R = { votes:0, goals:0, ast:0, mom:0, w:0, d:0, l:0, cleanQ:0 };
+      rl.forEach(x=>{ const v = D.votes.find(y=>y.match_id===x.id), st = msByMatch[x.id]||{}; if(!v) return;
+        R.votes += v.vote_count||0; R.goals += st.goals||0; R.ast += st.assists||0; if(st.is_mom) R.mom++;
+        const mm = v.matches||{}, o = mm.our_score, t = mm.opponent_score ?? mm.goals_conceded; if(o!=null && t!=null){ o>t?R.w++:o<t?R.l++:R.d++; }
+        ratingParts(v, st, D.p.id, D.p.position).forEach(p=>{ const k = p.k;
+          if(k==='득표') C.vote+=p.v; else if(/^골/.test(k)) C.goal+=p.v; else if(/^도움/.test(k)) C.ast+=p.v; else if(k==='MOM') C.mom+=p.v;
+          else if(/승리|패배|대패/.test(k)) C.res+=p.v; else { C.def+=p.v; const m2 = /무실점 (\d+)/.exec(k); if(m2) R.cleanQ += +m2[1]; } }); });
+      const n = rl.length, A = k => C[k]/n, sg = v => (v>0.049?'+':'')+v.toFixed(1), cl = v => v>0.049?'p':v<-0.049?'m':'z';
+      const items = [
+        ['vote','득표',`경기당 ${(R.votes/n).toFixed(1)}표`],
+        ['goal','골',`${R.goals}골`],
+        ['ast','도움',`${R.ast}도움`],
+        ['mom','MOM',`${R.mom}회`],
+        ['res','승패',`${R.w}승 ${R.d}무 ${R.l}패`],
+        ['def','수비',R.cleanQ?`무실점 ${R.cleanQ}쿼터`:'수비 기록']];
+      const sum = items.reduce((t,[k])=>t+A(k),0);
+      const IC = {vote:'🗳️',goal:'⚽',ast:'👟',mom:'⭐',res:'🏆',def:'🛡️'};
+      if ('jklmnop'.includes(rtv)) {
+        const pc = ['#2e7d32','#43a047','#66bb6a','#81c784','#a5d6a7','#c8e6c9'], mc = ['#c62828','#e53935','#ef5350','#e57373','#ef9a9a','#ffcdd2'];
+        const plus = items.filter(([k])=>A(k)>0.049).sort((x,y)=>A(y[0])-A(x[0])), minus = items.filter(([k])=>A(k)<-0.049).sort((x,y)=>A(x[0])-A(y[0]));
+        const col = k => { let i = plus.findIndex(x=>x[0]===k); if(i>=0) return pc[i]; i = minus.findIndex(x=>x[0]===k); return i>=0 ? mc[i] : '#d5dbe5'; };
+        const chip = ([k,l]) => `<span><u style="background:${col(k)}"></u>${l}<b class="${cl(A(k))}">${sg(A(k))}</b></span>`;
+        if (rtv==='o' || rtv==='p') { // 5~10점 구간만 확대: 기본 7은 옅게, 가감은 크게
+          const LO = 6, SP = 3, X = v => Math.max(0, Math.min(100, (v-LO)/SP*100));
+          const M = -minus.reduce((t,[k])=>t+A(k),0);
+          let cur = 7 - M; const segs = [];
+          minus.forEach(([k])=>{ segs.push([k, cur, cur - A(k), true]); cur -= A(k); });
+          cur = 7; plus.forEach(([k])=>{ segs.push([k, cur, cur + A(k), false]); cur += A(k); });
+          // 감점은 7점 안쪽을 잘라내는 빗금, 가점은 그 뒤로 이어짐
+          const html = segs.map(([k,a1,a2,neg])=>`<i class="${neg?'neg':''}" style="left:${X(Math.min(a1,a2))}%;width:${Math.abs(X(a2)-X(a1))}%;background:${neg?'':col(k)};${neg?`--mc:${col(k)}`:''}"></i>`).join('');
+          b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
+            <div class="ro-band"><i class="base" style="width:${X(7-M)}%"></i>${html}${rtv==='p'&&tAvg!=null?`<s style="left:${X(tAvg)}%"></s>`:''}</div>
+            <div class="ro-ax"><span style="left:0">6</span><span style="left:${X(7)}%">7</span><span style="left:100%">9</span>${rtv==='p'&&tAvg!=null?`<span class="ta" style="left:${X(tAvg)}%">팀 평균</span>`:''}</div>
+            <div class="rj-lg">${[...plus,...minus].map(chip).join('')}</div>`;
+        } else
+        if (rtv==='m' || rtv==='n') { // 가감 항목만으로 꽉 채운 띠
+          const segs = [...plus, ...minus], T = segs.reduce((t,[k])=>t+Math.abs(A(k)),0) || 1;
+          b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
+            <div class="rm-band">${segs.map(([k])=>`<i style="flex:${Math.abs(A(k))/T};background:${col(k)}"></i>`).join('')}</div>
+            <div class="rj-lg${rtv==='n'?' g3':''}">${(rtv==='n'?items:segs).map(chip).join('')}</div>`;
+        } else
+        if (rtv==='j' || rtv==='k') { // 10점 띠 (기본 표시 없음)
+          const M = -minus.reduce((t,[k])=>t+A(k),0), baseW = Math.max(0, 7 - M);
+          b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
+            <div class="rb-band"><i class="base" style="width:${baseW*10}%"></i>${minus.map(([k])=>`<i style="width:${-A(k)*10}%;background:${col(k)}"></i>`).join('')}${plus.map(([k])=>`<i style="width:${A(k)*10}%;background:${col(k)}"></i>`).join('')}</div>
+            <div class="rj-lg${rtv==='j'?' g3':''}">${(rtv==='j'?items:[...plus,...minus]).map(chip).join('')}</div>`;
+        } else { // 가감만 확대: 가운데 기준 왼쪽 감점, 오른쪽 가점
+          const P = plus.reduce((t,[k])=>t+A(k),0), M = -minus.reduce((t,[k])=>t+A(k),0), S = Math.max(P, M, .5);
+          b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
+            <div class="rl-bar"><div class="l">${[...minus].reverse().map(([k])=>`<i style="width:${-A(k)/S*100}%;background:${col(k)}"></i>`).join('')}</div><div class="r">${plus.map(([k])=>`<i style="width:${A(k)/S*100}%;background:${col(k)}"></i>`).join('')}</div></div>
+            <div class="rl-ax"><span>감점</span><span>가점</span></div>
+            <div class="rj-lg">${[...plus,...minus].map(chip).join('')}</div>`;
+        }
+      } else
+      if ('defghi'.includes(rtv)) {
+        if (rtv==='d') { // 숫자 + 2×3 칩
+          b = `<div class="rs-ap ap-h">${bigR}<div class="rd-grid">${items.map(([k,l])=>{const v=A(k);return `<div class="${cl(v)}"><span>${l}</span><b>${sg(v)}</b></div>`;}).join('')}</div></div>`;
+        } else if (rtv==='e') { // 숫자 + 한 줄 6칸 (아이콘)
+          b = `<div class="ap3-top">${bigR}<span>/ 10</span></div><div class="re-row">${items.map(([k,l])=>{const v=A(k);return `<div class="${cl(v)}"><i>${IC[k]}</i><b>${sg(v)}</b><span>${l}</span></div>`;}).join('')}</div>`;
+        } else if (rtv==='f') { // 숫자 + 위아래 막대 6개
+          const mx = Math.max(.3,...items.map(([k])=>Math.abs(A(k))));
+          b = `<div class="rs-ap ap-h">${bigR}<div class="rf-cols">${items.map(([k,l])=>{const v=A(k),h=Math.abs(v)/mx*100;return `<div class="${cl(v)}"><em>${sg(v)}</em><i><u style="height:${h/2}%;${v<0?'top:50%':'bottom:50%'}"></u></i><span>${l}</span></div>`;}).join('')}</div></div>`;
+        } else if (rtv==='g') { // 숫자 + 올린 것 / 깎은 것 두 줄
+          const up = items.filter(([k])=>A(k)>0.049).sort((x,y)=>A(y[0])-A(x[0])), dn = items.filter(([k])=>A(k)<-0.049).sort((x,y)=>A(x[0])-A(y[0]));
+          b = `<div class="rs-ap ap-h">${bigR}<div class="rg-box"><div><span class="h p">올린 것</span>${up.map(([k,l])=>`<em class="p">${l} ${sg(A(k))}</em>`).join('')||'<em>-</em>'}</div><div><span class="h m">깎은 것</span>${dn.map(([k,l])=>`<em class="m">${l} ${sg(A(k))}</em>`).join('')||'<em>-</em>'}</div></div></div>`;
+        } else if (rtv==='h') { // 링 게이지 + 상위 3개
+          const C2 = 2*Math.PI*42, L = Math.max(0,Math.min(10,avg))/10*C2;
+          const top3 = [...items].sort((x,y)=>Math.abs(A(y[0]))-Math.abs(A(x[0]))).slice(0,3);
+          b = `<div class="rh"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#eef2f8" stroke-width="9"/><circle cx="50" cy="50" r="42" fill="none" stroke="var(--team-navy)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${L} ${C2-L}" transform="rotate(-90 50 50)"/><text x="50" y="52" class="t">${avg.toFixed(1)}</text></svg><div class="rh-l">${top3.map(([k,l])=>{const v=A(k);return `<div class="${cl(v)}"><i>${IC[k]}</i><span>${l}</span><b>${sg(v)}</b></div>`;}).join('')}</div></div>`;
+        } else { // i: 숫자 + 아이콘 뱃지 한 줄 (0인 항목 숨김)
+          const nz = items.filter(([k])=>Math.abs(A(k))>0.049);
+          b = `<div class="ap3-top">${bigR}<span>/ 10</span></div><div class="ri-row">${nz.map(([k,l])=>{const v=A(k);return `<span class="${cl(v)}">${IC[k]} ${l} <b>${sg(v)}</b></span>`;}).join('')}</div>`;
+        }
+      } else
+      if ('ABCDEF'.includes(rtv)) { // 숫자 옆 최근 평점: 다른 그래프들
+        const mx = Math.max(.3, ...items.map(([k])=>Math.abs(A(k))));
+        const best = [...items].sort((x,y)=>A(y[0])-A(x[0]))[0][0];
+        const rows = items.map(([k,l])=>{ const v=A(k); return `<div class="${k===best&&v>0.049?'best':''}"><span>${l}</span><i>${v<0?`<u class="m" style="width:${Math.abs(v)/mx*50}%"></u>`:`<u class="p" style="width:${v/mx*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('');
+        const L = rl.slice(-8), gc = v => v>=8?'#2e7d32':v>=7?'#1a3a6b':v>=6?'#f5a623':'#c62828';
+        const last = L[L.length-1];
+        const cap = (t) => `<p><span>${t}</span><b>${last.r.toFixed(1)}</b></p>`;
+        let g = '';
+        if (rtv==='A') { // 세로 막대 (등급색)
+          g = `<div class="gA">${L.map((x,i)=>`<i style="height:${Math.max(8,(x.r-4)/6*100)}%;background:${gc(x.r)};opacity:${i===L.length-1?1:.75}"></i>`).join('')}</div>${cap('최근 8경기')}`;
+        } else if (rtv==='B') { // 점수 칩 (최근 폼처럼)
+          g = `<div class="gB">${L.slice(-5).map((x,i,arr)=>`<b style="background:${gc(x.r)}" class="${i===arr.length-1?'on':''}">${x.r.toFixed(1)}</b>`).join('')}</div>`;
+        } else if (rtv==='C') { // 롤리팝 (평균선 기준 위/아래)
+          const W=150,H=54, y = v => H/2 - (v-avg)/3*(H/2-4);
+          g = `<svg class="gC" viewBox="0 0 ${W} ${H}"><line x1="0" x2="${W}" y1="${H/2}" y2="${H/2}" class="base"/>${L.map((x,i)=>{ const cx = 8+i*(W-16)/Math.max(1,L.length-1); const yy = Math.max(4,Math.min(H-4,y(x.r))); return `<line x1="${cx}" x2="${cx}" y1="${H/2}" y2="${yy}" stroke="${x.r>=avg?'#2e7d32':'#c62828'}"/><circle cx="${cx}" cy="${yy}" r="${i===L.length-1?4.5:3.5}" style="fill:${x.r>=avg?'#2e7d32':'#c62828'}"/>`; }).join('')}</svg><p><span>내 평균 기준 위·아래</span><b>${last.r.toFixed(1)}</b></p>`;
+        } else if (rtv==='D') { // 히트 스트립 (8칸)
+          g = `<div class="gD">${L.map((x,i)=>`<i style="background:${gc(x.r)};opacity:${.45+.55*Math.max(0,Math.min(1,(x.r-5)/4))}" class="${i===L.length-1?'on':''}"></i>`).join('')}</div>${cap('최근 8경기')}`;
+        } else if (rtv==='E') { // 영역 + 계단
+          const W=150,H=54, lo3=Math.min(5.5,...L.map(x=>x.r)), hi3=Math.max(9,...L.map(x=>x.r)), xs=i=>i*W/L.length, ys=v=>H-4-(v-lo3)/(hi3-lo3)*(H-8);
+          let d = `M0 ${H}`; L.forEach((x,i)=>{ d += ` L${xs(i)} ${ys(x.r)} L${xs(i+1)} ${ys(x.r)}`; }); d += ` L${W} ${H} Z`;
+          g = `<svg class="gE" viewBox="0 0 ${W} ${H}"><path d="${d}"/></svg>${cap('최근 8경기')}`;
+        } else { // F: 반원 게이지 (최근 5경기 평균)
+          const r5 = L.slice(-5), m5 = r5.reduce((t,x)=>t+x.r,0)/r5.length, C3 = Math.PI*40, Lg = Math.max(0,Math.min(1,(m5-4)/6))*C3;
+          g = `<svg class="gF" viewBox="0 0 100 58"><path d="M10 52 A40 40 0 0 1 90 52" class="bg"/><path d="M10 52 A40 40 0 0 1 90 52" class="fg" stroke-dasharray="${Lg} ${C3}" style="stroke:${gc(m5)}"/><text x="50" y="50">${m5.toFixed(1)}</text></svg><p style="justify-content:center"><span>최근 5경기 평균</span></p>`;
+        }
+        b = `<div class="ap3-top rw-h">${bigR}<span>/ 10</span><div class="rw-sp rv">${g}</div></div><div class="ra-list rq">${rows}</div>`;
+      } else
+      if ('wxy'.includes(rtv)) { // 1번 + 숫자 옆 최근 평점 그래프
+        const mx = Math.max(.3, ...items.map(([k])=>Math.abs(A(k))));
+        const best = [...items].sort((x,y)=>A(y[0])-A(x[0]))[0][0];
+        const rows = items.map(([k,l])=>{ const v=A(k); return `<div class="${rtv!=='x'&&k===best&&v>0.049?'best':''}"><span>${rtv==='y'?`<i class="ic">${IC[k]}</i>`:''}${l}</span><i>${v<0?`<u class="m" style="width:${Math.abs(v)/mx*50}%"></u>`:`<u class="p" style="width:${v/mx*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('');
+        const L = rl.slice(-8), W = 150, H = 54, lo2 = Math.min(5.5, ...L.map(x=>x.r)), hi2 = Math.max(9, ...L.map(x=>x.r));
+        const xs = i => L.length>1 ? 6 + i*(W-12)/(L.length-1) : W/2, ys = v => H-8-(v-lo2)/(hi2-lo2)*(H-16);
+        const pts = L.map((x,i)=>`${xs(i)},${ys(x.r)}`).join(' ');
+        const last = L[L.length-1];
+        const area = L.length>1 ? `<polygon class="ar" points="${xs(0)},${H} ${pts} ${xs(L.length-1)},${H}"/>` : '';
+        const spark = `<div class="rw-sp"><svg viewBox="0 0 ${W} ${H}">${area}<polyline points="${pts}"/>${L.map((x,i)=>`<circle cx="${xs(i)}" cy="${ys(x.r)}" r="${i===L.length-1?4:2.5}" class="${i===L.length-1?'last':''}"/>`).join('')}</svg><p><span>최근 ${L.length}경기</span><b>${last.r.toFixed(1)}</b></p></div>`;
+        if (rtv==='x') b = `<div class="ru-hero rw-h">${bigR}<span>/ 10</span>${spark}</div><div class="ra-list rq">${rows}</div>`;
+        else b = `<div class="ap3-top rw-h">${bigR}<span>/ 10</span>${spark}</div><div class="ra-list rq${rtv==='y'?' ic':''}">${rows}</div>`;
+      } else
+      if ('tuv'.includes(rtv)) { // 1번 + 임팩트
+        const mx = Math.max(.3, ...items.map(([k])=>Math.abs(A(k))));
+        const best = [...items].sort((x,y)=>A(y[0])-A(x[0]))[0][0];
+        const dlt = tAvg!=null ? avg - tAvg : null;
+        const rows = items.map(([k,l])=>{ const v=A(k); return `<div class="${rtv!=='u'&&k===best&&v>0.049?'best':''}"><span>${rtv==='v'?`<i class="ic">${IC[k]}</i>`:''}${l}</span><i>${v<0?`<u class="m" style="width:${Math.abs(v)/mx*50}%"></u>`:`<u class="p" style="width:${v/mx*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('');
+        const pill = dlt!=null ? `<em class="rt-vs ${dlt>=0?'p':'m'}">팀 평균보다 ${dlt>=0?'+':''}${dlt.toFixed(1)}</em>` : '';
+        if (rtv==='u') b = `<div class="ru-hero">${bigR}<span>/ 10</span>${pill}</div><div class="ra-list rq">${rows}</div>`;
+        else b = `<div class="ap3-top">${bigR}<span>/ 10</span>${pill}</div><div class="ra-list rq${rtv==='v'?' ic':''}">${rows}</div>`;
+      } else
+      if ('qrs'.includes(rtv)) { // A안 정리: 기본 제외, 가운데 기준 가감 막대
+        let list = items;
+        if (rtv==='s') list = items.filter(([k])=>Math.abs(A(k))>0.049).sort((x,y)=>A(y[0])-A(x[0]));
+        const mx = Math.max(.3, ...list.map(([k])=>Math.abs(A(k))));
+        b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
+          <div class="ra-list rq${rtv==='r'?' raw':''}">${list.map(([k,l,raw])=>{ const v=A(k); return `<div><span>${l}${rtv==='r'?`<small>${raw}</small>`:''}</span><i>${v<0?`<u class="m" style="width:${Math.abs(v)/mx*50}%"></u>`:`<u class="p" style="width:${v/mx*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('')}</div>`;
+      } else
+      if (rtv==='a') { // 기본 7.0 + 항목별 가감 막대 (가운데 기준)
+        const mx = Math.max(.5, ...items.map(([k])=>Math.abs(A(k))));
+        b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
+          <div class="ra-list"><div class="ra-base"><span>기본</span><em></em><b>7.0</b></div>${items.map(([k,l,raw])=>{ const v=A(k); return `<div><span>${l}<small>${raw}</small></span><i>${v<0?`<u class="m" style="width:${Math.abs(v)/mx*50}%"></u>`:`<u class="p" style="width:${v/mx*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('')}
+          <div class="ra-sum"><span>경기당 평균</span><em></em><b>${(7+sum).toFixed(1)}</b></div></div>`;
+      } else if (rtv==='b') { // 0~10 띠: 기본 7.0 위에 가점(초록)·감점(빨강)
+        const plus = items.filter(([k])=>A(k)>0), minus = items.filter(([k])=>A(k)<0);
+        const pc = ['#2e7d32','#43a047','#66bb6a','#81c784','#a5d6a7','#c8e6c9'];
+        const P = plus.reduce((t,[k])=>t+A(k),0), M = -minus.reduce((t,[k])=>t+A(k),0);
+        const baseW = Math.max(0, 7 - M);
+        b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
+          <div class="rb-band"><i class="base" style="width:${baseW*10}%"></i>${minus.map(([k])=>`<i class="minus" style="width:${-A(k)*10}%"></i>`).join('')}${plus.map(([k],i)=>`<i style="width:${A(k)*10}%;background:${pc[i]}"></i>`).join('')}</div>
+          <div class="rb-scale"><span>0</span><span style="left:70%">7.0 기본</span><span>10</span></div>
+          <div class="rb-lg">${items.map(([k,l,raw])=>{ const v=A(k); const i=plus.findIndex(x=>x[0]===k); return `<div><u style="background:${v<0?'#e57373':i>=0?pc[i]:'#d5dbe5'}"></u><span>${l}</span><b class="${cl(v)}">${sg(v)}</b><small>${raw}</small></div>`; }).join('')}</div>`;
+      } else { // 항목 타일 6칸
+        b = `<div class="ap3-top">${bigR}<span>/ 10</span><em class="rc-base">기본 7.0 ${sum>=0?'+':'−'} ${Math.abs(sum).toFixed(1)}</em></div>
+          <div class="rc-grid">${items.map(([k,l,raw])=>{ const v=A(k); return `<div class="${cl(v)}"><span>${l}</span><b>${sg(v)}</b><small>${raw}</small></div>`; }).join('')}</div>`;
+      }
+      if (!'defghijklmnopqrstuvwxyABCDEF'.includes(rtv)) b += `<div class="rt-mini"><span>최고 <b>${hi.toFixed(1)}</b></span><span>최저 <b>${lo.toFixed(1)}</b></span><span>평가 <b>${n}</b>경기</span>${tAvg!=null?`<span>팀 평균 <b>${tAvg.toFixed(1)}</b></span>`:''}</div>`;
     } else if (rtv==='7') { // 숫자 + 추이 꺾은선 + 숫자 4칸
       const W=200,H=56, xs=i=>rl.length>1? 6+i*(W-12)/(rl.length-1) : W/2, ys=v=>H-6-(Math.max(4,Math.min(10,v))-4)/6*(H-12);
       const pts = rl.map((x,i)=>`${xs(i)},${ys(x.r)}`).join(' ');
