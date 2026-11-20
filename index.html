@@ -5427,6 +5427,8 @@ function mrPower(sid){
   calcPowerRanking(sid).then(r => { if(window._mr===D){ D.rankings[sid] = r; if(sid===currentSeasonId) D.ranking = r; mrRender(); } }).catch(()=>{ if(window._mr===D) delete D.rankings[sid]; });
 }
 function mrMore(){ window._mr.showAll = true; mrRender(); }
+// 최근 폼 평점 색: 점수대별 (~5 빨강 · 6 주황 · 7 남색 · 8 초록 · 9 하늘 · 10 금색)
+function formCol(v){ return v>=10?'#c99700':v>=9?'#1e88e5':v>=8?'#2e7d32':v>=7?'#1a3a6b':v>=6?'#ef8f00':'#c62828'; }
 function mrRender(){
   const D = window._mr, ov = document.getElementById('my-record'); if(!D || !ov) return;
   const keepY = ov.scrollTop;
@@ -5655,7 +5657,7 @@ function mrRender(){
         const gc = v => v>=8?'#2e7d32':v>=7?'#1a3a6b':v>=6?'#f5a623':'#c62828';
         const L5 = rl.slice(-5);
         const chips = `<div class="rw-sp rv"><div class="gB">${L5.map((x,i,arr)=>`<b style="background:${gc(x.r)}" class="${i===arr.length-1?'on':''}">${i===arr.length-1?'<em>최근</em>':''}${x.r.toFixed(1)}</b>`).join('')}</div></div>`;
-        const head = `<div class="ap3-top rw-h">${bigR}<span>/ 10</span>${chips}</div>`;
+        const head = `<div class="ap3-top rw-h">${bigR}<span>/ 10</span>${rtv==='K'?'':chips}</div>`;
         const nz = items.filter(([k])=>Math.round(Math.abs(A(k))*10)>=1).sort((x,y)=>A(y[0])-A(x[0]));
         const bars = nz.map(([k,l])=>{ const v=Math.round(A(k)*10)/10; return `<div><span>${l}</span><i>${v<0?`<u class="m" style="width:${Math.min(1,-v)*50}%"></u>`:`<u class="p" style="width:${Math.min(1,v)*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('');
         const md2 = x => { const m = (msByMatch[x.id]||{}).matches||{}; const d = new Date(m.match_date||0); return { d:`${d.getMonth()+1}/${d.getDate()}`, o: m.opponent || '' }; };
@@ -5675,7 +5677,7 @@ function mrRender(){
             if (KV==='1') return { c: cl(Math.round(tot*10)/10), h: `<em>${f1(tot)}<small>경기당 ${f2(avgV)}</small></em>` };
             if (KV==='2') return { c: cl(Math.round(tot*10)/10), h: `<em class="pm">${CP[k]?`<i class="p">+${CP[k].toFixed(1)}</i>`:''}${CM[k]?`<i class="m">${CM[k].toFixed(1)}</i>`:''}${!CP[k]&&!CM[k]?'0.0':''}</em>` };
             return { c: Math.abs(avgV)<0.005?'z':avgV>0?'p':'m', h: `<em>${f2(avgV)}</em>` }; };
-          b = head + `<div class="rK k${KV}">${cards.map(([k,l,raw])=>{ const o = val(k); return `<div class="${o.c}"><span>${l}</span><b>${raw}</b>${o.h}</div>`; }).join('')}</div><div class="rK-v"><span>🗳️ 득표 <small>경기당 ${(R.votes/n).toFixed(1)}표</small></span><em class="${KV==='3'?cl(vv):cl(Math.round((CP.vote+CM.vote)*10)/10)}">${KV==='3'?sg(vv):f1(CP.vote+CM.vote)}${KV==='3'?'':`<small>경기당 ${f2(A('vote'))}</small>`}</em></div>`;
+          b = head + `<div class="rK k${KV}">${cards.map(([k,l,raw])=>{ const o = val(k); return `<div class="${o.c}"><span>${l}</span><b>${raw}</b>${o.h}</div>`; }).join('')}</div>`;
         } else if (rtv==='M') { // 득표 미터 + 나머지 막대
           const part = rl.reduce((t,x)=>{ const v = D.votes.find(y=>y.match_id===x.id); return t + ((v&&v.total_participants)||0); },0) / n;
           const per = R.votes/n, pct = part ? Math.min(100, per/part*100) : 0, vv = Math.round(A('vote')*10)/10;
@@ -5822,7 +5824,7 @@ function mrRender(){
     ${apMix}
     ${rtCard}
     ${card(`${ttl('최근 폼')}<div class="mr-form">${form.map(r=>{ const m=r.matches, d=new Date(m.match_date), k = m.result==='Win'?'w':m.result==='Lose'?'l':'d'; const rt = ratingOf[r.match_id];
-      return `<div><u class="${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><b style="color:${rt?rc(rt):'var(--muted)'}">${rt?rt.toFixed(1):'-'}</b><span>${d.getMonth()+1}/${d.getDate()}</span><em>${r.goals?'⚽'+r.goals:''}${r.assists?' 🅰'+r.assists:''}${r.is_mom?' ⭐':''}</em></div>`; }).join('')}</div>`)}
+      return `<div><u class="${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><b style="color:${rt?formCol(rt):'var(--muted)'}">${rt?rt.toFixed(1):'-'}</b><span>${d.getMonth()+1}/${d.getDate()}</span><em>${r.goals?'⚽'+r.goals:''}${r.assists?' 🅰'+r.assists:''}${r.is_mom?' ⭐':''}</em></div>`; }).join('')}</div>`)}
     ${flowL.length>1 ? card(`${ttl(D.scope==='all'?'시즌별 공격포인트':'월별 공격포인트')}<div class="mr-bars">${flowL.map(([k,o])=>`<div><em>${o.g+o.a||''}</em><p><i class="a" style="height:${o.a/flowMax*100}%"></i><i class="g" style="height:${o.g/flowMax*100}%"></i></p><span>${D.scope==='all'?k:k+'월'}</span></div>`).join('')}</div><div class="mr-leg"><span><i class="g"></i>득점</span><span><i class="a"></i>도움</span></div>`) : ''}
     ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div class="rs-pos">
       <div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/posList[0][1]); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?g:''}</u>`; }).join('')}</div>
