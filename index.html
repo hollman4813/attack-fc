@@ -868,6 +868,8 @@
   .gB{display:flex;gap:5px;height:54px;align-items:center}
   .rw-sp.rv:has(.gB){align-self:center}
   .gB b{flex:1;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Teko','Noto Sans KR',sans-serif;font-size:16px;font-weight:600;opacity:.85}
+  .gB b{position:relative}
+  .gB b em{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:3px;font-style:normal;font-family:'Noto Sans KR',sans-serif;font-size:9.5px;font-weight:600;color:#9aa6b8;white-space:nowrap;line-height:1}
   .gB b.on{height:42px;opacity:1;box-shadow:0 3px 8px rgba(15,40,80,.25)}
   .rw-sp.rv{width:160px}
   .rw-sp.rv p span:last-child{font-weight:500}
@@ -5600,7 +5602,7 @@ function mrRender(){
       if ('ABCDEF'.includes(rtv)) { // 숫자 옆 최근 평점: 다른 그래프들
         const mx = Math.max(.3, ...items.map(([k])=>Math.abs(A(k))));
         const best = [...items].sort((x,y)=>A(y[0])-A(x[0]))[0][0];
-        const rows = items.map(([k,l])=>{ const v=A(k); return `<div class="${k===best&&v>0.049?'best':''}"><span>${l}</span><i>${v<0?`<u class="m" style="width:${Math.abs(v)/mx*50}%"></u>`:`<u class="p" style="width:${v/mx*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('');
+        const rows = items.map(([k,l])=>{ const v=Math.round(A(k)*10)/10; return `<div class="${k===best&&v>0.049?'best':''}"><span>${l}</span><i>${v<0?`<u class="m" style="width:${Math.abs(v)/mx*50}%"></u>`:`<u class="p" style="width:${v/mx*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('');
         const L = rl.slice(-8), gc = v => v>=8?'#2e7d32':v>=7?'#1a3a6b':v>=6?'#f5a623':'#c62828';
         const last = L[L.length-1];
         const cap = (t) => `<p><span>${t}</span><b>${last.r.toFixed(1)}</b></p>`;
@@ -5608,7 +5610,7 @@ function mrRender(){
         if (rtv==='A') { // 세로 막대 (등급색)
           g = `<div class="gA">${L.map((x,i)=>`<i style="height:${Math.max(8,(x.r-4)/6*100)}%;background:${gc(x.r)};opacity:${i===L.length-1?1:.75}"></i>`).join('')}</div>${cap('최근 8경기')}`;
         } else if (rtv==='B') { // 점수 칩 (최근 폼처럼)
-          g = `<div class="gB">${L.slice(-5).map((x,i,arr)=>`<b style="background:${gc(x.r)}" class="${i===arr.length-1?'on':''}">${x.r.toFixed(1)}</b>`).join('')}</div>`;
+          g = `<div class="gB">${L.slice(-5).map((x,i,arr)=>`<b style="background:${gc(x.r)}" class="${i===arr.length-1?'on':''}">${i===arr.length-1?'<em>최근</em>':''}${x.r.toFixed(1)}</b>`).join('')}</div>`;
         } else if (rtv==='C') { // 롤리팝 (평균선 기준 위/아래)
           const W=150,H=54, y = v => H/2 - (v-avg)/3*(H/2-4);
           g = `<svg class="gC" viewBox="0 0 ${W} ${H}"><line x1="0" x2="${W}" y1="${H/2}" y2="${H/2}" class="base"/>${L.map((x,i)=>{ const cx = 8+i*(W-16)/Math.max(1,L.length-1); const yy = Math.max(4,Math.min(H-4,y(x.r))); return `<line x1="${cx}" x2="${cx}" y1="${H/2}" y2="${yy}" stroke="${x.r>=avg?'#2e7d32':'#c62828'}"/><circle cx="${cx}" cy="${yy}" r="${i===L.length-1?4.5:3.5}" style="fill:${x.r>=avg?'#2e7d32':'#c62828'}"/>`; }).join('')}</svg><p><span>내 평균 기준 위·아래</span><b>${last.r.toFixed(1)}</b></p>`;
