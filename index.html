@@ -1188,9 +1188,10 @@
   .mem-pick.on{border-color:var(--skyblue);background:#eaf4fc;font-weight:700}
   /* 인트로 화면 */
   /* 인트로: 야간 경기 조명탑이 켜지며 엠블럼을 비춘다. 들어올 땐 감속, 나갈 땐 가속·더 짧게 */
-  #intro{position:fixed;inset:0;z-index:10000;background:linear-gradient(180deg,var(--team-navy),var(--team-navy-2));color:var(--on-team);overflow:hidden;animation:introOut .38s cubic-bezier(.7,0,.84,0) 2.6s forwards}
-  #intro.out{transform:translateY(-100%);visibility:hidden;transition:transform .3s cubic-bezier(.7,0,.84,0),visibility .3s}
-  html.intro-on{background:var(--team-navy)}  /* 인트로 동안 사파리 상단바 색 = 인트로 색 */
+  #intro{position:fixed;inset:0;z-index:10000;background:linear-gradient(180deg,var(--team-navy),var(--team-navy-2));color:var(--on-team);overflow:hidden;animation:introOut .5s ease-out 2.6s forwards}
+  #intro.out{opacity:0;visibility:hidden;transition:opacity .3s ease-out,visibility .3s}
+  html.intro-on{background:var(--team-navy)}
+  html.intro-on .loading,html.intro-on #net-busy{visibility:hidden!important}  /* 인트로 동안 로딩 표시 숨김 */  /* 인트로 동안 사파리 상단바 색 = 인트로 색 */
   #top-tint{position:fixed;left:0;right:0;top:0;height:max(1px,env(safe-area-inset-top,0px));z-index:9400;pointer-events:none;display:none}
   html.top-deep #match-detail{background:var(--bg);min-height:100vh}  /* 경기 상세: 상단바 = 짙은 남색, 본문은 밝은 회색 */
   /* 팀명(ATTACK)이 화면 세로 정가운데, 엠블럼은 그 위 */
@@ -1218,7 +1219,7 @@
   @keyframes introFadeIn{from{opacity:0}to{opacity:1}}
   @keyframes introPop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
   @keyframes introRise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
-  @keyframes introOut{to{transform:translateY(-100%);visibility:hidden}}
+  @keyframes introOut{to{opacity:0;visibility:hidden}}
   @media (max-height:640px){.intro-emblem{width:116px;height:116px;margin:-58px 0 0 -58px}.intro-circle{width:170px;height:170px;margin:-85px 0 0 -85px}.intro-txt{top:calc(50% + 104px)}.intro-name{font-size:40px}.intro-sub{font-size:14px}}
   @media (prefers-reduced-motion:reduce){#intro,#intro *{animation-duration:.01s!important;animation-delay:0s!important}#intro{animation:introFadeOut .3s linear 1.6s forwards!important}}
   @keyframes introFadeOut{to{opacity:0;visibility:hidden}}
