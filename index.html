@@ -915,6 +915,10 @@
   .rN-c{display:flex;justify-content:space-between;align-items:center;margin:6px 0 0;font-size:10px;color:var(--muted)}
   .rN-c u{display:inline-block;width:8px;height:8px;border-radius:2px;margin:0 2px 0 6px;vertical-align:-1px}
   .rt-help{width:22px;height:22px;border-radius:50%;border:0;background:#eef2f8;color:var(--team-navy);font:inherit;font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .rt-tr{margin-left:auto;align-self:center;display:flex;flex-direction:column;align-items:flex-end;gap:5px;text-align:right}
+  .rt-tr .tr{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:13px;font-size:12px;font-weight:800}
+  .rt-tr .tr.p{background:#eaf5ec;color:#2e7d32}.rt-tr .tr.m{background:#fdecec;color:#c62828}.rt-tr .tr.z{background:#eef2f8;color:var(--muted)}
+  .rt-tr small{font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap}
   .rt-cnt{margin-left:auto;align-self:center;font-style:normal;font-size:12px;font-weight:700;color:var(--muted)}
   #rb-pop.rt-hp{max-width:300px;min-width:270px}
   #rb-pop.rt-hp .rr b{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700}
@@ -5584,8 +5588,19 @@ function mrRender(){
   : `<div class="ap6">${big}<div class="ap6-g"><i><u style="width:${power/10}%"></u></i><p><span>0</span><span>1000</span></p></div></div><div class="ap6-t mx-stk">${[['평점 점수',P.rating,560,'r'],['출석 점수',attSum,440,'a1']].map(([l,v,m,c])=>`<div class="h"><u class="${c}"></u><span>${l}</span><b>${R1(v)}<small> / ${m}</small></b></div>`).join('')}${segs.slice(1).map(([,l,v,m])=>`<div><span>${l}</span><b>${R1(v)}<small> / ${m}</small></b></div>`).join('')}</div>`;
   // 평점 카드 (시안)
   // 평균 평점: 큰 숫자 + 평점 기준 설명(?)
+  // 최근 변화: 마지막 경기 반영 전 평균과 비교 + 최근 3경기 평균
+  const rtTrend = (()=>{
+    const rl = rated.map(x=>({ ...x, d: new Date(((msByMatch[x.id]||{}).matches||{}).match_date||0) })).sort((a,b)=>a.d-b.d);
+    if (!rl.length) return '';
+    const last = rl[rl.length-1], prev = rl.slice(0,-1);
+    const pAvg = prev.length ? prev.reduce((t,x)=>t+x.r,0)/prev.length : null;
+    const dl = pAvg==null ? null : Math.round((avg - pAvg)*10)/10;
+    const r3 = rl.slice(-3), a3 = r3.reduce((t,x)=>t+x.r,0)/r3.length;
+    const pill = dl==null ? `<span class="tr z">첫 평가 경기</span>` : dl>0 ? `<span class="tr p">▲ ${dl.toFixed(1)}점 올랐어요</span>` : dl<0 ? `<span class="tr m">▼ ${Math.abs(dl).toFixed(1)}점 내려갔어요</span>` : `<span class="tr z">지난 경기와 같아요</span>`;
+    return `<div class="rt-tr">${pill}<small>최근 경기 ${last.r.toFixed(1)}점 · ${rl.length}경기 평가</small></div>`;
+  })();
   const rtCard = card(`<div class="rs-apt">${ttl('평균 평점')}<button class="rt-help" onclick="rtHelp(this)" aria-label="평점 기준 보기">?</button></div>
-    ${rated.length ? `<div class="ap3-top"><b class="rt-n">${avg.toFixed(1)}</b><span>/ 10</span><em class="rt-cnt">${rated.length}경기 평가</em></div>` : `<p class="rs-apmsg">평가된 경기가 아직 없어요.</p>`}`);
+    ${rated.length ? `<div class="ap3-top"><b class="rt-n">${avg.toFixed(1)}</b><span>/ 10</span>${rtTrend}</div>` : `<p class="rs-apmsg">평가된 경기가 아직 없어요.</p>`}`);
   const apMix = card(`<div class="rs-apt">${ttl('어택 포인트')}${rkB}</div>${body}`);
   const prof = plyProfile(D.p);
   // 함께한 시간 (입단일 기준, 시즌 선택과 무관)
