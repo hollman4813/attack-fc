@@ -2748,13 +2748,13 @@ function renderStatList(tab) {
 
 /* ── 어택포인트 (경기당 1000점 만점: 출석200 + 연속출석 최대100 + 평점 700) ── */
 const POWER_CFG = { attend:200, streakStep:20, streakMax:100, ratingMax:700, defaultRating:7.0,
-  matchWeight:0.8, rateMax:100, cumMax:100, cumTarget:10, shrinkK:4, preJoinFactor:0.7 };
+  matchWeight:0.8, rateMax:100, cumMax:100, cumRatio:0.5, shrinkK:4, preJoinFactor:0.7 };
 
 // 항목별 점수 (경기 800 + 출석률 100 + 누적출석 100)
 function powerParts(matchAvg, attended, totalGames) {
   const c = POWER_CFG;
   const rate = Math.min(attended / totalGames, 1);           // 시즌 전체 경기 기준 출석률 (입단 전 경기는 팀 평균 참석률로 반영)
-  const cumTarget = Math.min(totalGames, c.cumTarget);
+  const cumTarget = Math.max(1, Math.ceil(totalGames * c.cumRatio));   // 시즌 경기 수의 50% 출석하면 만점
   const cum = Math.min(attended, cumTarget) / cumTarget;     // 누적출석 달성도
   return { match: matchAvg * c.matchWeight, rate: rate * c.rateMax, cum: cum * c.cumMax };
 }
@@ -5464,7 +5464,7 @@ function apHelp(btn){
     row('출석률', `최대 ${c.rateMax}점`) +
     `<p class="nt">시즌 전체 경기 중 출석한 비율</p>` +
     row('누적 출석', `최대 ${c.cumMax}점`) +
-    `<p class="nt">시즌 ${c.cumTarget}경기 출석하면 만점</p>` +
+    `<p class="nt">시즌 경기 수의 ${Math.round(c.cumRatio*100)}% 출석하면 만점</p>` +
     `<p class="nt" style="margin-top:6px">출석이 적은 선수는 경기 점수가 팀 평균 쪽으로 보정돼요. 입단 전 경기는 팀 평균 출석률을 반영해요.</p>` +
     `<div class="rt"><span>순위</span><b style="font-size:13px;font-family:inherit">시즌별 어택 포인트 순</b></div>`);
 }
