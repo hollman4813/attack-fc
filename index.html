@@ -914,6 +914,11 @@
   .rN i{width:18px;height:18px;border-radius:5px}
   .rN-c{display:flex;justify-content:space-between;align-items:center;margin:6px 0 0;font-size:10px;color:var(--muted)}
   .rN-c u{display:inline-block;width:8px;height:8px;border-radius:2px;margin:0 2px 0 6px;vertical-align:-1px}
+  .rt-help{width:22px;height:22px;border-radius:50%;border:0;background:#eef2f8;color:var(--team-navy);font:inherit;font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .rt-cnt{margin-left:auto;align-self:center;font-style:normal;font-size:12px;font-weight:700;color:var(--muted)}
+  #rb-pop.rt-hp{max-width:300px;min-width:270px}
+  #rb-pop.rt-hp .rr b{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700}
+  #rb-pop .nt{margin:-1px 0 5px;font-size:10.5px;line-height:1.45;color:rgba(255,255,255,.6)}
   .gA{display:flex;align-items:flex-end;gap:5px;height:54px}
   .gA i{flex:1;border-radius:4px 4px 2px 2px}
   .gB{display:flex;gap:5px;height:54px;align-items:center}
@@ -5428,6 +5433,31 @@ function mrPower(sid){
 }
 function mrMore(){ window._mr.showAll = true; mrRender(); }
 // 최근 폼 평점 색: 점수대별 (~5 빨강 · 6 주황 · 7 남색 · 8 초록 · 9 하늘 · 10 금색)
+// 평점 기준 설명 풍선
+function rtHelp(btn){
+  const old = document.getElementById('rb-pop'); if (old) { const same = old.dataset.k==='help'; old.remove(); if (same) return; }
+  const el = document.createElement('div'); el.id = 'rb-pop'; el.dataset.k = 'help'; el.classList.add('rt-hp');
+  const c = RATING_CFG, row = (k,v,cls='') => `<div class="rr"><span>${k}</span><b class="${cls}">${v}</b></div>`;
+  el.innerHTML = `<h6>평점 기준 (경기마다)</h6>` +
+    row('기본','7.0') +
+    row('MOM 득표','참석자 절반 = 0') +
+    `<p class="nt">전원이 뽑으면 +1.5, 아무도 안 뽑으면 −1.5</p>` +
+    row('골 · 도움','1개당 +0.2','p') +
+    row('MOM','+0.5','p') +
+    row('승리 / 패배',`+${c.win} / ${c.lose}`) +
+    row('대패 (4골 차 이상)',`${c.bigLoss}`,'m') +
+    row('무실점 쿼터',`+${c.cleanQ} (최대 +${c.cleanMax.toFixed(1)})`,'p') +
+    row('실점 1골',`${c.concededQ} (최대 ${c.concededMax.toFixed(1)})`,'m') +
+    `<p class="nt">무실점·실점은 그 쿼터에 GK·수비수 자리에서 뛴 경우만 반영돼요.</p>` +
+    `<div class="rt"><span>평균 평점</span><b style="font-size:13px;font-family:inherit">평가된 경기 평균 · 1~10점</b></div>`;
+  document.body.appendChild(el);
+  const r = btn.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
+  let left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width/2 - w/2));
+  let top = r.bottom + 10; if (top + h > window.innerHeight - 8) { top = r.top - h - 10; el.classList.add('up'); }
+  el.style.left = left + 'px'; el.style.top = top + 'px'; el.style.setProperty('--ax', (r.left + r.width/2 - left) + 'px');
+  const close = e => { if (e && e.type==='click' && (el.contains(e.target) || btn.contains(e.target))) return; el.remove(); document.removeEventListener('click', close, true); window.removeEventListener('scroll', close, true); };
+  setTimeout(()=>{ document.addEventListener('click', close, true); window.addEventListener('scroll', close, true); }, 0);
+}
 function formCol(v){ return v>=10?'#c99700':v>=9?'#1e88e5':v>=8?'#2e7d32':v>=7?'#1a3a6b':v>=6?'#ef8f00':'#c62828'; }
 function mrRender(){
   const D = window._mr, ov = document.getElementById('my-record'); if(!D || !ov) return;
@@ -5553,238 +5583,9 @@ function mrRender(){
         <div><h6>출석 점수</h6><p><b>${R1(attSum)}</b><small>/440</small></p><div class="rs-apd mx-bars">${segs.slice(1).map(([,l,v,m])=>bar(l,v,m,`${R1(v)}<small>/${m}</small>`)).join('')}</div></div></div>`
   : `<div class="ap6">${big}<div class="ap6-g"><i><u style="width:${power/10}%"></u></i><p><span>0</span><span>1000</span></p></div></div><div class="ap6-t mx-stk">${[['평점 점수',P.rating,560,'r'],['출석 점수',attSum,440,'a1']].map(([l,v,m,c])=>`<div class="h"><u class="${c}"></u><span>${l}</span><b>${R1(v)}<small> / ${m}</small></b></div>`).join('')}${segs.slice(1).map(([,l,v,m])=>`<div><span>${l}</span><b>${R1(v)}<small> / ${m}</small></b></div>`).join('')}</div>`;
   // 평점 카드 (시안)
-  const rtv = window._rtv || 'K';  // 개인기록 평균 평점: K = 숫자 + 최근 5경기 칩 + 포인트 카드(공격·수비·승리·MOM) + 득표
-  let rtCard = '';
-  if (rtv) {
-    const rc2 = v => v>=8?'#2e7d32':v>=7?'var(--team-navy)':v>=6?'#f5a623':'#c62828';
-    const rl = rated.map(x=>({ ...x, d: new Date(((msByMatch[x.id]||{}).matches||{}).match_date||0) })).sort((a,b)=>a.d-b.d);
-    const hi = rl.length ? Math.max(...rl.map(x=>x.r)) : null, lo = rl.length ? Math.min(...rl.map(x=>x.r)) : null;
-    const tAvgs = Array.isArray(pList) ? pList.map(x=>x.avgRating).filter(x=>x!=null) : [];
-    const tAvg = tAvgs.length ? tAvgs.reduce((a,b)=>a+b,0)/tAvgs.length : null;
-    const rRank = avg!=null && tAvgs.length ? 1 + tAvgs.filter(x=>x>avg+1e-9).length : null;
-    const bigR = `<b class="rt-n">${avg!=null?avg.toFixed(1):'-'}</b>`;
-    const head = ttl('평균 평점');
-    const md = x => `${x.d.getMonth()+1}/${x.d.getDate()}`;
-    let b = '';
-    if (!rl.length) b = `<div class="rs-ap">${bigR}<div class="rs-apd"><p class="rs-apmsg">평가된 경기가 아직 없어요.</p></div></div>`;
-    else if (rtv==='1') { // 추이 꺾은선
-      const W=200,H=64, xs=i=>rl.length>1? 6+i*(W-12)/(rl.length-1) : W/2, ys=v=>H-6-(Math.max(4,Math.min(10,v))-4)/6*(H-12);
-      const pts = rl.map((x,i)=>`${xs(i)},${ys(x.r)}`).join(' ');
-      b = `<div class="rs-ap">${bigR}<svg class="rt-sp" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${tAvg!=null?`<line x1="0" x2="${W}" y1="${ys(tAvg)}" y2="${ys(tAvg)}" class="ta"/>`:''}<polyline points="${pts}"/>${rl.map((x,i)=>`<circle cx="${xs(i)}" cy="${ys(x.r)}" r="3"/>`).join('')}</svg></div><div class="rt-cap"><span>${md(rl[0])}</span>${tAvg!=null?`<span class="ta">--- 팀 평균 ${tAvg.toFixed(1)}</span>`:''}<span>${md(rl[rl.length-1])}</span></div>`;
-    } else if (rtv==='2') { // 경기별 막대
-      const L = rl.slice(-8);
-      b = `<div class="rs-ap ap-h">${bigR}<div class="rt-cols">${L.map(x=>`<div><em>${x.r.toFixed(1)}</em><i><u style="height:${Math.max(6,(x.r-4)/6*100)}%;background:${rc2(x.r)}"></u></i><span>${md(x)}</span></div>`).join('')}</div></div>`;
-    } else if (rtv==='3') { // 숫자 타일
-      b = `<div class="ap3-top">${bigR}<span>/ 10</span></div><div class="rt-kpi">${[['최고',hi.toFixed(1)],['최저',lo.toFixed(1)],['팀 평균',tAvg!=null?tAvg.toFixed(1):'-'],['평가 경기',rl.length]].map(([l,v])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>`;
-    } else if ('abcdefghijklmnopqrstuvwxyABCDEFGHJKMN'.includes(rtv)) {
-      // 평점 상세: 경기당 평균 가감 + 실제 기록
-      const C = { vote:0, goal:0, ast:0, mom:0, res:0, def:0 }, CP = { vote:0, atk:0, mom:0, res:0, def:0 }, CM = { vote:0, atk:0, mom:0, res:0, def:0 }; const R = { votes:0, goals:0, ast:0, mom:0, w:0, d:0, l:0, cleanQ:0 };
-      rl.forEach(x=>{ const v = D.votes.find(y=>y.match_id===x.id), st = msByMatch[x.id]||{}; if(!v) return;
-        R.votes += v.vote_count||0; R.goals += st.goals||0; R.ast += st.assists||0; if(st.is_mom) R.mom++;
-        const mm = v.matches||{}, o = mm.our_score, t = mm.opponent_score ?? mm.goals_conceded; if(o!=null && t!=null){ o>t?R.w++:o<t?R.l++:R.d++; }
-        ratingParts(v, st, D.p.id, D.p.position).forEach(p=>{ const k = p.k;
-          const ck = k==='득표'?'vote':/^(골|도움)/.test(k)?'atk':k==='MOM'?'mom':/승리|패배/.test(k)?'res':'def'; (p.v>0?CP:CM)[ck] += p.v;  // 대패 감점은 수비 포인트로
-          if(k==='득표') C.vote+=p.v; else if(/^골/.test(k)) C.goal+=p.v; else if(/^도움/.test(k)) C.ast+=p.v; else if(k==='MOM') C.mom+=p.v;
-          else if(/승리|패배/.test(k)) C.res+=p.v; else { C.def+=p.v; const m2 = /무실점 (\d+)/.exec(k); if(m2) R.cleanQ += +m2[1]; if(k==='대패') R.big = (R.big||0) + 1; } }); });
-      const n = rl.length, A = k => C[k]/n, sg = v => (v>0.049?'+':'')+v.toFixed(1), cl = v => v>0.049?'p':v<-0.049?'m':'z';
-      const items = [
-        ['vote','득표',`경기당 ${(R.votes/n).toFixed(1)}표`],
-        ['atk','공격 포인트',`${R.goals}골 ${R.ast}도움`],
-        ['mom','MOM',`${R.mom}회`],
-        ['res','승리 포인트',`${R.w}승 ${R.d}무 ${R.l}패`],
-        ['def','수비 포인트',R.cleanQ?`무실점 ${R.cleanQ}쿼터`:'수비 기록']];
-      C.atk = C.goal + C.ast;
-      const sum = items.reduce((t,[k])=>t+A(k),0);
-      const IC = {vote:'🗳️',goal:'⚽',ast:'👟',atk:'⚽',mom:'⭐',res:'🏆',def:'🛡️'};
-      if ('jklmnop'.includes(rtv)) {
-        const pc = ['#2e7d32','#43a047','#66bb6a','#81c784','#a5d6a7','#c8e6c9'], mc = ['#c62828','#e53935','#ef5350','#e57373','#ef9a9a','#ffcdd2'];
-        const plus = items.filter(([k])=>A(k)>0.049).sort((x,y)=>A(y[0])-A(x[0])), minus = items.filter(([k])=>A(k)<-0.049).sort((x,y)=>A(x[0])-A(y[0]));
-        const col = k => { let i = plus.findIndex(x=>x[0]===k); if(i>=0) return pc[i]; i = minus.findIndex(x=>x[0]===k); return i>=0 ? mc[i] : '#d5dbe5'; };
-        const chip = ([k,l]) => `<span><u style="background:${col(k)}"></u>${l}<b class="${cl(A(k))}">${sg(A(k))}</b></span>`;
-        if (rtv==='o' || rtv==='p') { // 5~10점 구간만 확대: 기본 7은 옅게, 가감은 크게
-          const LO = 6, SP = 3, X = v => Math.max(0, Math.min(100, (v-LO)/SP*100));
-          const M = -minus.reduce((t,[k])=>t+A(k),0);
-          let cur = 7 - M; const segs = [];
-          minus.forEach(([k])=>{ segs.push([k, cur, cur - A(k), true]); cur -= A(k); });
-          cur = 7; plus.forEach(([k])=>{ segs.push([k, cur, cur + A(k), false]); cur += A(k); });
-          // 감점은 7점 안쪽을 잘라내는 빗금, 가점은 그 뒤로 이어짐
-          const html = segs.map(([k,a1,a2,neg])=>`<i class="${neg?'neg':''}" style="left:${X(Math.min(a1,a2))}%;width:${Math.abs(X(a2)-X(a1))}%;background:${neg?'':col(k)};${neg?`--mc:${col(k)}`:''}"></i>`).join('');
-          b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
-            <div class="ro-band"><i class="base" style="width:${X(7-M)}%"></i>${html}${rtv==='p'&&tAvg!=null?`<s style="left:${X(tAvg)}%"></s>`:''}</div>
-            <div class="ro-ax"><span style="left:0">6</span><span style="left:${X(7)}%">7</span><span style="left:100%">9</span>${rtv==='p'&&tAvg!=null?`<span class="ta" style="left:${X(tAvg)}%">팀 평균</span>`:''}</div>
-            <div class="rj-lg">${[...plus,...minus].map(chip).join('')}</div>`;
-        } else
-        if (rtv==='m' || rtv==='n') { // 가감 항목만으로 꽉 채운 띠
-          const segs = [...plus, ...minus], T = segs.reduce((t,[k])=>t+Math.abs(A(k)),0) || 1;
-          b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
-            <div class="rm-band">${segs.map(([k])=>`<i style="flex:${Math.abs(A(k))/T};background:${col(k)}"></i>`).join('')}</div>
-            <div class="rj-lg${rtv==='n'?' g3':''}">${(rtv==='n'?items:segs).map(chip).join('')}</div>`;
-        } else
-        if (rtv==='j' || rtv==='k') { // 10점 띠 (기본 표시 없음)
-          const M = -minus.reduce((t,[k])=>t+A(k),0), baseW = Math.max(0, 7 - M);
-          b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
-            <div class="rb-band"><i class="base" style="width:${baseW*10}%"></i>${minus.map(([k])=>`<i style="width:${-A(k)*10}%;background:${col(k)}"></i>`).join('')}${plus.map(([k])=>`<i style="width:${A(k)*10}%;background:${col(k)}"></i>`).join('')}</div>
-            <div class="rj-lg${rtv==='j'?' g3':''}">${(rtv==='j'?items:[...plus,...minus]).map(chip).join('')}</div>`;
-        } else { // 가감만 확대: 가운데 기준 왼쪽 감점, 오른쪽 가점
-          const P = plus.reduce((t,[k])=>t+A(k),0), M = -minus.reduce((t,[k])=>t+A(k),0), S = Math.max(P, M, .5);
-          b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
-            <div class="rl-bar"><div class="l">${[...minus].reverse().map(([k])=>`<i style="width:${-A(k)/S*100}%;background:${col(k)}"></i>`).join('')}</div><div class="r">${plus.map(([k])=>`<i style="width:${A(k)/S*100}%;background:${col(k)}"></i>`).join('')}</div></div>
-            <div class="rl-ax"><span>감점</span><span>가점</span></div>
-            <div class="rj-lg">${[...plus,...minus].map(chip).join('')}</div>`;
-        }
-      } else
-      if ('defghi'.includes(rtv)) {
-        if (rtv==='d') { // 숫자 + 2×3 칩
-          b = `<div class="rs-ap ap-h">${bigR}<div class="rd-grid">${items.map(([k,l])=>{const v=A(k);return `<div class="${cl(v)}"><span>${l}</span><b>${sg(v)}</b></div>`;}).join('')}</div></div>`;
-        } else if (rtv==='e') { // 숫자 + 한 줄 6칸 (아이콘)
-          b = `<div class="ap3-top">${bigR}<span>/ 10</span></div><div class="re-row">${items.map(([k,l])=>{const v=A(k);return `<div class="${cl(v)}"><i>${IC[k]}</i><b>${sg(v)}</b><span>${l}</span></div>`;}).join('')}</div>`;
-        } else if (rtv==='f') { // 숫자 + 위아래 막대 6개
-          const mx = Math.max(.3,...items.map(([k])=>Math.abs(A(k))));
-          b = `<div class="rs-ap ap-h">${bigR}<div class="rf-cols">${items.map(([k,l])=>{const v=A(k),h=Math.abs(v)/mx*100;return `<div class="${cl(v)}"><em>${sg(v)}</em><i><u style="height:${h/2}%;${v<0?'top:50%':'bottom:50%'}"></u></i><span>${l}</span></div>`;}).join('')}</div></div>`;
-        } else if (rtv==='g') { // 숫자 + 올린 것 / 깎은 것 두 줄
-          const up = items.filter(([k])=>A(k)>0.049).sort((x,y)=>A(y[0])-A(x[0])), dn = items.filter(([k])=>A(k)<-0.049).sort((x,y)=>A(x[0])-A(y[0]));
-          b = `<div class="rs-ap ap-h">${bigR}<div class="rg-box"><div><span class="h p">올린 것</span>${up.map(([k,l])=>`<em class="p">${l} ${sg(A(k))}</em>`).join('')||'<em>-</em>'}</div><div><span class="h m">깎은 것</span>${dn.map(([k,l])=>`<em class="m">${l} ${sg(A(k))}</em>`).join('')||'<em>-</em>'}</div></div></div>`;
-        } else if (rtv==='h') { // 링 게이지 + 상위 3개
-          const C2 = 2*Math.PI*42, L = Math.max(0,Math.min(10,avg))/10*C2;
-          const top3 = [...items].sort((x,y)=>Math.abs(A(y[0]))-Math.abs(A(x[0]))).slice(0,3);
-          b = `<div class="rh"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#eef2f8" stroke-width="9"/><circle cx="50" cy="50" r="42" fill="none" stroke="var(--team-navy)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${L} ${C2-L}" transform="rotate(-90 50 50)"/><text x="50" y="52" class="t">${avg.toFixed(1)}</text></svg><div class="rh-l">${top3.map(([k,l])=>{const v=A(k);return `<div class="${cl(v)}"><i>${IC[k]}</i><span>${l}</span><b>${sg(v)}</b></div>`;}).join('')}</div></div>`;
-        } else { // i: 숫자 + 아이콘 뱃지 한 줄 (0인 항목 숨김)
-          const nz = items.filter(([k])=>Math.abs(A(k))>0.049);
-          b = `<div class="ap3-top">${bigR}<span>/ 10</span></div><div class="ri-row">${nz.map(([k,l])=>{const v=A(k);return `<span class="${cl(v)}">${IC[k]} ${l} <b>${sg(v)}</b></span>`;}).join('')}</div>`;
-        }
-      } else
-      if ('GHJKMN'.includes(rtv)) { // 숫자 + 최근 칩 + (보는 재미) 시안
-        const gc = v => v>=8?'#2e7d32':v>=7?'#1a3a6b':v>=6?'#f5a623':'#c62828';
-        const L5 = rl.slice(-5);
-        const chips = `<div class="rw-sp rv"><div class="gB">${L5.map((x,i,arr)=>`<b style="background:${gc(x.r)}" class="${i===arr.length-1?'on':''}">${i===arr.length-1?'<em>최근</em>':''}${x.r.toFixed(1)}</b>`).join('')}</div></div>`;
-        const head = `<div class="ap3-top rw-h">${bigR}<span>/ 10</span>${rtv==='K'?'':chips}</div>`;
-        const nz = items.filter(([k])=>Math.round(Math.abs(A(k))*10)>=1).sort((x,y)=>A(y[0])-A(x[0]));
-        const bars = nz.map(([k,l])=>{ const v=Math.round(A(k)*10)/10; return `<div><span>${l}</span><i>${v<0?`<u class="m" style="width:${Math.min(1,-v)*50}%"></u>`:`<u class="p" style="width:${Math.min(1,v)*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('');
-        const md2 = x => { const m = (msByMatch[x.id]||{}).matches||{}; const d = new Date(m.match_date||0); return { d:`${d.getMonth()+1}/${d.getDate()}`, o: m.opponent || '' }; };
-        if (rtv==='G') { // 0 항목 숨김 + 베스트/아쉬운 경기
-          const bst = rl.reduce((a,x)=>x.r>a.r?x:a, rl[0]), wst = rl.reduce((a,x)=>x.r<a.r?x:a, rl[0]);
-          const tile = (t,x,c) => { const m = md2(x); return `<div class="rG-t ${c}"><span>${t}</span><b>${x.r.toFixed(1)}</b><small>${m.d} · ${luEsc(m.o)}</small></div>`; };
-          b = head + (bars?`<div class="ra-list rq">${bars}</div>`:'') + `<div class="rG">${tile('베스트 경기',bst,'p')}${tile('아쉬운 경기',wst,'m')}</div>`;
-        } else if (rtv==='H') { // 팀 안에서 내 위치 (점 분포)
-          const lo=5, hi=9, X = v => Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
-          const others = tAvgs;
-          b = head + `<div class="rH"><div class="ax">${others.map(v=>`<i style="left:${X(v)}%"></i>`).join('')}${tAvg!=null?`<s style="left:${X(tAvg)}%"></s>`:''}<b style="left:${X(avg)}%"><em>나</em></b></div><p><span>5</span><span>팀원 평균 평점 분포</span><span>9</span></p></div>` + (bars?`<div class="ra-list rq" style="margin-top:12px">${bars}</div>`:'');
-        } else if (rtv==='K') { // 포인트 카드 4칸 (실제 기록 + 점수)
-          const cards = [['atk','공격 포인트',`${R.goals}골 ${R.ast}도움`],['def','수비 포인트',`무실점 ${R.cleanQ}쿼터${R.big?`<small class="bg">대패 ${R.big}회</small>`:''}`],['res','승리 포인트',`${R.w}승 ${R.d}무 ${R.l}패`],['mom','MOM',`${R.mom}회`]];
-          const vv = Math.round(A('vote')*10)/10;
-          const KV = window._kv || '1',  /* 1 = 시즌 합계 + 경기당 작게 */ f1 = v => (v>0.049?'+':'')+v.toFixed(1), f2 = v => (v>0.0049?'+':'')+v.toFixed(2);
-          const val = k => { const avgV = A(k), tot = CP[k]+CM[k];
-            if (KV==='1') return { c: cl(Math.round(tot*10)/10), h: `<em>${f1(tot)}<small>경기당 ${f2(avgV)}</small></em>` };
-            if (KV==='2') return { c: cl(Math.round(tot*10)/10), h: `<em class="pm">${CP[k]?`<i class="p">+${CP[k].toFixed(1)}</i>`:''}${CM[k]?`<i class="m">${CM[k].toFixed(1)}</i>`:''}${!CP[k]&&!CM[k]?'0.0':''}</em>` };
-            return { c: Math.abs(avgV)<0.005?'z':avgV>0?'p':'m', h: `<em>${f2(avgV)}</em>` }; };
-          b = head + `<div class="rK k${KV}">${cards.map(([k,l,raw])=>{ const o = val(k); return `<div class="${o.c}"><span>${l}</span><b>${raw}</b>${o.h}</div>`; }).join('')}</div>`;
-        } else if (rtv==='M') { // 득표 미터 + 나머지 막대
-          const part = rl.reduce((t,x)=>{ const v = D.votes.find(y=>y.match_id===x.id); return t + ((v&&v.total_participants)||0); },0) / n;
-          const per = R.votes/n, pct = part ? Math.min(100, per/part*100) : 0, vv = Math.round(A('vote')*10)/10;
-          const rest = nz.filter(([k])=>k!=='vote').map(([k,l])=>{ const v=Math.round(A(k)*10)/10; return `<div><span>${l}</span><i>${v<0?`<u class="m" style="width:${Math.min(1,-v)*50}%"></u>`:`<u class="p" style="width:${Math.min(1,v)*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('');
-          b = head + `<div class="rM"><div class="t"><span>🗳️ 경기당 받은 표</span><b>${per.toFixed(1)}<small> / ${part.toFixed(0)}명</small></b><em class="${cl(vv)}">${sg(vv)}</em></div><i><u style="width:${pct}%"></u><s style="left:50%"></s></i><p><span>0</span><span>절반 = 0점</span><span>전원</span></p></div>` + (rest?`<div class="ra-list rq" style="margin-top:10px">${rest}</div>`:'');
-        } else if (rtv==='N') { // 시즌 전체 경기 점 타임라인
-          b = head + `<div class="rN">${rl.map(x=>{ const m=md2(x); return `<i style="background:${gc(x.r)}" title="${m.d} ${luEsc(m.o)} ${x.r.toFixed(1)}"></i>`; }).join('')}</div><p class="rN-c"><span>시즌 ${rl.length}경기</span><span><u style="background:#2e7d32"></u>8+ <u style="background:#1a3a6b"></u>7 <u style="background:#f5a623"></u>6 <u style="background:#c62828"></u>~5</span></p>` + (bars?`<div class="ra-list rq" style="margin-top:8px">${bars}</div>`:'');
-        } else { // J: 내 가감 + 이렇게 올릴 수 있어요
-          const tips = [['⚽','공격 포인트','+0.2'],['🛡️','수비 포인트','+0.3'],['⭐','MOM','+0.5'],['🏆','승리 포인트','+0.3']];
-          b = head + (bars?`<div class="ra-list rq">${bars}</div>`:'') + `<div class="rJ"><h6>이렇게 올릴 수 있어요</h6><div>${tips.map(([i,l,v])=>`<span>${i} ${l} <b>${v}</b></span>`).join('')}</div></div>`;
-        }
-      } else
-      if ('ABCDEF'.includes(rtv)) { // 숫자 옆 최근 평점: 다른 그래프들
-        const mx = 1;  // 막대 눈금 고정: 가운데에서 끝까지 = ±1.0점 (넘으면 끝에서 멈춤)
-        const best = [...items].sort((x,y)=>A(y[0])-A(x[0]))[0][0];
-        const rows = items.map(([k,l])=>{ const v=Math.round(A(k)*10)/10; return `<div class="${k===best&&v>0.049?'best':''}"><span>${l}</span><i>${v<0?`<u class="m" style="width:${Math.min(1,Math.abs(v)/mx)*50}%"></u>`:`<u class="p" style="width:${Math.min(1,v/mx)*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('');
-        const L = rl.slice(-8), gc = v => v>=8?'#2e7d32':v>=7?'#1a3a6b':v>=6?'#f5a623':'#c62828';
-        const last = L[L.length-1];
-        const cap = (t) => `<p><span>${t}</span><b>${last.r.toFixed(1)}</b></p>`;
-        let g = '';
-        if (rtv==='A') { // 세로 막대 (등급색)
-          g = `<div class="gA">${L.map((x,i)=>`<i style="height:${Math.max(8,(x.r-4)/6*100)}%;background:${gc(x.r)};opacity:${i===L.length-1?1:.75}"></i>`).join('')}</div>${cap('최근 8경기')}`;
-        } else if (rtv==='B') { // 점수 칩 (최근 폼처럼)
-          g = `<div class="gB">${L.slice(-5).map((x,i,arr)=>`<b style="background:${gc(x.r)}" class="${i===arr.length-1?'on':''}">${i===arr.length-1?'<em>최근</em>':''}${x.r.toFixed(1)}</b>`).join('')}</div>`;
-        } else if (rtv==='C') { // 롤리팝 (평균선 기준 위/아래)
-          const W=150,H=54, y = v => H/2 - (v-avg)/3*(H/2-4);
-          g = `<svg class="gC" viewBox="0 0 ${W} ${H}"><line x1="0" x2="${W}" y1="${H/2}" y2="${H/2}" class="base"/>${L.map((x,i)=>{ const cx = 8+i*(W-16)/Math.max(1,L.length-1); const yy = Math.max(4,Math.min(H-4,y(x.r))); return `<line x1="${cx}" x2="${cx}" y1="${H/2}" y2="${yy}" stroke="${x.r>=avg?'#2e7d32':'#c62828'}"/><circle cx="${cx}" cy="${yy}" r="${i===L.length-1?4.5:3.5}" style="fill:${x.r>=avg?'#2e7d32':'#c62828'}"/>`; }).join('')}</svg><p><span>내 평균 기준 위·아래</span><b>${last.r.toFixed(1)}</b></p>`;
-        } else if (rtv==='D') { // 히트 스트립 (8칸)
-          g = `<div class="gD">${L.map((x,i)=>`<i style="background:${gc(x.r)};opacity:${.45+.55*Math.max(0,Math.min(1,(x.r-5)/4))}" class="${i===L.length-1?'on':''}"></i>`).join('')}</div>${cap('최근 8경기')}`;
-        } else if (rtv==='E') { // 영역 + 계단
-          const W=150,H=54, lo3=Math.min(5.5,...L.map(x=>x.r)), hi3=Math.max(9,...L.map(x=>x.r)), xs=i=>i*W/L.length, ys=v=>H-4-(v-lo3)/(hi3-lo3)*(H-8);
-          let d = `M0 ${H}`; L.forEach((x,i)=>{ d += ` L${xs(i)} ${ys(x.r)} L${xs(i+1)} ${ys(x.r)}`; }); d += ` L${W} ${H} Z`;
-          g = `<svg class="gE" viewBox="0 0 ${W} ${H}"><path d="${d}"/></svg>${cap('최근 8경기')}`;
-        } else { // F: 반원 게이지 (최근 5경기 평균)
-          const r5 = L.slice(-5), m5 = r5.reduce((t,x)=>t+x.r,0)/r5.length, C3 = Math.PI*40, Lg = Math.max(0,Math.min(1,(m5-4)/6))*C3;
-          g = `<svg class="gF" viewBox="0 0 100 58"><path d="M10 52 A40 40 0 0 1 90 52" class="bg"/><path d="M10 52 A40 40 0 0 1 90 52" class="fg" stroke-dasharray="${Lg} ${C3}" style="stroke:${gc(m5)}"/><text x="50" y="50">${m5.toFixed(1)}</text></svg><p style="justify-content:center"><span>최근 5경기 평균</span></p>`;
-        }
-        b = `<div class="ap3-top rw-h">${bigR}<span>/ 10</span><div class="rw-sp rv">${g}</div></div><div class="ra-list rq">${rows}</div>`;
-      } else
-      if ('wxy'.includes(rtv)) { // 1번 + 숫자 옆 최근 평점 그래프
-        const mx = Math.max(.3, ...items.map(([k])=>Math.abs(A(k))));
-        const best = [...items].sort((x,y)=>A(y[0])-A(x[0]))[0][0];
-        const rows = items.map(([k,l])=>{ const v=A(k); return `<div class="${rtv!=='x'&&k===best&&v>0.049?'best':''}"><span>${rtv==='y'?`<i class="ic">${IC[k]}</i>`:''}${l}</span><i>${v<0?`<u class="m" style="width:${Math.abs(v)/mx*50}%"></u>`:`<u class="p" style="width:${v/mx*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('');
-        const L = rl.slice(-8), W = 150, H = 54, lo2 = Math.min(5.5, ...L.map(x=>x.r)), hi2 = Math.max(9, ...L.map(x=>x.r));
-        const xs = i => L.length>1 ? 6 + i*(W-12)/(L.length-1) : W/2, ys = v => H-8-(v-lo2)/(hi2-lo2)*(H-16);
-        const pts = L.map((x,i)=>`${xs(i)},${ys(x.r)}`).join(' ');
-        const last = L[L.length-1];
-        const area = L.length>1 ? `<polygon class="ar" points="${xs(0)},${H} ${pts} ${xs(L.length-1)},${H}"/>` : '';
-        const spark = `<div class="rw-sp"><svg viewBox="0 0 ${W} ${H}">${area}<polyline points="${pts}"/>${L.map((x,i)=>`<circle cx="${xs(i)}" cy="${ys(x.r)}" r="${i===L.length-1?4:2.5}" class="${i===L.length-1?'last':''}"/>`).join('')}</svg><p><span>최근 ${L.length}경기</span><b>${last.r.toFixed(1)}</b></p></div>`;
-        if (rtv==='x') b = `<div class="ru-hero rw-h">${bigR}<span>/ 10</span>${spark}</div><div class="ra-list rq">${rows}</div>`;
-        else b = `<div class="ap3-top rw-h">${bigR}<span>/ 10</span>${spark}</div><div class="ra-list rq${rtv==='y'?' ic':''}">${rows}</div>`;
-      } else
-      if ('tuv'.includes(rtv)) { // 1번 + 임팩트
-        const mx = Math.max(.3, ...items.map(([k])=>Math.abs(A(k))));
-        const best = [...items].sort((x,y)=>A(y[0])-A(x[0]))[0][0];
-        const dlt = tAvg!=null ? avg - tAvg : null;
-        const rows = items.map(([k,l])=>{ const v=A(k); return `<div class="${rtv!=='u'&&k===best&&v>0.049?'best':''}"><span>${rtv==='v'?`<i class="ic">${IC[k]}</i>`:''}${l}</span><i>${v<0?`<u class="m" style="width:${Math.abs(v)/mx*50}%"></u>`:`<u class="p" style="width:${v/mx*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('');
-        const pill = dlt!=null ? `<em class="rt-vs ${dlt>=0?'p':'m'}">팀 평균보다 ${dlt>=0?'+':''}${dlt.toFixed(1)}</em>` : '';
-        if (rtv==='u') b = `<div class="ru-hero">${bigR}<span>/ 10</span>${pill}</div><div class="ra-list rq">${rows}</div>`;
-        else b = `<div class="ap3-top">${bigR}<span>/ 10</span>${pill}</div><div class="ra-list rq${rtv==='v'?' ic':''}">${rows}</div>`;
-      } else
-      if ('qrs'.includes(rtv)) { // A안 정리: 기본 제외, 가운데 기준 가감 막대
-        let list = items;
-        if (rtv==='s') list = items.filter(([k])=>Math.abs(A(k))>0.049).sort((x,y)=>A(y[0])-A(x[0]));
-        const mx = Math.max(.3, ...list.map(([k])=>Math.abs(A(k))));
-        b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
-          <div class="ra-list rq${rtv==='r'?' raw':''}">${list.map(([k,l,raw])=>{ const v=A(k); return `<div><span>${l}${rtv==='r'?`<small>${raw}</small>`:''}</span><i>${v<0?`<u class="m" style="width:${Math.abs(v)/mx*50}%"></u>`:`<u class="p" style="width:${v/mx*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('')}</div>`;
-      } else
-      if (rtv==='a') { // 기본 7.0 + 항목별 가감 막대 (가운데 기준)
-        const mx = Math.max(.5, ...items.map(([k])=>Math.abs(A(k))));
-        b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
-          <div class="ra-list"><div class="ra-base"><span>기본</span><em></em><b>7.0</b></div>${items.map(([k,l,raw])=>{ const v=A(k); return `<div><span>${l}<small>${raw}</small></span><i>${v<0?`<u class="m" style="width:${Math.abs(v)/mx*50}%"></u>`:`<u class="p" style="width:${v/mx*50}%"></u>`}</i><b class="${cl(v)}">${sg(v)}</b></div>`; }).join('')}
-          <div class="ra-sum"><span>경기당 평균</span><em></em><b>${(7+sum).toFixed(1)}</b></div></div>`;
-      } else if (rtv==='b') { // 0~10 띠: 기본 7.0 위에 가점(초록)·감점(빨강)
-        const plus = items.filter(([k])=>A(k)>0), minus = items.filter(([k])=>A(k)<0);
-        const pc = ['#2e7d32','#43a047','#66bb6a','#81c784','#a5d6a7','#c8e6c9'];
-        const P = plus.reduce((t,[k])=>t+A(k),0), M = -minus.reduce((t,[k])=>t+A(k),0);
-        const baseW = Math.max(0, 7 - M);
-        b = `<div class="ap3-top">${bigR}<span>/ 10</span></div>
-          <div class="rb-band"><i class="base" style="width:${baseW*10}%"></i>${minus.map(([k])=>`<i class="minus" style="width:${-A(k)*10}%"></i>`).join('')}${plus.map(([k],i)=>`<i style="width:${A(k)*10}%;background:${pc[i]}"></i>`).join('')}</div>
-          <div class="rb-scale"><span>0</span><span style="left:70%">7.0 기본</span><span>10</span></div>
-          <div class="rb-lg">${items.map(([k,l,raw])=>{ const v=A(k); const i=plus.findIndex(x=>x[0]===k); return `<div><u style="background:${v<0?'#e57373':i>=0?pc[i]:'#d5dbe5'}"></u><span>${l}</span><b class="${cl(v)}">${sg(v)}</b><small>${raw}</small></div>`; }).join('')}</div>`;
-      } else { // 항목 타일 6칸
-        b = `<div class="ap3-top">${bigR}<span>/ 10</span><em class="rc-base">기본 7.0 ${sum>=0?'+':'−'} ${Math.abs(sum).toFixed(1)}</em></div>
-          <div class="rc-grid">${items.map(([k,l,raw])=>{ const v=A(k); return `<div class="${cl(v)}"><span>${l}</span><b>${sg(v)}</b><small>${raw}</small></div>`; }).join('')}</div>`;
-      }
-      if (!'defghijklmnopqrstuvwxyABCDEFGHJKMN'.includes(rtv)) b += `<div class="rt-mini"><span>최고 <b>${hi.toFixed(1)}</b></span><span>최저 <b>${lo.toFixed(1)}</b></span><span>평가 <b>${n}</b>경기</span>${tAvg!=null?`<span>팀 평균 <b>${tAvg.toFixed(1)}</b></span>`:''}</div>`;
-    } else if (rtv==='7') { // 숫자 + 추이 꺾은선 + 숫자 4칸
-      const W=200,H=56, xs=i=>rl.length>1? 6+i*(W-12)/(rl.length-1) : W/2, ys=v=>H-6-(Math.max(4,Math.min(10,v))-4)/6*(H-12);
-      const pts = rl.map((x,i)=>`${xs(i)},${ys(x.r)}`).join(' ');
-      b = `<div class="rs-ap rt7">${bigR}<span class="rt7-u">/ 10</span><div class="rt7-c"><svg class="rt-sp" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${tAvg!=null?`<line x1="0" x2="${W}" y1="${ys(tAvg)}" y2="${ys(tAvg)}" class="ta"/>`:''}<polyline points="${pts}"/>${rl.map((x,i)=>`<circle cx="${xs(i)}" cy="${ys(x.r)}" r="3"/>`).join('')}</svg><p><span>${md(rl[0])}</span>${tAvg!=null?`<span class="ta">--- 팀 평균</span>`:''}<span>${md(rl[rl.length-1])}</span></p></div></div>
-        <div class="rt-kpi">${[['최고',hi.toFixed(1)],['최저',lo.toFixed(1)],['팀 평균',tAvg!=null?tAvg.toFixed(1):'-'],['평가 경기',rl.length]].map(([l,v])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>`;
-    } else if (rtv==='4') { // 평균 구성 (기본 7.0 + 가감)
-      const cat = {득표:0,'골·도움':0,MOM:0,'승패':0,'수비':0};
-      rl.forEach(x=>{ const v = D.votes.find(y=>y.match_id===x.id); if(!v) return; ratingParts(v, msByMatch[x.id]||{}, D.p.id, D.p.position).forEach(p=>{ const k = p.k==='득표'?'득표':/^(골|도움)/.test(p.k)?'골·도움':p.k==='MOM'?'MOM':/승리|패배|대패/.test(p.k)?'승패':'수비'; cat[k]+=p.v; }); });
-      const rows = Object.entries(cat).map(([k,v])=>[k,v/rl.length]);
-      const mx = Math.max(.5,...rows.map(r=>Math.abs(r[1])));
-      b = `<div class="rs-ap ap-h">${bigR}<div class="rt-dv"><div class="base"><span>기본</span><b>7.0</b></div>${rows.map(([k,v])=>`<div><span>${k}</span><i>${v<0?`<u class="m" style="width:${Math.abs(v)/mx*50}%"></u>`:`<u class="p" style="width:${v/mx*50}%"></u>`}</i><b class="${v>0.04?'p':v<-0.04?'m':''}">${v>=0?'+':''}${v.toFixed(1)}</b></div>`).join('')}</div></div>`;
-    } else if (rtv==='5') { // 분포
-      const bk = [['~5.9',x=>x<6],['6.0~6.9',x=>x>=6&&x<7],['7.0~7.9',x=>x>=7&&x<8],['8.0~8.9',x=>x>=8&&x<9],['9.0~',x=>x>=9]].map(([l,f])=>[l,rl.filter(x=>f(x.r)).length]);
-      const m = Math.max(1,...bk.map(x=>x[1]));
-      b = `<div class="rs-ap ap-h">${bigR}<div class="rt-hist">${bk.map(([l,n],i)=>`<div><span>${l}</span><i><u style="width:${n/m*100}%" class="h${i}"></u></i><b>${n}<small>경기</small></b></div>`).join('')}</div></div>`;
-    } else { // 10점 게이지 + 팀 평균 표시
-      b = `<div class="ap6">${bigR}<div class="ap6-g rt-g"><i><u style="width:${avg*10}%"></u>${tAvg!=null?`<s style="left:${tAvg*10}%"></s>`:''}</i><p><span>0</span>${tAvg!=null?`<span class="ta" style="left:${tAvg*10}%">팀 평균 ${tAvg.toFixed(1)}</span>`:''}<span>10</span></p></div></div><div class="rt-mini"><span>최고 <b>${hi.toFixed(1)}</b></span><span>최저 <b>${lo.toFixed(1)}</b></span><span>평가 <b>${rl.length}</b>경기</span></div>`;
-    }
-    rtCard = card(head + b);
-  }
+  // 평균 평점: 큰 숫자 + 평점 기준 설명(?)
+  const rtCard = card(`<div class="rs-apt">${ttl('평균 평점')}<button class="rt-help" onclick="rtHelp(this)" aria-label="평점 기준 보기">?</button></div>
+    ${rated.length ? `<div class="ap3-top"><b class="rt-n">${avg.toFixed(1)}</b><span>/ 10</span><em class="rt-cnt">${rated.length}경기 평가</em></div>` : `<p class="rs-apmsg">평가된 경기가 아직 없어요.</p>`}`);
   const apMix = card(`<div class="rs-apt">${ttl('어택 포인트')}${rkB}</div>${body}`);
   const prof = plyProfile(D.p);
   // 함께한 시간 (입단일 기준, 시즌 선택과 무관)
