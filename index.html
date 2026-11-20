@@ -914,7 +914,8 @@
   .rN i{width:18px;height:18px;border-radius:5px}
   .rN-c{display:flex;justify-content:space-between;align-items:center;margin:6px 0 0;font-size:10px;color:var(--muted)}
   .rN-c u{display:inline-block;width:8px;height:8px;border-radius:2px;margin:0 2px 0 6px;vertical-align:-1px}
-  .rt-help{width:22px;height:22px;border-radius:50%;border:0;background:#eef2f8;color:var(--team-navy);font:inherit;font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .rs-ttlq{display:flex;align-items:center;gap:6px}
+  .rt-help{width:20px;height:20px;border-radius:50%;border:0;background:#eef2f8;color:var(--team-navy);font:inherit;font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex:none}
   .rt-tr{margin-left:auto;align-self:center;display:flex;flex-direction:column;align-items:flex-end;gap:5px;text-align:right}
   .rt-tr .tr{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:13px;font-size:12px;font-weight:800}
   .rt-tr .tr.p{background:#eaf5ec;color:#2e7d32}.rt-tr .tr.m{background:#fdecec;color:#c62828}.rt-tr .tr.z{background:#eef2f8;color:var(--muted)}
@@ -5438,11 +5439,38 @@ function mrPower(sid){
 function mrMore(){ window._mr.showAll = true; mrRender(); }
 // 최근 폼 평점 색: 점수대별 (~5 빨강 · 6 주황 · 7 남색 · 8 초록 · 9 하늘 · 10 금색)
 // 평점 기준 설명 풍선
+function helpPop(btn, key, html){
+  const old = document.getElementById('rb-pop'); if (old) { const same = old.dataset.k===key; old.remove(); if (same) return; }
+  const el = document.createElement('div'); el.id = 'rb-pop'; el.dataset.k = key; el.classList.add('rt-hp');
+  el.innerHTML = html;
+  document.body.appendChild(el);
+  const r = btn.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
+  let left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width/2 - w/2));
+  let top = r.bottom + 10; if (top + h > window.innerHeight - 8) { top = r.top - h - 10; el.classList.add('up'); }
+  el.style.left = left + 'px'; el.style.top = top + 'px'; el.style.setProperty('--ax', (r.left + r.width/2 - left) + 'px');
+  const close = e => { if (e && e.type==='click' && (el.contains(e.target) || btn.contains(e.target))) return; el.remove(); document.removeEventListener('click', close, true); window.removeEventListener('scroll', close, true); };
+  setTimeout(()=>{ document.addEventListener('click', close, true); window.addEventListener('scroll', close, true); }, 0);
+}
+const helpRow = (k,v,cls='') => `<div class="rr"><span>${k}</span><b class="${cls}">${v}</b></div>`;
+// 어택 포인트 기준 설명
+function apHelp(btn){
+  const c = POWER_CFG, row = helpRow;
+  helpPop(btn, 'ap', `<h6>어택 포인트 기준 (1000점 만점)</h6>` +
+    row('경기 점수', `최대 ${(c.attend + c.streakMax + c.ratingMax) * c.matchWeight}점`) +
+    `<p class="nt">출석한 경기마다 아래 점수를 매겨 평균 낸 뒤 ×${c.matchWeight}</p>` +
+    row('· 출석', `${c.attend}점`, 'p') +
+    row('· 연속 출석', `2경기째부터 +${c.streakStep}씩 (최대 ${c.streakMax})`, 'p') +
+    row('· 평점', `평점 × ${c.ratingMax/10} (10점이면 ${c.ratingMax})`, 'p') +
+    row('출석률', `최대 ${c.rateMax}점`) +
+    `<p class="nt">시즌 전체 경기 중 출석한 비율</p>` +
+    row('누적 출석', `최대 ${c.cumMax}점`) +
+    `<p class="nt">시즌 ${c.cumTarget}경기 출석하면 만점</p>` +
+    `<p class="nt" style="margin-top:6px">출석이 적은 선수는 경기 점수가 팀 평균 쪽으로 보정돼요. 입단 전 경기는 팀 평균 출석률을 반영해요.</p>` +
+    `<div class="rt"><span>순위</span><b style="font-size:13px;font-family:inherit">시즌별 어택 포인트 순</b></div>`);
+}
 function rtHelp(btn){
-  const old = document.getElementById('rb-pop'); if (old) { const same = old.dataset.k==='help'; old.remove(); if (same) return; }
-  const el = document.createElement('div'); el.id = 'rb-pop'; el.dataset.k = 'help'; el.classList.add('rt-hp');
-  const c = RATING_CFG, row = (k,v,cls='') => `<div class="rr"><span>${k}</span><b class="${cls}">${v}</b></div>`;
-  el.innerHTML = `<h6>평점 기준 (경기마다)</h6>` +
+  const c = RATING_CFG, row = helpRow;
+  helpPop(btn, 'rt', `<h6>평점 기준 (경기마다)</h6>` +
     row('기본','7.0') +
     row('MOM 득표','참석자 절반 = 0') +
     `<p class="nt">전원이 뽑으면 +1.5, 아무도 안 뽑으면 −1.5</p>` +
@@ -5453,14 +5481,7 @@ function rtHelp(btn){
     row('무실점 쿼터',`+${c.cleanQ} (최대 +${c.cleanMax.toFixed(1)})`,'p') +
     row('실점 1골',`${c.concededQ} (최대 ${c.concededMax.toFixed(1)})`,'m') +
     `<p class="nt">무실점·실점은 그 쿼터에 GK·수비수 자리에서 뛴 경우만 반영돼요.</p>` +
-    `<div class="rt"><span>평균 평점</span><b style="font-size:13px;font-family:inherit">평가된 경기 평균 · 1~10점</b></div>`;
-  document.body.appendChild(el);
-  const r = btn.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
-  let left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width/2 - w/2));
-  let top = r.bottom + 10; if (top + h > window.innerHeight - 8) { top = r.top - h - 10; el.classList.add('up'); }
-  el.style.left = left + 'px'; el.style.top = top + 'px'; el.style.setProperty('--ax', (r.left + r.width/2 - left) + 'px');
-  const close = e => { if (e && e.type==='click' && (el.contains(e.target) || btn.contains(e.target))) return; el.remove(); document.removeEventListener('click', close, true); window.removeEventListener('scroll', close, true); };
-  setTimeout(()=>{ document.addEventListener('click', close, true); window.addEventListener('scroll', close, true); }, 0);
+    `<div class="rt"><span>평균 평점</span><b style="font-size:13px;font-family:inherit">평가된 경기 평균 · 1~10점</b></div>`);
 }
 function formCol(v){ return v>=10?'#c99700':v>=9?'#1e88e5':v>=8?'#2e7d32':v>=7?'#1a3a6b':v>=6?'#ef8f00':'#c62828'; }
 function mrRender(){
@@ -5599,9 +5620,9 @@ function mrRender(){
     const pill = dl==null ? `<span class="tr z">첫 평가 경기</span>` : dl>0 ? `<span class="tr p">▲ ${dl.toFixed(1)}점 올랐어요</span>` : dl<0 ? `<span class="tr m">▼ ${Math.abs(dl).toFixed(1)}점 내려갔어요</span>` : `<span class="tr z">지난 경기와 같아요</span>`;
     return `<div class="rt-tr">${pill}<small>최근 경기 ${last.r.toFixed(1)}점 · ${rl.length}경기 평가</small></div>`;
   })();
-  const rtCard = card(`<div class="rs-apt">${ttl('평균 평점')}<button class="rt-help" onclick="rtHelp(this)" aria-label="평점 기준 보기">?</button></div>
+  const rtCard = card(`<h3 class="rs-ttl rs-ttlq">평균 평점<button class="rt-help" onclick="rtHelp(this)" aria-label="평점 기준 보기">?</button></h3>
     ${rated.length ? `<div class="ap3-top"><b class="rt-n">${avg.toFixed(1)}</b><span>/ 10</span>${rtTrend}</div>` : `<p class="rs-apmsg">평가된 경기가 아직 없어요.</p>`}`);
-  const apMix = card(`<div class="rs-apt">${ttl('어택 포인트')}${rkB}</div>${body}`);
+  const apMix = card(`<div class="rs-apt"><h3 class="rs-ttl rs-ttlq">어택 포인트<button class="rt-help" onclick="apHelp(this)" aria-label="어택 포인트 기준 보기">?</button></h3>${rkB}</div>${body}`);
   const prof = plyProfile(D.p);
   // 함께한 시간 (입단일 기준, 시즌 선택과 무관)
   let tgCard = '';
