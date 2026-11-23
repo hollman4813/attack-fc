@@ -1205,7 +1205,7 @@
   .intro-emblem{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;object-fit:cover;box-shadow:0 12px 36px rgba(0,0,0,.4);animation:introPop .55s var(--ease-pop) 1.15s both}
   /* 엠블럼이 나온 뒤 센터서클째 위로 올라가고, 문구가 화면 가운데에 나옴 */
   .intro-stage{position:absolute;inset:0;animation:introUp .6s cubic-bezier(.65,0,.35,1) 1.8s both}
-  .intro-txt{position:absolute;left:0;right:0;top:calc(50% + 40px);transform:translateY(-50%);text-align:center}
+  .intro-txt{position:absolute;left:0;right:0;top:calc(50% + 128px);transform:translateY(-50%);text-align:center}  /* 서클(220)+간격(36)+문구(140)를 한 덩어리로 화면 가운데 */
   .intro-name{font-family:'Barlow Condensed',var(--font-display);font-size:48px;font-weight:800;font-style:italic;white-space:nowrap}
   .intro-name .wp{display:block;font-size:1.35em;letter-spacing:.02em;line-height:.95;color:#fff}
   .intro-name em{display:block;font-style:italic;font-size:.95em;letter-spacing:.14em;padding-left:.14em;line-height:1.1;color:#9cc8f0}
@@ -1220,11 +1220,11 @@
   @keyframes introGlow{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
   @keyframes introFadeIn{from{opacity:0}to{opacity:1}}
   @keyframes introPop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
-  @keyframes introUp{from{transform:none}to{transform:translateY(-185px)}}
-  @keyframes introUpS{from{transform:none}to{transform:translateY(-140px)}}
+  @keyframes introUp{from{transform:none}to{transform:translateY(-88px)}}
+  @keyframes introUpS{from{transform:none}to{transform:translateY(-72px)}}
   @keyframes introRise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
   @keyframes introOut{to{opacity:0;visibility:hidden}}
-  @media (max-height:640px){.intro-emblem{width:116px;height:116px;margin:-58px 0 0 -58px}.intro-circle{width:170px;height:170px;margin:-85px 0 0 -85px}.intro-stage{animation-name:introUpS}.intro-name{font-size:40px}.intro-sub{font-size:14px}}
+  @media (max-height:640px){.intro-emblem{width:116px;height:116px;margin:-58px 0 0 -58px}.intro-circle{width:170px;height:170px;margin:-85px 0 0 -85px}.intro-stage{animation-name:introUpS}.intro-txt{top:calc(50% + 99px)}.intro-name{font-size:40px}.intro-sub{font-size:14px}}
   @media (prefers-reduced-motion:reduce){#intro,#intro *{animation-duration:.01s!important;animation-delay:0s!important}#intro{animation:introFadeOut .3s linear 1.6s forwards!important}}
   @keyframes introFadeOut{to{opacity:0;visibility:hidden}}
   /* 시작 화면: 팀 컬러 배경 */
