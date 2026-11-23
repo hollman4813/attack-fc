@@ -1188,7 +1188,7 @@
   .mem-pick.on{border-color:var(--skyblue);background:#eaf4fc;font-weight:700}
   /* 인트로 화면 */
   /* 인트로: 야간 경기 조명탑이 켜지며 엠블럼을 비춘다. 들어올 땐 감속, 나갈 땐 가속·더 짧게 */
-  #intro{position:fixed;inset:0;z-index:10000;background:linear-gradient(180deg,var(--team-navy),var(--team-navy-2));color:var(--on-team);overflow:hidden;animation:introOut .5s ease-out 2.6s forwards}
+  #intro{position:fixed;inset:0;z-index:10000;background:linear-gradient(180deg,var(--team-navy),var(--team-navy-2));color:var(--on-team);overflow:hidden;animation:introOut .5s ease-out 3.4s forwards}
   #intro.out{opacity:0;visibility:hidden;transition:opacity .3s ease-out,visibility .3s}
   html.intro-on{background:var(--team-navy)}
   html.intro-on .loading,html.intro-on #net-busy{visibility:hidden!important}  /* 인트로 동안 로딩 표시 숨김 */  /* 인트로 동안 사파리 상단바 색 = 인트로 색 */
@@ -1203,13 +1203,15 @@
   .intro-spotc{position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff;animation:introDot .5s var(--ease-pop) .95s both}
   .intro-glow{position:absolute;left:50%;top:50%;width:440px;height:440px;margin:-220px 0 0 -220px;border-radius:50%;background:radial-gradient(circle,rgba(150,205,255,.42),rgba(124,192,255,.12) 42%,transparent 64%);animation:introGlow .7s var(--ease-out) 1.05s both}
   .intro-emblem{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;object-fit:cover;box-shadow:0 12px 36px rgba(0,0,0,.4);animation:introPop .55s var(--ease-pop) 1.15s both}
-  .intro-txt{position:absolute;left:0;right:0;top:calc(50% + 134px);text-align:center}
+  /* 엠블럼이 나온 뒤 센터서클째 위로 올라가고, 문구가 화면 가운데에 나옴 */
+  .intro-stage{position:absolute;inset:0;animation:introUp .6s cubic-bezier(.65,0,.35,1) 1.8s both}
+  .intro-txt{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center}
   .intro-name{font-family:'Barlow Condensed',var(--font-display);font-size:48px;font-weight:800;font-style:italic;white-space:nowrap}
   .intro-name .wp{display:block;font-size:1.35em;letter-spacing:.02em;line-height:.95;color:#fff}
   .intro-name em{display:block;font-style:italic;font-size:.95em;letter-spacing:.14em;padding-left:.14em;line-height:1.1;color:#9cc8f0}
-  .intro-name,.intro-sub{animation:introRise .55s var(--ease-out) 1.4s both}
-  .intro-sub{margin-top:12px;font-family:'Barlow Condensed',var(--font-display);font-size:16px;font-weight:600;line-height:1;letter-spacing:6px;padding-left:6px;color:var(--team-sky-soft);opacity:.85;animation-delay:1.52s}
-  .intro-by{position:absolute;left:0;right:0;text-align:center;bottom:calc(18px + env(safe-area-inset-bottom,0px));font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:500;letter-spacing:1.5px;color:rgba(255,255,255,.7);animation:introFadeIn .5s ease-out 1.6s both}
+  .intro-name,.intro-sub{animation:introRise .55s var(--ease-out) 2.1s both}
+  .intro-sub{margin-top:12px;font-family:'Barlow Condensed',var(--font-display);font-size:16px;font-weight:600;line-height:1;letter-spacing:6px;padding-left:6px;color:var(--team-sky-soft);opacity:.85;animation-delay:2.22s}
+  .intro-by{position:absolute;left:0;right:0;text-align:center;bottom:calc(18px + env(safe-area-inset-bottom,0px));font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:500;letter-spacing:1.5px;color:rgba(255,255,255,.7);animation:introFadeIn .5s ease-out 2.3s both}
   @keyframes introLine{from{transform:scaleX(0)}to{transform:scaleX(1)}}
   @keyframes introDraw{to{stroke-dashoffset:0}}
   @keyframes introDot{0%{transform:scale(0)}60%{transform:scale(1.6)}100%{transform:scale(1)}}
@@ -1218,9 +1220,11 @@
   @keyframes introGlow{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
   @keyframes introFadeIn{from{opacity:0}to{opacity:1}}
   @keyframes introPop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  @keyframes introUp{from{transform:none}to{transform:translateY(-212px)}}
+  @keyframes introUpS{from{transform:none}to{transform:translateY(-165px)}}
   @keyframes introRise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
   @keyframes introOut{to{opacity:0;visibility:hidden}}
-  @media (max-height:640px){.intro-emblem{width:116px;height:116px;margin:-58px 0 0 -58px}.intro-circle{width:170px;height:170px;margin:-85px 0 0 -85px}.intro-txt{top:calc(50% + 104px)}.intro-name{font-size:40px}.intro-sub{font-size:14px}}
+  @media (max-height:640px){.intro-emblem{width:116px;height:116px;margin:-58px 0 0 -58px}.intro-circle{width:170px;height:170px;margin:-85px 0 0 -85px}.intro-stage{animation-name:introUpS}.intro-name{font-size:40px}.intro-sub{font-size:14px}}
   @media (prefers-reduced-motion:reduce){#intro,#intro *{animation-duration:.01s!important;animation-delay:0s!important}#intro{animation:introFadeOut .3s linear 1.6s forwards!important}}
   @keyframes introFadeOut{to{opacity:0;visibility:hidden}}
   /* 시작 화면: 팀 컬러 배경 */
@@ -1327,11 +1331,13 @@
 <body>
 <div id="intro" aria-hidden="true" onclick="this.classList.add('out')">
   <i class="intro-turf"></i>
+  <div class="intro-stage">
   <i class="intro-line"></i>
   <svg class="intro-circle" viewBox="0 0 220 220"><circle cx="110" cy="110" r="106" pathLength="1"/></svg>
   <i class="intro-spotc"></i>
   <i class="intro-glow"></i>
   <img src="emblem_v4.png" alt="" class="intro-emblem">
+  </div>
   <div class="intro-txt"><div class="intro-name"><span class="wp">WE PLAY TO</span><em>ATTACK</em></div><div class="intro-sub">SINCE 2006</div></div>
   <div class="intro-by">© ATTACK FC</div>
 </div>
@@ -1342,7 +1348,7 @@
   document.documentElement.classList.add('intro-on');
   el.addEventListener('animationend', e => { if(e.target===el && /introOut|introFadeOut/.test(e.animationName)) kill(); });
   el.addEventListener('transitionend', e => { if(e.target===el) kill(); });
-  setTimeout(kill, 4000);
+  setTimeout(kill, 4800);
 })();</script>
 <script>(function(){ try{ var R=document.documentElement, F=document.fonts; if(!F||!F.load) return;
   var chk=function(){ F.load("600 26px Teko","10").then(function(f){ if(f&&f.length) R.classList.add('f-teko'); }).catch(function(){});
