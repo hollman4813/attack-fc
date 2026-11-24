@@ -1327,6 +1327,23 @@
   .nw-share:active{background:#dfe6f1}
   #nw-toast{position:fixed;left:50%;bottom:calc(32px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);z-index:9800;background:rgba(15,40,80,.94);color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
   #nw-toast.on{opacity:1;transform:translate(-50%,0)}
+  .ts-kp.ts-kp2{flex-direction:column;align-items:flex-start;gap:5px}
+  .ts-kp2 b{white-space:normal!important;font-size:12px!important;line-height:1.4}
+  .ts-ar{font-style:normal;color:var(--muted);margin:0 2px}
+  .ts-cl{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none}
+  .ts-cl b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:22px;font-weight:600;line-height:1;color:var(--team-navy)}
+  .ts-cl b small{font-size:12px;color:var(--muted);font-weight:500}
+  .ts-cl>small{font-size:10.5px;color:var(--muted)}
+  .ts-q{display:flex;flex-direction:column;gap:9px}
+  .ts-q>div{display:grid;grid-template-columns:28px 1fr 22px 1fr 22px;align-items:center;gap:6px}
+  .ts-q span{font-family:'Teko','Noto Sans KR',sans-serif;font-size:17px;font-weight:600;color:var(--team-deep)}
+  .ts-q i{height:10px;border-radius:5px;background:#eef2f8;overflow:hidden}
+  .ts-q u{display:block;height:100%;border-radius:5px}
+  .ts-q u.f,.ts-qlg u.f{background:#2e7d32}.ts-q u.a,.ts-qlg u.a{background:#c62828}
+  .ts-q b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:18px;font-weight:600;text-align:right}
+  .ts-q b.f{color:#2e7d32}.ts-q b.a{color:#c62828}
+  .ts-qlg{display:flex;gap:14px;justify-content:flex-end;margin:10px 0 0;font-size:11px;color:var(--muted)}
+  .ts-qlg u{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
   .ts-more{display:none!important}
   section.ts-open .ts-more{display:flex!important}
   .ts-morebtn{display:block;width:100%;margin-top:8px;height:38px;border:0;border-radius:10px;background:#f4f7fb;color:var(--team-navy);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
@@ -3254,6 +3271,38 @@ async function loadTeamStats() {
   const oppM = name => matches.find(x=>x.opponent===name || x.opponents?.name===name);
   html += `<section class="ovc"><h3 class="ovc-h"><span>상대팀 킬러</span><span class="ovc-pill">많이 붙은 팀 순</span></h3>${killerRows.length ? killerRows.map((r,i)=>{ const m = oppM(r.opp);
       return `<div class="ts-kr${i>=5?' ts-more':''}"${r.who.length===1?` onclick="showPlayer(${r.who[0].id})"`:''}><span class="ts-ko">${m?`<span class="mx-e" style="width:26px;height:26px">${oppLogo(m,24)}</span>`:''}<span><b>${luEsc(r.opp)}</b><small>${r.games}경기</small></span></span><span class="ts-kp"><span class="ts-stack">${r.who.slice(0,3).map(p=>svAv(p)).join('')}</span><b>${r.who.map(p=>luEsc(p.name)).join(', ')}</b></span><span class="sv-v">${r.goals}<small>골</small></span></div>`; }).join('') + (killerRows.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${killerRows.length-5}팀)</button>`:'') : '<div class="ovc-empty">데이터 없음</div>'}</section>`;
+
+  // 재미 요소: 쿼터 기록·라인업이 있는 경기 기준
+  const RX = await ratingCtxLoad().catch(()=>null);
+  if (RX) {
+    const pOf = id => allPlayersData.find(p=>p.id===id);
+    const qF = [0,0,0,0], qA = [0,0,0,0]; let recN = 0;
+    const duo = {}, back = {};
+    matches.forEach(m => {
+      const rec = RX.recs[m.id], plan = RX.plans[m.id]; if (!rec) return; recN++;
+      for (let q=0;q<4;q++) {
+        const sc = luQScore(rec[q]); qF[q] += sc.us; qA[q] += sc.them;
+        luRecOf(rec,q).goals.forEach(g => { if (g.og || g.s==null || g.a==null || g.s===g.a) return; const k = g.a+'>'+g.s; duo[k] = (duo[k]||0) + 1; });
+        // 무실점 조합: 그 쿼터 GK·수비 자리 (교체 없는 쿼터만)
+        const e = plan && plan[q], fm = e && LU_FORMATIONS[e.formation]; if (!fm || !rec[q]) continue;
+        const ids = []; let ok = true;
+        Object.keys(e.slots||{}).forEach(k => { const d = fm.find(x=>x[0]===k), sl = e.slots[k]; if (!d || !sl || !['GK','CB','LB','RB'].includes(d[1])) return; if (sl.s && sl.s!==sl.p) ok = false; if (sl.p!=null) ids.push(sl.p); });
+        if (!ok || ids.length < 3) continue;
+        const key = ids.sort((a,b)=>a-b).join(','), o = back[key] || (back[key] = { ids, n:0, clean:0, ga:0 });
+        o.n++; o.ga += sc.them; if (sc.them === 0) o.clean++;
+      }
+    });
+    const stack = ps => `<span class="ts-stack">${ps.slice(0,4).map(p=>svAv(p)).join('')}</span>`;
+    // 골·어시 듀오
+    const duoL = Object.entries(duo).map(([k,n])=>{ const [a,b] = k.split('>').map(Number); return { a:pOf(a), s:pOf(b), n }; }).filter(x=>x.a&&x.s).sort((x,y)=>y.n-x.n);
+    html += `<section class="ovc"><h3 class="ovc-h"><span>골 · 어시 듀오</span><span class="ovc-pill">도움 → 골</span></h3>${duoL.length ? duoL.map((x,i)=>`<div class="ts-kr${i>=5?' ts-more':''}"><span class="ts-kp">${stack([x.a,x.s])}<b>${luEsc(x.a.name)} <i class="ts-ar">→</i> ${luEsc(x.s.name)}</b></span><span class="sv-v">${x.n}<small>골</small></span></div>`).join('') + (duoL.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${duoL.length-5}쌍)</button>`:'') : '<div class="ovc-empty">쿼터 기록이 있는 경기가 아직 없어요</div>'}</section>`;
+    // 무실점 조합
+    const backL = Object.values(back).filter(o=>o.n>=2 && o.clean>0).map(o=>({ ...o, ps:o.ids.map(pOf).filter(Boolean) })).sort((x,y)=>y.clean-x.clean || (y.clean/y.n)-(x.clean/x.n));
+    html += `<section class="ovc"><h3 class="ovc-h"><span>무실점 조합</span><span class="ovc-pill">GK · 수비 라인</span></h3>${backL.length ? backL.map((o,i)=>`<div class="ts-kr${i>=5?' ts-more':''}"><span class="ts-kp ts-kp2">${stack(o.ps)}<b>${o.ps.map(p=>luEsc(p.name)).join(' · ')}</b></span><span class="ts-cl"><b>${o.clean}<small>/${o.n}쿼터</small></b><small>쿼터당 실점 ${(o.ga/o.n).toFixed(1)}</small></span></div>`).join('') + (backL.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${backL.length-5}조합)</button>`:'') : '<div class="ovc-empty">2쿼터 이상 함께 뛴 수비 조합 중 무실점 기록이 아직 없어요</div>'}</section>`;
+    // 쿼터별 득실
+    if (recN) { const mx = Math.max(1, ...qF, ...qA);
+      html += `<section class="ovc"><h3 class="ovc-h"><span>쿼터별 득실</span><span class="ovc-pill">${recN}경기 기준</span></h3><div class="ts-q">${[0,1,2,3].map(q=>`<div><span>${q+1}Q</span><i><u class="f" style="width:${qF[q]/mx*100}%"></u></i><b class="f">${qF[q]}</b><i><u class="a" style="width:${qA[q]/mx*100}%"></u></i><b class="a">${qA[q]}</b></div>`).join('')}</div><p class="ts-qlg"><span><u class="f"></u>득점</span><span><u class="a"></u>실점</span></p></section>`; }
+  }
 
   // 월별 / 경기장별 / 상대팀별 — 한 카드에서 전환
   const oppRow = name => { const m = matches.find(x=>(x.opponents?.name||x.opponent)===name); return m ? `<span class="mx-e" style="width:24px;height:24px">${oppLogo(m,22)}</span>` : ''; };
