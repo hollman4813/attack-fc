@@ -3283,13 +3283,14 @@ async function loadTeamStats() {
       for (let q=0;q<4;q++) {
         const sc = luQScore(rec[q]); qF[q] += sc.us; qA[q] += sc.them;
         luRecOf(rec,q).goals.forEach(g => { if (g.og || g.s==null || g.a==null || g.s===g.a) return; const k = g.a+'>'+g.s; duo[k] = (duo[k]||0) + 1; });
-        // 무실점 조합: 그 쿼터 GK·수비 자리 (교체 없는 쿼터만)
+        // 무실점 조합: 그 쿼터 GK·수비 자리. 교체가 있으면 전반·후반 조합을 반 쿼터씩 (실점도 반씩)
         const e = plan && plan[q], fm = e && LU_FORMATIONS[e.formation]; if (!fm || !rec[q]) continue;
-        const ids = []; let ok = true;
-        Object.keys(e.slots||{}).forEach(k => { const d = fm.find(x=>x[0]===k), sl = e.slots[k]; if (!d || !sl || !['GK','CB','LB','RB'].includes(d[1])) return; if (sl.s && sl.s!==sl.p) ok = false; if (sl.p!=null) ids.push(sl.p); });
-        if (!ok || ids.length < 3) continue;
-        const key = ids.sort((a,b)=>a-b).join(','), o = back[key] || (back[key] = { ids, n:0, clean:0, ga:0 });
-        o.n++; o.ga += sc.them; if (sc.them === 0) o.clean++;
+        const h1 = [], h2 = []; let sub = false;
+        Object.keys(e.slots||{}).forEach(k => { const d = fm.find(x=>x[0]===k), sl = e.slots[k]; if (!d || !sl || !['GK','CB','LB','RB'].includes(d[1]) || sl.p==null) return; h1.push(sl.p); if (sl.s && sl.s!==sl.p) { sub = true; h2.push(sl.s); } else h2.push(sl.p); });
+        if (h1.length < 3) continue;
+        (sub ? [[h1,.5],[h2,.5]] : [[h1,1]]).forEach(([ids,w]) => {
+          const key = [...ids].sort((a,b)=>a-b).join(','), o = back[key] || (back[key] = { ids:[...ids].sort((a,b)=>a-b), n:0, clean:0, ga:0 });
+          o.n += w; o.ga += sc.them*w; if (sc.them === 0) o.clean += w; });
       }
     });
     const stack = ps => `<span class="ts-stack">${ps.slice(0,4).map(p=>svAv(p)).join('')}</span>`;
@@ -3297,8 +3298,9 @@ async function loadTeamStats() {
     const duoL = Object.entries(duo).map(([k,n])=>{ const [a,b] = k.split('>').map(Number); return { a:pOf(a), s:pOf(b), n }; }).filter(x=>x.a&&x.s).sort((x,y)=>y.n-x.n);
     html += `<section class="ovc"><h3 class="ovc-h"><span>골 · 어시 듀오</span><span class="ovc-pill">도움 → 골</span></h3>${duoL.length ? duoL.map((x,i)=>`<div class="ts-kr${i>=5?' ts-more':''}"><span class="ts-kp">${stack([x.a,x.s])}<b>${luEsc(x.a.name)} <i class="ts-ar">→</i> ${luEsc(x.s.name)}</b></span><span class="sv-v">${x.n}<small>골</small></span></div>`).join('') + (duoL.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${duoL.length-5}쌍)</button>`:'') : '<div class="ovc-empty">쿼터 기록이 있는 경기가 아직 없어요</div>'}</section>`;
     // 무실점 조합
+    const qfmt = v => Number.isInteger(v) ? v : v.toFixed(1);
     const backL = Object.values(back).filter(o=>o.n>=2 && o.clean>0).map(o=>({ ...o, ps:o.ids.map(pOf).filter(Boolean) })).sort((x,y)=>y.clean-x.clean || (y.clean/y.n)-(x.clean/x.n));
-    html += `<section class="ovc"><h3 class="ovc-h"><span>무실점 조합</span><span class="ovc-pill">GK · 수비 라인</span></h3>${backL.length ? backL.map((o,i)=>`<div class="ts-kr${i>=5?' ts-more':''}"><span class="ts-kp ts-kp2">${stack(o.ps)}<b>${o.ps.map(p=>luEsc(p.name)).join(' · ')}</b></span><span class="ts-cl"><b>${o.clean}<small>/${o.n}쿼터</small></b><small>쿼터당 실점 ${(o.ga/o.n).toFixed(1)}</small></span></div>`).join('') + (backL.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${backL.length-5}조합)</button>`:'') : '<div class="ovc-empty">2쿼터 이상 함께 뛴 수비 조합 중 무실점 기록이 아직 없어요</div>'}</section>`;
+    html += `<section class="ovc"><h3 class="ovc-h"><span>무실점 조합</span><span class="ovc-pill">GK · 수비 라인</span></h3>${backL.length ? backL.map((o,i)=>`<div class="ts-kr${i>=5?' ts-more':''}"><span class="ts-kp ts-kp2">${stack(o.ps)}<b>${o.ps.map(p=>luEsc(p.name)).join(' · ')}</b></span><span class="ts-cl"><b>${qfmt(o.clean)}<small>/${qfmt(o.n)}쿼터</small></b><small>쿼터당 실점 ${(o.ga/o.n).toFixed(1)}</small></span></div>`).join('') + (backL.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${backL.length-5}조합)</button>`:'') : '<div class="ovc-empty">2쿼터 이상 함께 뛴 수비 조합 중 무실점 기록이 아직 없어요</div>'}</section>`;
     // 쿼터별 득실
     if (recN) { const mx = Math.max(1, ...qF, ...qA);
       html += `<section class="ovc"><h3 class="ovc-h"><span>쿼터별 득실</span><span class="ovc-pill">${recN}경기 기준</span></h3><div class="ts-q">${[0,1,2,3].map(q=>`<div><span>${q+1}Q</span><i><u class="f" style="width:${qF[q]/mx*100}%"></u></i><b class="f">${qF[q]}</b><i><u class="a" style="width:${qA[q]/mx*100}%"></u></i><b class="a">${qA[q]}</b></div>`).join('')}</div><p class="ts-qlg"><span><u class="f"></u>득점</span><span><u class="a"></u>실점</span></p></section>`; }
