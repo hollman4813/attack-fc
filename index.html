@@ -3307,14 +3307,16 @@ async function loadTeamStats() {
     html += `<section class="ovc"><h3 class="ovc-h"><span>골 · 어시 듀오</span><span class="ovc-pill">도움 → 골</span></h3>${duoL.length ? duoL.map((x,i)=>`<div class="ts-kr${i>=5?' ts-more':''}"><span class="ts-kp">${stack([x.a,x.s])}<b>${luEsc(x.a.name)} <i class="ts-ar">→</i> ${luEsc(x.s.name)}</b></span><span class="sv-v">${x.n}<small>골</small></span></div>`).join('') + (duoL.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${duoL.length-5}쌍)</button>`:'') : '<div class="ovc-empty">쿼터 기록이 있는 경기가 아직 없어요</div>'}</section>`;
     // 무실점 조합
     const qfmt = v => Number.isInteger(v) ? v : v.toFixed(1);
-    const backL = Object.values(back).filter(o=>o.n>=2 && o.clean>0).map(o=>({ ...o, ps:o.ids.map(pOf).filter(Boolean) })).sort((x,y)=>y.clean-x.clean || (y.clean/y.n)-(x.clean/x.n));
-    const rowB = (o,i,low) => `<div class="ts-kr${i>=5?' ts-more':''}"${low&&o.ps[0]?` onclick="showPlayer(${o.ps[0].id})"`:''}><span class="ts-kp${low?'':' ts-kp2'}">${stack(o.ps)}<b>${o.ps.map(p=>luEsc(p.name)).join(' · ')}</b></span><span class="ts-cl">${low ? `<b>${(o.ga/o.n).toFixed(1)}<small> 실점/쿼터</small></b><small>${qfmt(o.n)}쿼터 · 총 ${qfmt(o.ga)}실점</small>` : `<b>${qfmt(o.clean)}<small>/${qfmt(o.n)}쿼터</small></b><small>쿼터당 실점 ${(o.ga/o.n).toFixed(1)}</small>`}</span></div>`;
+    // 수비: 선수별(수비 자리로 뛴 쿼터) 무실점·최소 실점 + 조합별 무실점
+    const indL = Object.entries(ind).map(([pid,o])=>({ ...o, ps:[pOf(+pid)].filter(Boolean) })).filter(o=>o.ps.length);
+    const cleanL = indL.filter(o=>o.clean>0).sort((x,y)=>y.clean-x.clean || (y.clean/y.n)-(x.clean/x.n));
+    const lowL = indL.filter(o=>o.n>=2).sort((x,y)=>(x.ga/x.n)-(y.ga/y.n) || y.n-x.n);
+    const comboL = Object.values(back).filter(o=>o.clean>0).map(o=>({ ...o, ps:o.ids.map(pOf).filter(Boolean) })).sort((x,y)=>y.clean-x.clean || (y.clean/y.n)-(x.clean/x.n));
+    const rowB = (o,i,mode) => { const one = mode!=='combo';
+      return `<div class="ts-kr${i>=5?' ts-more':''}"${one&&o.ps[0]?` onclick="showPlayer(${o.ps[0].id})"`:''}><span class="ts-kp${one?'':' ts-kp2'}">${stack(o.ps)}<b>${o.ps.map(p=>luEsc(p.name)).join(' · ')}</b></span><span class="ts-cl">${mode==='low' ? `<b>${(o.ga/o.n).toFixed(1)}<small> 실점/쿼터</small></b><small>${qfmt(o.n)}쿼터 · 총 ${qfmt(o.ga)}실점</small>` : `<b>${qfmt(o.clean)}<small>/${qfmt(o.n)}쿼터</small></b><small>쿼터당 실점 ${(o.ga/o.n).toFixed(1)}</small>`}</span></div>`; };
     const moreB = (L, u) => L.length>5 ? `<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${L.length-5}${u})</button>` : '';
-    // 최소 실점: 2쿼터 이상 함께한 조합 중 쿼터당 실점이 적은 순
-    // 최소 실점: 수비 자리(GK·수비수)로 2쿼터 이상 뛴 선수별 쿼터당 실점
-    const lowL = Object.entries(ind).filter(([,o])=>o.n>=2).map(([pid,o])=>({ ...o, ps:[pOf(+pid)].filter(Boolean) })).filter(o=>o.ps.length).sort((x,y)=>(x.ga/x.n)-(y.ga/y.n) || y.n-x.n);
-    const pane = (k, L, empty) => `<div class="ts-bp" data-k="${k}"${k==='clean'?'':' hidden'}>${L.length ? L.map((o,i)=>rowB(o,i,k==='low')).join('') + moreB(L, k==='low'?'명':'조합') : `<div class="ovc-empty">${empty}</div>`}</div>`;
-    html += `<section class="ovc"><h3 class="ovc-h"><span>수비 조합</span><span class="ovc-tg"><button class="on" onclick="tsBack('clean',this)">무실점</button><button onclick="tsBack('low',this)">최소 실점</button></span></h3>${pane('clean', backL, '2쿼터 이상 함께 뛴 수비 조합 중 무실점 기록이 아직 없어요')}${pane('low', lowL, '수비 자리로 2쿼터 이상 뛴 선수가 아직 없어요')}</section>`;
+    const pane = (k, L, empty) => `<div class="ts-bp" data-k="${k}"${k==='clean'?'':' hidden'}>${L.length ? L.map((o,i)=>rowB(o,i,k)).join('') + moreB(L, k==='combo'?'조합':'명') : `<div class="ovc-empty">${empty}</div>`}</div>`;
+    html += `<section class="ovc"><h3 class="ovc-h"><span>수비</span><span class="ovc-tg"><button class="on" onclick="tsBack('clean',this)">무실점</button><button onclick="tsBack('low',this)">최소 실점</button><button onclick="tsBack('combo',this)">조합</button></span></h3>${pane('clean', cleanL, 'GK·수비 자리 무실점 쿼터 기록이 아직 없어요')}${pane('low', lowL, '수비 자리로 2쿼터 이상 뛴 선수가 아직 없어요')}${pane('combo', comboL, '무실점 쿼터를 만든 수비 조합이 아직 없어요')}</section>`;
     // 쿼터별 득실
     if (recN) { const mx = Math.max(1, ...qF, ...qA);
       html += `<section class="ovc"><h3 class="ovc-h"><span>쿼터별 득실</span><span class="ovc-pill">${recN}경기 기준</span></h3><div class="ts-q"><div class="h"><b class="f">득점</b><i></i><span></span><i></i><b class="a">실점</b></div>${[0,1,2,3].map(q=>`<div><b class="f">${qF[q]}</b><i class="l"><u class="f" style="width:${qF[q]/mx*100}%"></u></i><span>${q+1}Q</span><i><u class="a" style="width:${qA[q]/mx*100}%"></u></i><b class="a">${qA[q]}</b></div>`).join('')}</div></section>`; }
