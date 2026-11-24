@@ -698,6 +698,7 @@
   .sq-tag.role{color:#c98a00;background:#fff6d8}
   .sq-tag.hurt{color:#c62828;background:#ffebee}
   .sq-inj{color:#c62828;font-weight:600}
+  .sq-rst{color:#1e6fb0;font-weight:600}
   .tg-hero{display:flex;align-items:baseline;gap:6px;margin-top:2px}
   .tg-hero b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:60px;font-weight:600;line-height:.8;padding-top:8px;color:var(--team-navy)}
   .tg-hero span{font-size:15px;font-weight:800;color:var(--team-deep)}
@@ -1956,6 +1957,7 @@
             <option value="resting">휴식</option>
             <option value="left">탈퇴</option>
           </select>
+          <div id="ep-rest" style="display:none;margin-top:8px;padding:10px;background:#f4f7fb;border:1px solid #dde4ee;border-radius:8px"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">복귀 예정 (월)</div><input id="ep-rest-ret" type="month" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff"></div>
           <div id="ep-inj" style="display:none;margin-top:8px;padding:10px;background:#fff5f5;border:1px solid #ffcdd2;border-radius:8px">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
               <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">부상 부위</div>
@@ -2961,7 +2963,7 @@ function squadRender(){
     return `<div class="sq-row" onclick="showPlayer(${p.id})">
       <span class="sq-no">${p.number ?? '-'}</span>
       <div class="sq-ph">${photo}</div>
-      <div class="sq-id"><div class="sq-nm"><span>${luEsc(p.name)}</span>${role}${stTag}</div><div class="sq-pos">${luEsc(sub)}${inj&&inj.sub?`<span class="sq-inj"> · ${luEsc(inj.sub)}</span>`:''}</div></div>
+      <div class="sq-id"><div class="sq-nm"><span>${luEsc(p.name)}</span>${role}${stTag}</div><div class="sq-pos">${luEsc(sub)}${inj&&inj.sub?`<span class="sq-inj"> · ${luEsc(inj.sub)}</span>`:''}${st==='resting'&&restInfo(p.id)?`<span class="sq-rst"> · ${restInfo(p.id)}</span>`:''}</div></div>
       <div class="sq-st"><div class="ap"><b>${x.power!=null?Math.round(x.power):'-'}</b><span>어택P</span></div></div>
     </div>`;
   };
@@ -4713,8 +4715,10 @@ async function injLoad(fresh){
   if (!fresh && window._injMap) return window._injMap;
   const d = await luGet('injuries'); window._injMap = (d && typeof d === 'object') ? d : {}; return window._injMap;
 }
-function epInjToggle(){ const el = document.getElementById('ep-inj'); if (el) el.style.display = document.getElementById('ep-status').value === 'injured' ? 'block' : 'none'; }
+function epInjToggle(){ const v = document.getElementById('ep-status').value, el = document.getElementById('ep-inj'), er = document.getElementById('ep-rest'); if (el) el.style.display = v === 'injured' ? 'block' : 'none'; if (er) er.style.display = v === 'resting' ? 'block' : 'none'; }
 // 부상 표기: 태그 "부상 3주", 보조 "발목 · 12/10 복귀 예정"
+// 휴식 표기: 보조 "2027.02 복귀 예정"
+function restInfo(pid){ const j = (window._injMap||{})[pid]; if (!j || !j.ret) return ''; const [y,mo] = j.ret.split('-'); return `${y}.${mo} 복귀 예정`; }
 function injInfo(pid){
   const j = (window._injMap||{})[pid]; if (!j) return { tag:'부상', sub:'' };
   let sub = j.part || '';
@@ -4748,6 +4752,7 @@ function loadEditPlayer() {
     document.getElementById('ep-inj-part').value = j.part || '';
     document.getElementById('ep-inj-weeks').value = String(j.weeks || 0);
     document.getElementById('ep-inj-since').value = j.since || new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+    document.getElementById('ep-rest-ret').value = j.ret || '';
     epInjToggle(); });
 }
 
@@ -4810,6 +4815,7 @@ async function updatePlayer() {
     try {
       const m = { ...(await injLoad(true)) };
       if (body.status === 'injured') m[id] = { part: document.getElementById('ep-inj-part').value || '', weeks: +document.getElementById('ep-inj-weeks').value || 0, since: document.getElementById('ep-inj-since').value || '' };
+      else if (body.status === 'resting') { const ret = document.getElementById('ep-rest-ret').value; if (ret) m[id] = { ret }; else delete m[id]; }   // 휴식 복귀 예정 월
       else delete m[id];
       await luPut('injuries', m); window._injMap = m;
     } catch(e) {}
