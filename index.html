@@ -1327,6 +1327,20 @@
   .nw-share:active{background:#dfe6f1}
   #nw-toast{position:fixed;left:50%;bottom:calc(32px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);z-index:9800;background:rgba(15,40,80,.94);color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
   #nw-toast.on{opacity:1;transform:translate(-50%,0)}
+  .ts-more{display:none!important}
+  section.ts-open .ts-more{display:flex!important}
+  .ts-morebtn{display:block;width:100%;margin-top:8px;height:38px;border:0;border-radius:10px;background:#f4f7fb;color:var(--team-navy);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  .ts-kr{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #eef1f5;cursor:pointer}
+  .ts-kr:first-of-type{border-top:0}
+  .ts-ko{display:flex;align-items:center;gap:8px;width:42%;min-width:0}
+  .ts-ko>span:last-child{display:flex;flex-direction:column;min-width:0}
+  .ts-ko b{font-size:13px;font-weight:800;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ts-ko small{font-size:11px;color:var(--muted)}
+  .ts-kp{flex:1;display:flex;align-items:center;gap:6px;min-width:0}
+  .ts-kp b{font-size:13px;font-weight:700;color:#344054;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ts-kp b small{font-size:11px;font-weight:600;color:var(--muted)}
+  .ts-kp .sv-av{width:28px;height:28px;flex:none}
+  .ts-kr .sv-v small{font-size:11px;margin-left:1px}
 </style>
 </head>
 <body>
@@ -3153,8 +3167,10 @@ async function loadTeamStats() {
     const p = list[0];
     return `<section class="ovc">${head}
       <div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc(p.name.slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b><span>${subOf(p)}</span></div><div class="sv-big">${valOf(p)}</div></div>
-      ${list.slice(1).map((q,i)=>`<div class="sv-r" onclick="showPlayer(${q.id})"><span class="sv-rk">${i+2}</span>${svAv(q)}<p>${luEsc(q.name)}<small>${subOf(q)}</small></p><span class="sv-v">${valOf(q)}</span></div>`).join('')}</section>`;
+      ${list.slice(1).map((q,i)=>`<div class="sv-r${i>=4?' ts-more':''}" onclick="showPlayer(${q.id})"><span class="sv-rk">${i+2}</span>${svAv(q)}<p>${luEsc(q.name)}<small>${subOf(q)}</small></p><span class="sv-v">${valOf(q)}</span></div>`).join('')}${tsMoreBtn(list.length)}</section>`;
   };
+  // TOP 5 아래는 더보기로
+  const tsMoreBtn = n => n > 5 ? `<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${n-5}명)</button>` : '';
   const recRow = (label, m) => m ? `<div class="ts-mr" onclick="showMatch(${m.id})"><div class="ts-ml"><span>${label}</span><b><span class="mx-e" style="width:22px;height:22px">${oppLogo(m,20)}</span>${luEsc(m.opponents?.name||m.opponent||'')}</b></div>${mxScore(m)}</div>` : '';
   const pct = n => Math.round(n/G*100);
 
@@ -3189,7 +3205,7 @@ async function loadTeamStats() {
     // 최근 3개월 내 참석 여부 (문자열 비교, YYYY-MM-DD 형식)
     const recentAttended = playerStats.some(s => s.matches?.match_date >= threeMonthsAgoStr);
     return { ...p, attended, totalEligible, rate, recentAttended };
-  }).filter(p => p.totalEligible > 0 && p.recentAttended).sort((a,b)=>b.rate-a.rate).slice(0,5);
+  }).filter(p => p.totalEligible > 0 && p.recentAttended).sort((a,b)=>b.rate-a.rate);
 
   // 🍀 승리요정 (참석 시 팀 승률)
   const luckyRank = allPlayersData.map(p => {
@@ -3201,7 +3217,7 @@ async function loadTeamStats() {
     const winsWhenPlayed = playerStats.filter(s => s.matches?.result === 'Win').length;
     const winRate = Math.round(winsWhenPlayed/attended*100);
     return { ...p, attended, winsWhenPlayed, winRate };
-  }).filter(Boolean).sort((a,b)=>b.winRate-a.winRate).slice(0,5);
+  }).filter(Boolean).sort((a,b)=>b.winRate-a.winRate);
 
   // 🎯 상대팀 킬러 (특정 팀 상대 최다골)
   const recentPlayerIds = new Set(
@@ -3217,16 +3233,22 @@ async function loadTeamStats() {
     if (!killerMap[key]) killerMap[key] = { player_id: s.player_id, opponent: opp, goals: 0 };
     killerMap[key].goals += s.goals;
   });
-  const killerRank = Object.values(killerMap)
-    .filter(k => k.goals >= 2)
-    .sort((a,b)=>b.goals-a.goals)
-    .slice(0,5)
-    .map(k => ({ ...k, player: allPlayersData.find(p=>p.id===k.player_id) }))
-    .filter(k => k.player);
+  // 상대팀별 킬러: 많이 붙은 상대팀부터, 팀마다 최다 득점 선수(동률이면 함께)
+  const oppGames = {};
+  matches.forEach(m => { const o = m.opponent || m.opponents?.name; if (o) oppGames[o] = (oppGames[o]||0) + 1; });
+  const byOpp = {};
+  Object.values(killerMap).forEach(k => { (byOpp[k.opponent] = byOpp[k.opponent] || []).push(k); });
+  const killerRows = Object.entries(byOpp).map(([opp, ks]) => {
+    const top = Math.max(...ks.map(k=>k.goals));
+    const who = ks.filter(k=>k.goals===top).map(k=>allPlayersData.find(p=>p.id===k.player_id)).filter(Boolean);
+    return { opp, games: oppGames[opp]||0, goals: top, who };
+  }).filter(r => r.who.length).sort((a,b)=>b.games-a.games || b.goals-a.goals);
 
   html += tsLeader('참석률 TOP 5', attendanceRank, p=>`${p.rate}<small>%</small>`, p=>`${p.attended}/${p.totalEligible}경기 출석`, '데이터 없음 (입단 3개월 이상자 없음)');
   html += tsLeader('승리요정 TOP 5', luckyRank, p=>`${p.winRate}<small>%</small>`, p=>`출전 ${p.attended}경기 ${p.winsWhenPlayed}승`, '데이터 없음 (3경기 이상 참석자 없음)');
-  html += tsLeader('상대팀 킬러', killerRank.map(k=>({...k.player, _g:k.goals, _o:k.opponent})), p=>p._g, p=>`vs ${luEsc(p._o)}`, '데이터 없음 (동일 상대 2골 이상 없음)');
+  const oppM = name => matches.find(x=>x.opponent===name || x.opponents?.name===name);
+  html += `<section class="ovc"><h3 class="ovc-h"><span>상대팀 킬러</span><span class="ovc-pill">많이 붙은 팀 순</span></h3>${killerRows.length ? killerRows.map((r,i)=>{ const m = oppM(r.opp);
+      return `<div class="ts-kr${i>=5?' ts-more':''}"${r.who.length===1?` onclick="showPlayer(${r.who[0].id})"`:''}><span class="ts-ko">${m?`<span class="mx-e" style="width:26px;height:26px">${oppLogo(m,24)}</span>`:''}<span><b>${luEsc(r.opp)}</b><small>${r.games}경기</small></span></span><span class="ts-kp">${svAv(r.who[0])}<b>${luEsc(r.who[0].name)}${r.who.length>1?`<small> 외 ${r.who.length-1}명</small>`:''}</b></span><span class="sv-v">${r.goals}<small>골</small></span></div>`; }).join('') + (killerRows.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${killerRows.length-5}팀)</button>`:'') : '<div class="ovc-empty">데이터 없음</div>'}</section>`;
 
   // 월별 / 경기장별 / 상대팀별 — 한 카드에서 전환
   const oppRow = name => { const m = matches.find(x=>(x.opponents?.name||x.opponent)===name); return m ? `<span class="mx-e" style="width:24px;height:24px">${oppLogo(m,22)}</span>` : ''; };
@@ -3247,6 +3269,7 @@ async function tsSeason(sid){
   await loadTeamStats();
 }
 
+function tsMore(btn){ const sec = btn.closest('section'); if (!btn.dataset.lbl) btn.dataset.lbl = btn.textContent; const open = !sec.classList.contains('ts-open'); sec.classList.toggle('ts-open', open); btn.textContent = open ? '접기' : btn.dataset.lbl; }
 function tsTab(k, btn){
   const box = document.getElementById('ts-tables'); if(!box) return;
   box.querySelectorAll('.ovc-tg button').forEach(b=>b.classList.toggle('on', b===btn));
