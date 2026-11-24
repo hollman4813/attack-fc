@@ -1335,7 +1335,13 @@
   .ts-cl b small{font-size:12px;color:var(--muted);font-weight:500}
   .ts-cl>small{font-size:10.5px;color:var(--muted)}
   .ts-q{display:flex;flex-direction:column;gap:9px}
-  .ts-q>div{display:grid;grid-template-columns:28px 1fr 22px 1fr 22px;align-items:center;gap:6px}
+  .ts-q>div{display:grid;grid-template-columns:28px 1fr 30px 1fr 28px;align-items:center;gap:6px}
+  .ts-q>div.h b{font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:800}
+  .ts-q>div.h i{background:none}
+  .ts-q>div.h b.f{text-align:left}
+  .ts-q i.l{display:flex;justify-content:flex-end}
+  .ts-q span{text-align:center}
+  .ts-q b.f{text-align:left}
   .ts-q span{font-family:'Teko','Noto Sans KR',sans-serif;font-size:17px;font-weight:600;color:var(--team-deep)}
   .ts-q i{height:10px;border-radius:5px;background:#eef2f8;overflow:hidden}
   .ts-q u{display:block;height:100%;border-radius:5px}
@@ -3309,7 +3315,7 @@ async function loadTeamStats() {
     html += `<section class="ovc"><h3 class="ovc-h"><span>수비 조합</span><span class="ovc-tg"><button class="on" onclick="tsBack('clean',this)">무실점</button><button onclick="tsBack('low',this)">최소 실점</button></span></h3>${pane('clean', backL, '2쿼터 이상 함께 뛴 수비 조합 중 무실점 기록이 아직 없어요')}${pane('low', lowL, '2쿼터 이상 함께 뛴 수비 조합이 아직 없어요')}</section>`;
     // 쿼터별 득실
     if (recN) { const mx = Math.max(1, ...qF, ...qA);
-      html += `<section class="ovc"><h3 class="ovc-h"><span>쿼터별 득실</span><span class="ovc-pill">${recN}경기 기준</span></h3><div class="ts-q">${[0,1,2,3].map(q=>`<div><span>${q+1}Q</span><i><u class="f" style="width:${qF[q]/mx*100}%"></u></i><b class="f">${qF[q]}</b><i><u class="a" style="width:${qA[q]/mx*100}%"></u></i><b class="a">${qA[q]}</b></div>`).join('')}</div><p class="ts-qlg"><span><u class="f"></u>득점</span><span><u class="a"></u>실점</span></p></section>`; }
+      html += `<section class="ovc"><h3 class="ovc-h"><span>쿼터별 득실</span><span class="ovc-pill">${recN}경기 기준</span></h3><div class="ts-q"><div class="h"><b class="f">득점</b><i></i><span></span><i></i><b class="a">실점</b></div>${[0,1,2,3].map(q=>`<div><b class="f">${qF[q]}</b><i class="l"><u class="f" style="width:${qF[q]/mx*100}%"></u></i><span>${q+1}Q</span><i><u class="a" style="width:${qA[q]/mx*100}%"></u></i><b class="a">${qA[q]}</b></div>`).join('')}</div></section>`; }
   }
 
   // 월별 / 경기장별 / 상대팀별 — 한 카드에서 전환
