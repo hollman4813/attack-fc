@@ -1339,6 +1339,9 @@
   .ts-kp{flex:1;display:flex;align-items:center;gap:6px;min-width:0}
   .ts-kp b{font-size:13px;font-weight:700;color:#344054;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ts-kp b small{font-size:11px;font-weight:600;color:var(--muted)}
+  .ts-stack{display:flex;flex:none}
+  .ts-stack .sv-av{box-shadow:0 0 0 2px #fff}
+  .ts-stack .sv-av+.sv-av{margin-left:-10px}
   .ts-kp .sv-av{width:28px;height:28px;flex:none}
   .ts-kr .sv-v small{font-size:11px;margin-left:1px}
 </style>
@@ -3248,7 +3251,7 @@ async function loadTeamStats() {
   html += tsLeader('승리요정 TOP 5', luckyRank, p=>`${p.winRate}<small>%</small>`, p=>`출전 ${p.attended}경기 ${p.winsWhenPlayed}승`, '데이터 없음 (3경기 이상 참석자 없음)');
   const oppM = name => matches.find(x=>x.opponent===name || x.opponents?.name===name);
   html += `<section class="ovc"><h3 class="ovc-h"><span>상대팀 킬러</span><span class="ovc-pill">많이 붙은 팀 순</span></h3>${killerRows.length ? killerRows.map((r,i)=>{ const m = oppM(r.opp);
-      return `<div class="ts-kr${i>=5?' ts-more':''}"${r.who.length===1?` onclick="showPlayer(${r.who[0].id})"`:''}><span class="ts-ko">${m?`<span class="mx-e" style="width:26px;height:26px">${oppLogo(m,24)}</span>`:''}<span><b>${luEsc(r.opp)}</b><small>${r.games}경기</small></span></span><span class="ts-kp">${svAv(r.who[0])}<b>${luEsc(r.who[0].name)}${r.who.length>1?`<small> 외 ${r.who.length-1}명</small>`:''}</b></span><span class="sv-v">${r.goals}<small>골</small></span></div>`; }).join('') + (killerRows.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${killerRows.length-5}팀)</button>`:'') : '<div class="ovc-empty">데이터 없음</div>'}</section>`;
+      return `<div class="ts-kr${i>=5?' ts-more':''}"${r.who.length===1?` onclick="showPlayer(${r.who[0].id})"`:''}><span class="ts-ko">${m?`<span class="mx-e" style="width:26px;height:26px">${oppLogo(m,24)}</span>`:''}<span><b>${luEsc(r.opp)}</b><small>${r.games}경기</small></span></span><span class="ts-kp"><span class="ts-stack">${r.who.slice(0,3).map(p=>svAv(p)).join('')}</span><b>${r.who.map(p=>luEsc(p.name)).join(', ')}</b></span><span class="sv-v">${r.goals}<small>골</small></span></div>`; }).join('') + (killerRows.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${killerRows.length-5}팀)</button>`:'') : '<div class="ovc-empty">데이터 없음</div>'}</section>`;
 
   // 월별 / 경기장별 / 상대팀별 — 한 카드에서 전환
   const oppRow = name => { const m = matches.find(x=>(x.opponents?.name||x.opponent)===name); return m ? `<span class="mx-e" style="width:24px;height:24px">${oppLogo(m,22)}</span>` : ''; };
