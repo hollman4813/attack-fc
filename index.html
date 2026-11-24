@@ -5114,6 +5114,8 @@ function pdRender(){
 
 /* ── 경기 상세 페이지 ── */
 async function showMatch(matchId, skipPushState) {
+  const fromList = !document.getElementById('match-detail').classList.contains('active');
+  if (fromList) window._mdPrevY = window.scrollY || document.documentElement.scrollTop || 0;   // 목록 위치 기억
   window._prevSection = document.querySelector('.section.active')?.id || 'home';
   window._prevTab = document.querySelector('.tab-section.active')?.id || 'tab-matches';
   window._prevTabBtn = document.querySelector('.team-tab.active');
@@ -5126,6 +5128,7 @@ async function showMatch(matchId, skipPushState) {
   });
   document.getElementById('match-detail').classList.add('active');
   document.getElementById('team-tab-bar').style.display = 'none';
+  if (fromList) window.scrollTo(0, 0);   // 경기 상세는 맨 위에서 시작
   document.getElementById('match-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
 
   let matches = [], stats = [], allMatches = [], matchVotes = [], lineupData = null;
@@ -5333,6 +5336,7 @@ function backToMatches() {
   const idx = TAB_ORDER.indexOf(tabName);
   if (window._prevTabBtn) window._prevTabBtn.classList.add('active');
   else if (document.querySelectorAll('.team-tab')[idx]) document.querySelectorAll('.team-tab')[idx].classList.add('active');
+  window.scrollTo(0, window._mdPrevY || 0);   // 보던 목록 위치로 복귀
 }
 
 function backFromPlayer() {
