@@ -1344,6 +1344,7 @@
   .ts-q b.f{color:#2e7d32}.ts-q b.a{color:#c62828}
   .ts-qlg{display:flex;gap:14px;justify-content:flex-end;margin:10px 0 0;font-size:11px;color:var(--muted)}
   .ts-qlg u{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
+  .ts-bp[hidden]{display:none}
   .ts-more{display:none!important}
   section.ts-open .ts-more{display:flex!important}
   .ts-morebtn{display:block;width:100%;margin-top:8px;height:38px;border:0;border-radius:10px;background:#f4f7fb;color:var(--team-navy);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
@@ -3300,7 +3301,12 @@ async function loadTeamStats() {
     // 무실점 조합
     const qfmt = v => Number.isInteger(v) ? v : v.toFixed(1);
     const backL = Object.values(back).filter(o=>o.n>=2 && o.clean>0).map(o=>({ ...o, ps:o.ids.map(pOf).filter(Boolean) })).sort((x,y)=>y.clean-x.clean || (y.clean/y.n)-(x.clean/x.n));
-    html += `<section class="ovc"><h3 class="ovc-h"><span>무실점 조합</span><span class="ovc-pill">GK · 수비 라인</span></h3>${backL.length ? backL.map((o,i)=>`<div class="ts-kr${i>=5?' ts-more':''}"><span class="ts-kp ts-kp2">${stack(o.ps)}<b>${o.ps.map(p=>luEsc(p.name)).join(' · ')}</b></span><span class="ts-cl"><b>${qfmt(o.clean)}<small>/${qfmt(o.n)}쿼터</small></b><small>쿼터당 실점 ${(o.ga/o.n).toFixed(1)}</small></span></div>`).join('') + (backL.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${backL.length-5}조합)</button>`:'') : '<div class="ovc-empty">2쿼터 이상 함께 뛴 수비 조합 중 무실점 기록이 아직 없어요</div>'}</section>`;
+    const rowB = (o,i,low) => `<div class="ts-kr${i>=5?' ts-more':''}"><span class="ts-kp ts-kp2">${stack(o.ps)}<b>${o.ps.map(p=>luEsc(p.name)).join(' · ')}</b></span><span class="ts-cl">${low ? `<b>${(o.ga/o.n).toFixed(1)}<small> 실점/쿼터</small></b><small>${qfmt(o.n)}쿼터 · 총 ${qfmt(o.ga)}실점</small>` : `<b>${qfmt(o.clean)}<small>/${qfmt(o.n)}쿼터</small></b><small>쿼터당 실점 ${(o.ga/o.n).toFixed(1)}</small>`}</span></div>`;
+    const moreB = (L, u) => L.length>5 ? `<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${L.length-5}${u})</button>` : '';
+    // 최소 실점: 2쿼터 이상 함께한 조합 중 쿼터당 실점이 적은 순
+    const lowL = Object.values(back).filter(o=>o.n>=2).map(o=>({ ...o, ps:o.ids.map(pOf).filter(Boolean) })).sort((x,y)=>(x.ga/x.n)-(y.ga/y.n) || y.n-x.n);
+    const pane = (k, L, empty) => `<div class="ts-bp" data-k="${k}"${k==='clean'?'':' hidden'}>${L.length ? L.map((o,i)=>rowB(o,i,k==='low')).join('') + moreB(L,'조합') : `<div class="ovc-empty">${empty}</div>`}</div>`;
+    html += `<section class="ovc"><h3 class="ovc-h"><span>수비 조합</span><span class="ovc-tg"><button class="on" onclick="tsBack('clean',this)">무실점</button><button onclick="tsBack('low',this)">최소 실점</button></span></h3>${pane('clean', backL, '2쿼터 이상 함께 뛴 수비 조합 중 무실점 기록이 아직 없어요')}${pane('low', lowL, '2쿼터 이상 함께 뛴 수비 조합이 아직 없어요')}</section>`;
     // 쿼터별 득실
     if (recN) { const mx = Math.max(1, ...qF, ...qA);
       html += `<section class="ovc"><h3 class="ovc-h"><span>쿼터별 득실</span><span class="ovc-pill">${recN}경기 기준</span></h3><div class="ts-q">${[0,1,2,3].map(q=>`<div><span>${q+1}Q</span><i><u class="f" style="width:${qF[q]/mx*100}%"></u></i><b class="f">${qF[q]}</b><i><u class="a" style="width:${qA[q]/mx*100}%"></u></i><b class="a">${qA[q]}</b></div>`).join('')}</div><p class="ts-qlg"><span><u class="f"></u>득점</span><span><u class="a"></u>실점</span></p></section>`; }
@@ -3326,6 +3332,11 @@ async function tsSeason(sid){
 }
 
 function tsMore(btn){ const sec = btn.closest('section'); if (!btn.dataset.lbl) btn.dataset.lbl = btn.textContent; const open = !sec.classList.contains('ts-open'); sec.classList.toggle('ts-open', open); btn.textContent = open ? '접기' : btn.dataset.lbl; }
+function tsBack(k, btn){
+  const sec = btn.closest('section'); sec.querySelectorAll('.ovc-tg button').forEach(b=>b.classList.toggle('on', b===btn));
+  sec.querySelectorAll('.ts-bp').forEach(p=>p.hidden = p.dataset.k!==k);
+  sec.classList.remove('ts-open'); sec.querySelectorAll('.ts-morebtn').forEach(b=>{ if(b.dataset.lbl) b.textContent = b.dataset.lbl; });
+}
 function tsTab(k, btn){
   const box = document.getElementById('ts-tables'); if(!box) return;
   box.querySelectorAll('.ovc-tg button').forEach(b=>b.classList.toggle('on', b===btn));
