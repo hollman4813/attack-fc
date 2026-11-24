@@ -3283,6 +3283,7 @@ async function loadTeamStats() {
   const RX = await ratingCtxLoad().catch(()=>null);
   if (RX) {
     const pOf = id => allPlayersData.find(p=>p.id===id);
+    const pOfG = id => pOf(id) || (RX.guests && RX.guests[id]!=null ? { id, name: RX.guests[id]+'(용병)', guest:true } : null);   // 조합에는 용병도 표시
     const qF = [0,0,0,0], qA = [0,0,0,0]; let recN = 0;
     const duo = {}, back = {}, ind = {};   // ind: 수비 자리 선수별
     matches.forEach(m => {
@@ -3311,7 +3312,7 @@ async function loadTeamStats() {
     const indL = Object.entries(ind).map(([pid,o])=>({ ...o, ps:[pOf(+pid)].filter(Boolean) })).filter(o=>o.ps.length);
     const cleanL = indL.filter(o=>o.clean>0).sort((x,y)=>y.clean-x.clean || (y.clean/y.n)-(x.clean/x.n));
     const lowL = indL.filter(o=>o.n>=2).sort((x,y)=>(x.ga/x.n)-(y.ga/y.n) || y.n-x.n);
-    const comboL = Object.values(back).filter(o=>o.clean>0).map(o=>({ ...o, ps:o.ids.map(pOf).filter(Boolean) })).sort((x,y)=>y.clean-x.clean || (y.clean/y.n)-(x.clean/x.n));
+    const comboL = Object.values(back).filter(o=>o.clean>0).map(o=>({ ...o, ps:o.ids.map(pOfG).filter(Boolean) })).sort((x,y)=>y.clean-x.clean || (y.clean/y.n)-(x.clean/x.n));
     const rowB = (o,i,mode) => { const one = mode!=='combo';
       return `<div class="ts-kr${i>=5?' ts-more':''}"${one&&o.ps[0]?` onclick="showPlayer(${o.ps[0].id})"`:''}><span class="ts-kp${one?'':' ts-kp2'}">${stack(o.ps)}<b>${o.ps.map(p=>luEsc(p.name)).join(' · ')}</b></span><span class="ts-cl">${mode==='low' ? `<b>${(o.ga/o.n).toFixed(1)}<small> 실점/쿼터</small></b><small>${qfmt(o.n)}쿼터 · 총 ${qfmt(o.ga)}실점</small>` : `<b>${qfmt(o.clean)}<small>/${qfmt(o.n)}쿼터</small></b><small>쿼터당 실점 ${(o.ga/o.n).toFixed(1)}</small>`}</span></div>`; };
     const moreB = (L, u) => L.length>5 ? `<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${L.length-5}${u})</button>` : '';
@@ -3404,10 +3405,10 @@ async function ratingCtxLoad(force){
       api(`${LU_STORE}?select=key,data&key=like.match_*`).catch(()=>[]),
       api(`${LU_STORE}?select=key,data&key=like.rec_*`).catch(()=>[])
     ]); }catch(e){}
-    const plans = {}, recs = {};
-    (mrows||[]).forEach(r=>{ const m = /^match_(\d+)$/.exec(r.key); if(!m || !r.data) return; if(r.data.plan) plans[+m[1]] = r.data.plan; if(Array.isArray(r.data.rec)) recs[+m[1]] = JSON.parse(JSON.stringify(r.data.rec)); });
+    const plans = {}, recs = {}, guests = {};
+    (mrows||[]).forEach(r=>{ const m = /^match_(\d+)$/.exec(r.key); if(!m || !r.data) return; if(r.data.plan) plans[+m[1]] = r.data.plan; if(r.data.cfg && Array.isArray(r.data.cfg.guests)) r.data.cfg.guests.forEach(g=>{ if(g && g.id!=null) guests[g.id] = g.name||'용병'; }); if(Array.isArray(r.data.rec)) recs[+m[1]] = JSON.parse(JSON.stringify(r.data.rec)); });
     (rrows||[]).forEach(r=>{ const m = /^rec_(\d+)_(\d)$/.exec(r.key); if(!m) return; const id=+m[1], q=+m[2]; (recs[id] = recs[id] || [null,null,null,null])[q] = {them:(r.data&&r.data.them)||0, goals:(r.data&&r.data.goals)||[]}; });
-    _rctx = { plans, recs }; _rctxAt = Date.now(); _rctxP = null; window._autoPos = autoPosCalc(plans); return _rctx;
+    _rctx = { plans, recs, guests }; _rctxAt = Date.now(); _rctxP = null; window._autoPos = autoPosCalc(plans); return _rctx;
   })();
   return _rctxP;
 }
