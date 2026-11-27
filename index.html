@@ -5016,7 +5016,7 @@ async function showPlayer(playerId) {
 // 경기별 기록 표 (공개 프로필 · 개인기록 공통): 결과 | 상대·날짜·스코어 | 골 | 도움 | 평점
 function recTable(list, ratingOf){
   if(!list.length) return '';
-  const rc = v => v>=8?'#2e7d32':v>=6?'#f5a623':'#c62828';
+  const rc = v => formCol(v);
   const n = v => v ? `<b>${v}</b>` : '<b class="z">0</b>';
   const yr = new Date().getFullYear();
   return `<div class="rt-hd"><span></span><span>경기</span><span>득점</span><span>도움</span><span>평점</span></div>` + list.map(r=>{
@@ -5053,7 +5053,7 @@ function pdRender(){
   const msBy = {}; D.matchStats.forEach(r=>msBy[r.match_id]=r);
   const ratingOf = {};
   D.votes.forEach(v=>{ if(!v.matches) return; ratingOf[v.match_id] = ratingFor(v, msBy[v.match_id]||{}, p.id, p.position); });
-  const rc = v => v>=8?'#2e7d32':v>=6?'#f5a623':'#c62828';
+  const rc = v => formCol(v);
   // 프로필
   let age = '-';
   if (p.birth_date) { const t = new Date(), b = new Date(p.birth_date); age = t.getFullYear()-b.getFullYear(); if (t.getMonth()<b.getMonth() || (t.getMonth()===b.getMonth() && t.getDate()<b.getDate())) age--; age += `세<small class="pd-by">(${b.getFullYear()}.${String(b.getMonth()+1).padStart(2,'0')})</small>`; }
@@ -5215,7 +5215,7 @@ async function showMatch(matchId, skipPushState) {
     : `<span class="mdx-av" style="width:${z}px;height:${z}px;font-size:${Math.round(z*.4)}px">${luEsc((p.name||'?').slice(0,1))}</span>`;
   const pOf = s => { const p = Object.assign({}, s.players||{}); if (p.id == null) p.id = s.player_id; return p; };
   const n = v => v ? `<b>${v}</b>` : '<b class="z">0</b>';
-  const rcol = v => !v ? 'var(--muted)' : v >= 8 ? '#2e7d32' : v >= 6 ? '#f5a623' : '#c62828';
+  const rcol = v => !v ? 'var(--muted)' : formCol(v);
   const ratingOfS = s => { const p = s.players||{}; const isDef = voteMap[s.player_id]?.is_defender ?? ['GK','DF'].includes(p.position); return getMatchRating(s.player_id, isDef, goalsConceded, s.goals, s.assists); };
   const ground = m.grounds?.name||m.ground||'장소 미정';
   const dow = ['일','월','화','수','목','금','토'][d.getDay()];
@@ -5614,7 +5614,8 @@ function rtHelp(btn){
     `<p class="nt">무실점·실점은 그 쿼터에 GK·수비수 자리에서 뛴 경우만 반영돼요.</p>` +
     `<div class="rt"><span>평균 평점</span><b style="font-size:13px;font-family:inherit">평가된 경기 평균 · 1~10점</b></div>`);
 }
-function formCol(v){ return v>=10?'#c99700':v>=9?'#1e88e5':v>=8?'#2e7d32':v>=7?'#1a3a6b':v>=6?'#ef8f00':'#c62828'; }
+// 평점 색 (앱 공통): ~4 진빨강 · 5 빨강 · 6 주황 · 7 남색 · 8 초록 · 9 파랑 · 10 금색
+function formCol(v){ return v>=10?'#c99700':v>=9?'#1e88e5':v>=8?'#2e7d32':v>=7?'#1a3a6b':v>=6?'#ef8f00':v>=5?'#e53935':'#8e1b1b'; }
 function mrRender(){
   const D = window._mr, ov = document.getElementById('my-record'); if(!D || !ov) return;
   const keepY = ov.scrollTop;
@@ -5637,7 +5638,7 @@ function mrRender(){
   });
   const avg = rated.length ? (rated.reduce((s,x)=>s+x.r,0)/rated.length) : null;
   const ratingOf = {}; rated.forEach(x=>ratingOf[x.id]=x.r);
-  const rc = v => v>=8?'#2e7d32':v>=6?'#f5a623':'#c62828';
+  const rc = v => formCol(v);
   // 어택포인트 (현재 시즌만)
   let power = null, prank = null, pme = null;
   const pList = D.scope==='all' ? null : D.rankings[D.scope];
