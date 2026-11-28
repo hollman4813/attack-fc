@@ -2872,12 +2872,12 @@ async function defCardHtml(sid){
     return `<div class="ts-kr${i>=5?' ts-more':''}"${one&&o.ps[0]?` onclick="showPlayer(${o.ps[0].id})"`:''}><span class="ts-kp${one?'':' ts-kp2'}">${stack(o.ps)}<b>${o.ps.map(p=>luEsc(p.name)).join(' · ')}</b></span><span class="ts-cl">${mode==='low' ? `<b>${(o.ga/o.n).toFixed(1)}<small> 실점/쿼터</small></b><small>${qfmt(o.n)}쿼터 · 총 ${qfmt(o.ga)}실점</small>` : `<b>${qfmt(o.clean)}<small>/${qfmt(o.n)}쿼터</small></b><small>쿼터당 실점 ${(o.ga/o.n).toFixed(1)}</small>`}</span></div>`; };
   const moreB = (L, u) => L.length>5 ? `<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${L.length-5}${u})</button>` : '';
   // 무실점·최소 실점: 다른 지표 카드와 같은 형식 (1위 크게 + 순위 목록)
-  // 무실점: 무실점 쿼터 / 수비 자리로 뛴 전체 쿼터
-  const valOfK = { clean: o => `${qfmt(o.clean)}<small class="sv-of">/${qfmt(o.n)}</small>`, low: o => `${(o.ga/o.n).toFixed(2)}` };
-  const subOfK = {};
+  // 무실점: 무실점 쿼터 수 + 이름 아래 무실점률
+  const valOfK = { clean: o => `${qfmt(o.clean)}<small>쿼터</small>`, low: o => `${(o.ga/o.n).toFixed(2)}` };
+  const subOfK = { clean: o => `무실점률 ${Math.round(o.clean/o.n*100)}%` };
   const pane = (k, L, empty) => `<div class="ts-bp" data-k="${k}"${k==='clean'?'':' hidden'}>${!L.length ? `<div class="ovc-empty">${empty}</div>`
     : k==='combo' ? L.map((o,i)=>rowB(o,i,k)).join('') + moreB(L,'조합')
-    : fmBody(L.map(o=>({ ...o.ps[0], _o:o })), q=>valOfK[k](q._o), '명', k==='low' ? q=>q._o.adj : q=>q._o.clean, subOfK[k] ? q=>subOfK[k](q._o) : null)}${k==='low'?'<p class="ts-flnote">쿼터당 실점 · 6쿼터 이상 · 출전량 반영 순위</p>':''}${k==='clean'?'<p class="ts-flnote">무실점 쿼터 / 수비 자리 출전 쿼터 · 교체는 0.5</p>':''}</div>`;
+    : fmBody(L.map(o=>({ ...o.ps[0], _o:o })), q=>valOfK[k](q._o), '명', k==='low' ? q=>q._o.adj : q=>q._o.clean, subOfK[k] ? q=>subOfK[k](q._o) : null)}${k==='low'?'<p class="ts-flnote">쿼터당 실점 · 6쿼터 이상 · 출전량 반영 순위</p>':''}${k==='clean'?'<p class="ts-flnote">GK·수비 자리 무실점 쿼터 · 교체는 0.5</p>':''}</div>`;
   return `<section class="ovc">${head}${pane('clean', cleanL, 'GK·수비 자리 무실점 쿼터 기록이 아직 없어요')}${pane('low', lowL, '수비 자리로 6쿼터 이상 뛴 선수가 아직 없어요')}${pane('combo', comboL, '무실점 쿼터를 만든 수비 조합이 아직 없어요')}</section>`;
 }
 function renderStatOverview() {
