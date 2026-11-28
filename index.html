@@ -2977,6 +2977,8 @@ const SUB_POS_NAME = {GK:'Goalkeeper', CB:'Centre-Back', FB:'Full-Back', CDM:'De
 // 선수 포지션 한 줄 표기 (세부 포지션 우선, 없으면 대분류 코드)
 // 라인업 기록 기반 주·서브 포지션: 5쿼터 이상 뛴 자리 중 가장 많이 뛴 곳 = 주, 다음 = 서브 (교체 출전 0.5쿼터)
 const AUTO_POS_MIN_Q = 5;
+// 화면 표기: 라인업 그룹·자리 이름의 DM → CDM
+function posTxt(g){ return g==='DM' ? 'CDM' : g==='LDM' ? 'LCDM' : g==='RDM' ? 'RCDM' : g; }
 const LU_TO_SUB = {GK:'GK', CB:'CB', LB:'FB', RB:'FB', DM:'CDM', CM:'CM', CAM:'CAM', LM:'WF', RM:'WF', LW:'WF', RW:'WF', ST:'CF'};
 const SUB_TO_CAT = {GK:'GK', CB:'DF', FB:'DF', CDM:'MF', CM:'MF', CAM:'MF', CF:'FW', WF:'FW'};
 function autoPosCalc(plans){
@@ -4395,7 +4397,7 @@ function rcQuarters(D){
       const p = pp(x.p), sub = x.s != null && x.s !== x.p ? pp(x.s) : null;
       const st = D.rec ? luQStat(D.rec,q,x.p) : {g:0,a:0,og:0}, ss = sub && D.rec ? luQStat(D.rec,q,x.s) : {g:0,a:0,og:0};
       rcBubble(ctx, D, { cx: x0 + pw*sl.x/100, cy: y0 + ph*sl.y/100 - 14*k, number: p.guest ? '용' : p.number, name: p.name, photo: D.photos[x.p],
-        g: st.g, a: st.a, og: st.og, sub: sub ? {name: sub.name, g: ss.g, a: ss.a, og: ss.og} : null, pos: sl.id }, k);
+        g: st.g, a: st.a, og: st.og, sub: sub ? {name: sub.name, g: ss.g, a: ss.a, og: ss.og} : null, pos: posTxt(sl.id) }, k);
     });
   });
   return cv;
@@ -5108,8 +5110,8 @@ function pdRender(){
   let posHtml;
   if (posList.length) {
     const top = posList[0][1];
-    posHtml = `<div class="rs-pos"><div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/top); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?g:''}</u>`; }).join('')}</div>
-      <div class="rs-plist">${posList.slice(0,4).map(([g,q],i)=>`<div class="${i===0?'on':''}"><b>${g}</b><span>${i===0?'가장 많이 뜀':'라인업 기록'}</span><em>${fq(q)}</em></div>`).join('')}</div></div>`;
+    posHtml = `<div class="rs-pos"><div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/top); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?posTxt(g):''}</u>`; }).join('')}</div>
+      <div class="rs-plist">${posList.slice(0,4).map(([g,q],i)=>`<div class="${i===0?'on':''}"><b>${posTxt(g)}</b><span>${i===0?'가장 많이 뜀':'라인업 기록'}</span><em>${fq(q)}</em></div>`).join('')}</div></div>`;
   } else if (subPos.length) {
     posHtml = `<div class="rs-pos"><div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${subPos.map((sp,i)=>{ const c = subXY[sp]||[50,50]; return `<u class="${i===0?'on':''}" style="left:${c[0]}%;top:${c[1]}%;width:${i?24:32}px;height:${i?24:32}px">${sp}</u>`; }).join('')}</div>
       <div class="rs-plist">${subPos.map((sp,i)=>`<div class="${i===0?'on':''}"><b>${sp}</b><span>${subName[sp]||''}</span><em style="font-family:inherit;font-size:12px;font-weight:700">${i===0?'Main':'Sub'}</em></div>`).join('')}</div></div>`;
@@ -5288,7 +5290,7 @@ async function showMatch(matchId, skipPushState) {
   const att = stats.filter(s=>s.attended).map(s=>({s, r: ratingOfS(s)})).sort((a,b)=>(b.r||0)-(a.r||0) || String(a.s.players?.name).localeCompare(String(b.s.players?.name)));
   // 용병 (라인업 설정에 등록된 게스트)
   const guests = ((lineupData && lineupData.cfg && lineupData.cfg.guests) || []);
-  const guestRows = guests.map(g=>`<div class="mdx-row" style="cursor:default"><div class="mdx-p"><span class="mdx-av" style="width:34px;height:34px;font-size:12px;background:#fff6d8;color:#c98a00">용</span><div><h5>${luEsc(g.name||'용병')}<em class="rt-mom" style="background:#eef2f8;color:var(--team-navy)">용병</em></h5><p>${(g.pref&&g.pref.length)?luEsc(g.pref.join(' · ')):'게스트'}</p></div></div><b class="z">-</b><b class="z ap-n">-</b><span></span></div>`).join('');
+  const guestRows = guests.map(g=>`<div class="mdx-row" style="cursor:default"><div class="mdx-p"><span class="mdx-av" style="width:34px;height:34px;font-size:12px;background:#fff6d8;color:#c98a00">용</span><div><h5>${luEsc(g.name||'용병')}<em class="rt-mom" style="background:#eef2f8;color:var(--team-navy)">용병</em></h5><p>${(g.pref&&g.pref.length)?luEsc(g.pref.map(posTxt).join(' · ')):'게스트'}</p></div></div><b class="z">-</b><b class="z ap-n">-</b><span></span></div>`).join('');
   const rateHtml = (att.length || guests.length) ? `<div class="mdx-hd"><span>선수</span><span>평점</span><span>어택P</span><span>변동</span></div>` + att.map(({s,r})=>{
     const p = pOf(s);
     const parts = r ? (getMatchParts(s.player_id, voteMap[s.player_id]?.is_defender ?? ['GK','DF'].includes(s.players?.position), goalsConceded) || []) : [];
@@ -5828,8 +5830,8 @@ function mrRender(){
       return `<div><u class="${k}">${k==='w'?'승':k==='l'?'패':'무'}</u><b style="color:${rt?formCol(rt):'var(--muted)'}">${rt?rt.toFixed(1):'-'}</b><span>${d.getMonth()+1}/${d.getDate()}</span><em>${r.goals?'⚽'+r.goals:''}${r.assists?' 🅰'+r.assists:''}${r.is_mom?' ⭐':''}</em></div>`; }).join('')}</div>`)}
     ${flowL.length>1 ? card(`${ttl(D.scope==='all'?'시즌별 공격포인트':'월별 공격포인트')}<div class="mr-bars">${flowL.map(([k,o])=>`<div><em>${o.g+o.a||''}</em><p><i class="a" style="height:${o.a/flowMax*100}%"></i><i class="g" style="height:${o.g/flowMax*100}%"></i></p><span>${D.scope==='all'?k:k+'월'}</span></div>`).join('')}</div><div class="mr-leg"><span><i class="g"></i>득점</span><span><i class="a"></i>도움</span></div>`) : ''}
     ${card(`${ttl('많이 뛴 포지션')}${posList.length ? `<div class="rs-pos">
-      <div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/posList[0][1]); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?g:''}</u>`; }).join('')}</div>
-      <div class="rs-plist">${posList.slice(0,5).map(([g,q],i)=>`<div class="${i===0?'on':''}"><b>${g}</b><span>${fq(q)}</span><em>${Math.round(q/posTotal*100)}%</em></div>`).join('')}</div>
+      <div class="rs-pitch"><i class="b t"></i><i class="b bt"></i>${posList.map(([g,q],i)=>{ const c=posXY[g]; if(!c) return ''; const sz=Math.round(16+18*q/posList[0][1]); return `<u class="${i===0?'on':''}" style="left:${Math.max(18,Math.min(82,c.x))}%;top:${Math.max(12,Math.min(88,c.y))}%;width:${sz}px;height:${sz}px">${i<3?posTxt(g):''}</u>`; }).join('')}</div>
+      <div class="rs-plist">${posList.slice(0,5).map(([g,q],i)=>`<div class="${i===0?'on':''}"><b>${posTxt(g)}</b><span>${fq(q)}</span><em>${Math.round(q/posTotal*100)}%</em></div>`).join('')}</div>
     </div>` : '<div style="padding:4px 0 6px;font-size:13px;color:var(--muted)">집계된 라인업 기록이 아직 없어요.</div>'}`)}
     ${card(`${ttl('팀 내 순위')}<div class="rs-rank">${ranks.map(([n,r,v])=>`<div class="${r&&r<=3?'top':''}"><span>${n}</span><b>${r?r+'<small>위</small>':'-'}</b><i>${v}${n==='출전'?'경기':n==='득점'?'골':n==='도움'?'개':''}</i></div>`).join('')}</div>`)}
     ${TM ? card(`${ttl('출석')}<div class="rs-rank">${[['참석',GP,`/ ${TM}경기`],['참석률',`${attRate}<small>%</small>`,''],['연속 출석',`${curAtt}<small>경기</small>`,'진행 중'],['최장 연속',`${bestAtt}<small>경기</small>`,attRecord?'<em class="att-rec">신기록 달성 중!</em>':'']].map(([l,v,x])=>`<div><span>${l}</span><b>${v}</b><i>${x}</i></div>`).join('')}</div>`) : ''}
@@ -6696,7 +6698,7 @@ function luRender(){
 
 /* ---------- 탭: 선수 설정 ---------- */
 function luPosSelect(id, val){
-  return `<select id="${id}" class="lu-sel"><option value="">-</option>${LU_POS.map(p=>`<option value="${p}" ${p===val?'selected':''}>${p}</option>`).join('')}</select>`;
+  return `<select id="${id}" class="lu-sel"><option value="">-</option>${LU_POS.map(p=>`<option value="${p}" ${p===val?'selected':''}>${posTxt(p)}</option>`).join('')}</select>`;
 }
 function luRenderPrefs(){
   const list = (LU.matchId && LU.att) ? LU.att : [];
@@ -6786,7 +6788,7 @@ function luRenderMatch(){
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${LU.loadedPlayers.filter(p=>p.status!=='left'||LU.attInit.has(p.id)).map(p=>{const on=LU.attSet.has(p.id);return `<div onclick="luToggleAtt(${p.id},${!on})" style="padding:7px 4px;text-align:center;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid ${on?'var(--skyblue)':'var(--border)'};background:${on?'#e8f5fb':'#f8f9fb'};font-weight:${on?700:400};color:${on?'var(--text)':'var(--muted)'}">${luEsc(p.name)}</div>`}).join('')}</div></div>
     <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)">
       <div style="font-size:13px;font-weight:700;margin-bottom:6px">용병 추가</div>
-      ${(c.guests||[]).map(g=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fff7e0;border-radius:8px;margin-bottom:6px;font-size:13px"><b style="flex:1">${luEsc(g.name)} <span style="font-weight:400;font-size:11px;color:var(--muted)">${(g.pref||[]).join(' · ')||'포지션 미정'}</span></b><button class="lu-x" style="font-size:15px" onclick="luRemoveGuest(${g.id})">✕</button></div>`).join('')}
+      ${(c.guests||[]).map(g=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fff7e0;border-radius:8px;margin-bottom:6px;font-size:13px"><b style="flex:1">${luEsc(g.name)} <span style="font-weight:400;font-size:11px;color:var(--muted)">${(g.pref||[]).map(posTxt).join(' · ')||'포지션 미정'}</span></b><button class="lu-x" style="font-size:15px" onclick="luRemoveGuest(${g.id})">✕</button></div>`).join('')}
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;cursor:pointer"><input type="checkbox" ${c.guestGk===false?'':'checked'} onchange="LU.cfg.guestGk=this.checked" style="width:16px;height:16px"> 용병도 GK 배정 가능</label>
       <div style="display:flex;gap:6px;margin-bottom:6px"><input id="lu-gname" class="lu-sel" placeholder="용병 이름" style="flex:1"><button onclick="luAddGuest()" style="padding:0 14px;background:var(--skyblue);color:#fff;border:none;border-radius:6px;font:inherit;font-weight:700;cursor:pointer">추가</button></div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${[1,2,3].map(i=>`<div><div class="lu-lb">${i}순위</div>${luPosSelect('lu-gp'+i,'')}</div>`).join('')}</div>
@@ -7174,7 +7176,7 @@ function luEdit(slotId){
   }).join('');
   const subOpts = LU.att.filter(p=>!luWhere(plan,p.id,q) || p.id===cur.s).map(p=>`<option value="${p.id}" ${cur.s===p.id?'selected':''}>${luEsc(p.name)}</option>`).join('');
   document.getElementById('lu-sheet').innerHTML = `<div class="lu-shade" onclick="luCloseSheet()"></div><div class="lu-sheetbox">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>${q+1}Q · ${slotId} (${slot.pos})</b><button class="lu-x" onclick="luCloseSheet()">✕</button></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>${q+1}Q · ${posTxt(slotId)} (${posTxt(slot.pos)})</b><button class="lu-x" onclick="luCloseSheet()">✕</button></div>
     <div style="max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:8px">${list}</div>
     <div style="display:flex;gap:8px;margin-top:10px;align-items:center">${slotId==='GK'?'<span style="flex:1;font-size:11px;color:var(--muted)">GK는 교체 불가</span>':`<span class="lu-lb" style="margin:0">교체 투입</span>
       <select class="lu-sel" style="flex:1" onchange="luSetSub(this.value)"><option value="">없음</option>${subOpts}</select>`}
