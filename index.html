@@ -2853,10 +2853,13 @@ async function defCardHtml(sid){
 function renderStatOverview() {
   window._currentStatTab = 'overview';
   const body = document.getElementById('scorers-body');
-  const cards = FM_CATS.map((cat,i) => {
-    const top = [...statStats].filter(p=>p[cat.key]>0).sort((a,b)=>b[cat.key]-a[cat.key]);
-    return fmCard(cat.tab, cat.label, top, p=>p[cat.key]) + (i===0 ? '<div id="fm-def"><section class="ovc"><h3 class="ovc-h"><span>수비 지표</span></h3><div class="ovc-empty">계산 중...</div></section></div>' : '');   // 득점 아래에 수비
-  }).join('');
+  // 공격 지표: 득점·도움·공격 포인트를 탭 하나로
+  const topOf = cat => [...statStats].filter(p=>p[cat.key]>0).sort((a,b)=>b[cat.key]-a[cat.key]);
+  const atkCats = FM_CATS.filter(c=>c.tab!=='mom');
+  const atk = `<section class="ovc"><h3 class="ovc-h"><span>공격 지표</span><span class="ovc-tg">${atkCats.map((c,i)=>`<button${i?'':' class="on"'} onclick="tsBack('${c.tab}',this)">${c.label}</button>`).join('')}</span></h3>${atkCats.map((c,i)=>{ const L = topOf(c);
+    return `<div class="ts-bp" data-k="${c.tab}"${i?' hidden':''}>${L.length ? fmBody(L, p=>p[c.key]) : '<div class="ovc-empty">기록 없음</div>'}</div>`; }).join('')}</section>`;
+  const momCat = FM_CATS.find(c=>c.tab==='mom');
+  const cards = atk + '<div id="fm-def"><section class="ovc"><h3 class="ovc-h"><span>수비 지표</span></h3><div class="ovc-empty">계산 중...</div></section></div>' + fmCard(momCat.tab, momCat.label, topOf(momCat), p=>p[momCat.key]);
   const sid = window._statSeason || currentSeasonId;
   body.innerHTML = `<div class="sv-ttl">${seasonSelect(sid,'statSeason')}</div>` + cards + `<div id="fm-power">${fmCard('power','어택 포인트',null)}</div>`;
   const pb = document.querySelector('#fm-power .ovc-empty'); if(pb) pb.textContent = '계산 중...';
