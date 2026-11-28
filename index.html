@@ -5127,9 +5127,10 @@ function pdRender(){
         <div class="tc-id">
           <div class="tc-ph">${p.photo_url?`<img src="${p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((p.name||'?').charAt(0))}</b>`}</div>
           <div style="min-width:0"><div class="tc-a">${p.number!=null?`<span class="tc-ano">${p.number}</span>`:''}<div class="tc-name${(p.name||'').length>4?' long':''}">${luEsc(p.name)}</div></div>
-          <div class="pd-pos">${luEsc(posLine)}${nick}${stTag}</div></div>
+          <div class="pd-pos">${luEsc(posMap[pof.cat]||pof.cat||'')}${nick}${stTag}</div></div>
         </div>
         <div class="pd-info">${[['나이',age],['주발',footMap[p.dominant_foot]||'-'],['입단',jd?`${jd.getFullYear()}.${String(jd.getMonth()+1).padStart(2,'0')}`:'-'],['국가',p.nationality||'-']].map(([l,v])=>`<div><span>${l}</span><b>${l==='나이'?v:luEsc(String(v))}</b></div>`).join('')}</div>
+        ${posList.length ? (()=>{ const tot = posList.reduce((t,x)=>t+x[1],0), q = posList[0][1], pct = Math.round(q/tot*100); return `<div class="tc-mpc"><span class="l">시즌 가장 많이 뛴 포지션</span><b>${LU_TO_SUB[posList[0][0]]||posList[0][0]}</b><i><u style="width:${pct}%"></u></i><em>${(q%1?q.toFixed(1):q)}쿼터 · ${pct}%</em></div>`; })() : ''}
         <div class="tc-stats">${[[GP,'출전'],[G,'득점'],[A,'도움'],[MOM,'MOM']].map(([v,l])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}<div class="tc-tot"><span>어택P</span><b>${D.power!=null?D.power:'-'}</b></div></div>
       </div>
       <div class="rs">
