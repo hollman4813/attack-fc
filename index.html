@@ -3485,7 +3485,7 @@ function ratingParts(v, st, pid, position){
   const m = (v && v.matches) || {}, c = RATING_CFG, out = [];
   const our = m.our_score, them = m.opponent_score ?? m.goals_conceded;
   const vote = (calcMatchAdjustedRate(v.vote_count, v.total_participants) * 100 - 66.5) / 22;
-  out.push({k:`득표 (${v.vote_count||0}/${v.total_participants||0}표)`, v:vote, keep:true});   // 득표는 0점이어도 항상 표시
+  out.push({k:'득표', v:vote, keep:true});   // 득표는 0점이어도 항상 표시
   if (st.goals) out.push({k:`골${st.goals>1?'×'+st.goals:''}`, v:st.goals*0.2});
   if (st.assists) out.push({k:`도움${st.assists>1?'×'+st.assists:''}`, v:st.assists*0.2});
   if (st.is_mom) out.push({k:'MOM', v:0.5});
