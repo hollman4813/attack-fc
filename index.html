@@ -2978,7 +2978,8 @@ const SUB_POS_NAME = {GK:'Goalkeeper', CB:'Centre-Back', FB:'Full-Back', CDM:'De
 // 라인업 기록 기반 주·서브 포지션: 5쿼터 이상 뛴 자리 중 가장 많이 뛴 곳 = 주, 다음 = 서브 (교체 출전 0.5쿼터)
 const AUTO_POS_MIN_Q = 5;
 // 화면 표기: 라인업 그룹·자리 이름을 선수 세부 포지션 이름에 맞춤 (DM → CDM, ST → CF)
-const POS_TXT = {DM:'CDM', LDM:'LCDM', RDM:'RCDM', ST:'CF', LST:'LCF', RST:'RCF'};
+// 가운데 자리는 좌우 표시 없이 (LCB→CB, LDM→CDM, LST→CF), 윙은 LWF/RWF (상위 그룹은 WF)
+const POS_TXT = {DM:'CDM', LDM:'CDM', RDM:'CDM', ST:'CF', LST:'CF', RST:'CF', LCB:'CB', RCB:'CB', LCM:'CM', RCM:'CM', LW:'LWF', RW:'RWF'};
 function posTxt(g){ return POS_TXT[g] || g; }
 const LU_TO_SUB = {GK:'GK', CB:'CB', LB:'FB', RB:'FB', DM:'CDM', CM:'CM', CAM:'CAM', LM:'WF', RM:'WF', LW:'WF', RW:'WF', ST:'CF'};
 const SUB_TO_CAT = {GK:'GK', CB:'DF', FB:'DF', CDM:'MF', CM:'MF', CAM:'MF', CF:'FW', WF:'FW'};
