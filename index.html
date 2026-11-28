@@ -2872,7 +2872,7 @@ async function defCardHtml(sid){
   const valOfK = { clean: o => `${qfmt(o.clean)}<small>쿼터</small>`, low: o => `${(o.ga/o.n).toFixed(2)}` };
   const pane = (k, L, empty) => `<div class="ts-bp" data-k="${k}"${k==='clean'?'':' hidden'}>${!L.length ? `<div class="ovc-empty">${empty}</div>`
     : k==='combo' ? L.map((o,i)=>rowB(o,i,k)).join('') + moreB(L,'조합')
-    : fmBody(L.map(o=>({ ...o.ps[0], _o:o })), q=>valOfK[k](q._o), '명', k==='low' ? q=>q._o.adj : null)}${k==='low'?'<p class="ts-flnote">쿼터당 평균 실점 · 6쿼터 이상 · 순위는 출전 쿼터 수도 반영</p>':''}${k==='clean'?'<p class="ts-flnote">GK·수비 자리로 뛴 무실점 쿼터 수 · 교체 쿼터는 0.5</p>':''}</div>`;
+    : fmBody(L.map(o=>({ ...o.ps[0], _o:o })), q=>valOfK[k](q._o), '명', k==='low' ? q=>q._o.adj : null)}${k==='low'?'<p class="ts-flnote">쿼터당 실점 · 6쿼터 이상 · 출전량 반영 순위</p>':''}${k==='clean'?'<p class="ts-flnote">GK·수비 자리로 뛴 무실점 쿼터 수 · 교체 쿼터는 0.5</p>':''}</div>`;
   return `<section class="ovc">${head}${pane('clean', cleanL, 'GK·수비 자리 무실점 쿼터 기록이 아직 없어요')}${pane('low', lowL, '수비 자리로 6쿼터 이상 뛴 선수가 아직 없어요')}${pane('combo', comboL, '무실점 쿼터를 만든 수비 조합이 아직 없어요')}</section>`;
 }
 function renderStatOverview() {
