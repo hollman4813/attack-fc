@@ -493,8 +493,8 @@
   .mdx-row{padding:9px 0;border-top:1px solid #eef1f5;cursor:pointer}
   .mdx-p{display:flex;align-items:center;gap:10px;min-width:0}
   .mdx-p div{min-width:0}
-  .mdx-p h5{margin:0;font-size:14px;font-weight:800;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mdx-p h5 small{font-family:'Teko','Noto Sans KR',sans-serif;font-size:16px;font-weight:600;color:var(--muted);margin-right:5px}
+  .mdx-p h5{margin:0;font-size:16px;font-weight:800;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mdx-p h5 small{font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;font-weight:600;color:var(--muted);margin-right:5px}
   .mdx-p p{margin:1px 0 0;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mdx-row>b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:24px;font-weight:600;line-height:1;padding-top:3px;text-align:center;color:var(--team-navy)}
   .mdx-row>b.z{color:#cfd6e0}
@@ -527,7 +527,7 @@
   .sv-ph img{width:100%;height:100%;object-fit:cover}
   .sv-ph em{position:absolute;left:0;top:0;background:var(--team-gold);color:var(--team-deep);font-style:normal;font-family:'Teko','Noto Sans KR',sans-serif;font-size:16px;font-weight:600;width:22px;height:22px;display:flex;align-items:center;justify-content:center;line-height:1;border-bottom-right-radius:8px}
   .f-teko .sv-ph em{padding-top:3px;box-sizing:border-box}
-  .sv-nm{flex:1;min-width:0}.sv-nm b{display:block;font-size:17px;font-weight:800;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sv-nm span{font-size:12px;color:var(--muted)}
+  .sv-nm{flex:1;min-width:0}.sv-nm b{display:block;font-size:19px;font-weight:800;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sv-nm span{font-size:12px;color:var(--muted)}
   .sv-big{font-family:'Teko','Noto Sans KR',sans-serif;font-size:46px;font-weight:600;line-height:1;color:var(--team-deep)}
   .f-teko .sv-big{line-height:.8;padding-top:8px}
   .sv-r{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid #eef1f5;cursor:pointer}
@@ -535,7 +535,7 @@
   .f-teko .sv-r .sv-rk{padding-top:3px}
   .sv-av{width:34px;height:34px;border-radius:50%;flex:none;background:#e8f0f8;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--team-navy);font-size:13px;overflow:hidden}
   .sv-av img{width:100%;height:100%;object-fit:cover}
-  .sv-r p{margin:0;flex:1;min-width:0;font-size:14px;font-weight:700;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sv-r p{margin:0;flex:1;min-width:0;font-size:15px;font-weight:700;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sv-r p small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
   .sv-ldr+.sv-r p small{display:none}
   .ovc>.sv-ldr~.sv-r p small{display:none}
@@ -2418,7 +2418,6 @@ async function loadOverview() {
         <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px">
           <span style="font-size:13px;font-weight:700;color:var(--muted);min-width:18px">${p.number||'-'}</span> ${p.name}
         </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subTxt}</div>
       </div>
       <div style="text-align:right;padding-left:8px">
         <div style="font-size:20px;font-weight:800;color:var(--skyblue)">${p[k]}</div>
@@ -2772,7 +2771,7 @@ function fmAvatar(p){
 }
 function svAv(p){ return `<span class="sv-av">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}</span>`; }
 function svRow(p, rank, val){
-  return `<div class="sv-r" onclick="showPlayer(${p.id})"><span class="sv-rk">${rank}</span>${svAv(p)}<p>${luEsc(p.name)}<small>${posShort(p)}</small></p><span class="sv-v">${val}</span></div>`;
+  return `<div class="sv-r" onclick="showPlayer(${p.id})"><span class="sv-rk">${rank}</span>${svAv(p)}<p>${luEsc(p.name)}</p><span class="sv-v">${val}</span></div>`;
 }
 // 카테고리 카드: 1위 크게 + 2~5위, 나머지는 더보기 (팀 통계와 같은 형식)
 function fmCard(tab, label, list, valOf){
@@ -2781,7 +2780,7 @@ function fmCard(tab, label, list, valOf){
   const p = list[0];
   let rk = 1; const ranks = list.map((q,i)=>{ if(i>0 && valOf(q)!==valOf(list[i-1])) rk = i+1; return rk; });
   return `<section class="ovc">${head}
-    <div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b><span>${posShort(p)}</span></div><div class="sv-big">${valOf(p)}</div></div>
+    <div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b></div><div class="sv-big">${valOf(p)}</div></div>
     ${list.slice(1).map((q,i)=>svRow(q,ranks[i+1],valOf(q)).replace('<div class="sv-r"', `<div class="sv-r${i>=4?' ts-more':''}"`)).join('')}
     ${list.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${list.length-5}명)</button>`:''}</section>`;
 }
@@ -5070,7 +5069,7 @@ function plyProfile(p){
   const nick = p.nickname ? ` <span class="sq-tag role">${luEsc(p.nickname)}</span>` : '';
   return {
     pos: `<div class="pd-pos">${luEsc(posLine)}${nick}${stTag}</div>`,
-    tags: `<div class="pd-pos">${luEsc(POS_NAME[pof.cat]||pof.cat||'')}${nick}${stTag}</div>`,   // 개인기록: 포지션 분류(Midfielder 등)까지만
+    tags: (nick||stTag) ? `<div class="pd-pos">${nick.trim()}${stTag}</div>` : '',   // 개인기록: 포지션 분류(Midfielder 등)까지만
     info: `<div class="pd-info">${[['나이',age],['주발',footMap[p.dominant_foot]||'-'],['입단',jd?`${jd.getFullYear()}.${String(jd.getMonth()+1).padStart(2,'0')}`:'-'],['국가',p.nationality||'-']].map(([l,v])=>`<div><span>${l}</span><b>${l==='나이'?v:luEsc(String(v))}</b></div>`).join('')}</div>`
   };
 }
@@ -5134,7 +5133,7 @@ function pdRender(){
         <div class="tc-id">
           <div class="tc-ph">${p.photo_url?`<img src="${p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((p.name||'?').charAt(0))}</b>`}</div>
           <div style="min-width:0"><div class="tc-a">${p.number!=null?`<span class="tc-ano">${p.number}</span>`:''}<div class="tc-name${(p.name||'').length>4?' long':''}">${luEsc(p.name)}</div></div>
-          <div class="pd-pos">${luEsc(posMap[pof.cat]||pof.cat||'')}${nick}${stTag}</div></div>
+          ${(nick||stTag)?`<div class="pd-pos">${nick.trim()}${stTag}</div>`:''}</div>
         </div>
         <div class="pd-info">${[['나이',age],['주발',footMap[p.dominant_foot]||'-'],['입단',jd?`${jd.getFullYear()}.${String(jd.getMonth()+1).padStart(2,'0')}`:'-'],['국가',p.nationality||'-']].map(([l,v])=>`<div><span>${l}</span><b>${l==='나이'?v:luEsc(String(v))}</b></div>`).join('')}</div>
         ${posList.length ? (()=>{ const tot = posList.reduce((t,x)=>t+x[1],0), q = posList[0][1], pct = Math.round(q/tot*100); return `<div class="tc-mpc"><span class="l">시즌 가장 많이 뛴 포지션</span><b>${LU_TO_SUB[posList[0][0]]||posList[0][0]}</b><i><u style="width:${pct}%"></u></i><em>${(q%1?q.toFixed(1):q)}쿼터 · ${pct}%</em></div>`; })() : ''}
@@ -5281,14 +5280,14 @@ async function showMatch(matchId, skipPushState) {
   const momHtml = moms.map(mom => {
     const p = pOf(mom), r = ratingOfS(mom);
     const bits = [mom.goals?`${mom.goals}골`:'', mom.assists?`${mom.assists}도움`:''].filter(Boolean).join(' · ');
-    return `<div class="mdx-mom" onclick="showPlayer(${p.id})">${av(p,56)}<div style="min-width:0"><span class="mdx-star">★ MOM</span><h4>${luEsc(p.name||'-')}</h4><p>${p.number?p.number+' · ':''}${subLine(p)}${bits?' · '+bits:''}</p></div>${r?`<div class="mdx-mom-r"><b style="color:${rcol(r)}">${r}</b><span>평점</span></div>`:''}</div>`;
+    return `<div class="mdx-mom" onclick="showPlayer(${p.id})">${av(p,56)}<div style="min-width:0"><span class="mdx-star">★ MOM</span><h4>${luEsc(p.name||'-')}</h4>${bits?`<p>${bits}</p>`:''}</div>${r?`<div class="mdx-mom-r"><b style="color:${rcol(r)}">${r}</b><span>평점</span></div>`:''}</div>`;
   }).join('');
 
   // 공격 포인트
   const contrib = stats.filter(s=>(s.goals||0)+(s.assists||0)>0).sort((a,b)=>(b.goals-a.goals)||(b.assists-a.assists));
   const contribHtml = contrib.length ? `<div class="mdx-hd"><span>선수</span><span>득점</span><span>도움</span></div>` + contrib.map(s=>{
     const p = pOf(s);
-    return `<div class="mdx-row" onclick="showPlayer(${p.id})"><div class="mdx-p">${av(p,34)}<div><h5>${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}</h5><p>${subLine(p)}</p></div></div>${n(s.goals)}${n(s.assists)}</div>`;
+    return `<div class="mdx-row" onclick="showPlayer(${p.id})"><div class="mdx-p">${av(p,34)}<div><h5>${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}</h5></div></div>${n(s.goals)}${n(s.assists)}</div>`;
   }).join('') : '<div class="ovc-empty">기록 없음</div>';
 
   // 선수 평점
@@ -5302,7 +5301,7 @@ async function showMatch(matchId, skipPushState) {
     (window._rbParts = window._rbParts || {})[s.player_id] = { parts, r, name: p.name };
     const net = Math.round(parts.reduce((a,x)=>a+x.v,0)*10)/10;
     const rbBtn = parts.length ? `<button class="rb-btn ${net>0?'p':net<0?'m':''}" onclick="event.stopPropagation();rbPop(this,${s.player_id})" aria-label="평점 상세 보기">${net>0?'+':''}${net}</button>` : '<span class="rb-none">-</span>';
-    return `<div class="mdx-row mdx-nogo"><div class="mdx-p"><span class="mdx-go" onclick="showPlayer(${p.id})">${av(p,34)}</span><div><h5><span class="mdx-go" onclick="showPlayer(${p.id})">${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}</span>${s.is_mom?'<em class="rt-mom">MOM</em>':''}</h5><p>${subLine(p)}</p></div></div>${parts.length ? `<button class="rb-rate" style="color:${rcol(r)}" onclick="event.stopPropagation();rbPop(this,${s.player_id})" aria-label="평점 상세 보기">${r}</button>` : `<b style="color:${rcol(r)}">${r||'-'}</b>`}<b class="ap-n">${powerMap[s.player_id]!=null?Math.round(powerMap[s.player_id]):'-'}</b><span class="ap-dc">${powerDelta[s.player_id]!=null && !powerNew[s.player_id] ? `<span class="ap-d ${powerDelta[s.player_id]>0?'p':powerDelta[s.player_id]<0?'m':''}">${powerDelta[s.player_id]>0?'+':''}${powerDelta[s.player_id]}</span>` : (powerNew[s.player_id] ? '<span class="ap-d n">NEW</span>' : '')}</span></div>`;
+    return `<div class="mdx-row mdx-nogo"><div class="mdx-p"><span class="mdx-go" onclick="showPlayer(${p.id})">${av(p,34)}</span><div><h5><span class="mdx-go" onclick="showPlayer(${p.id})">${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}</span>${s.is_mom?'<em class="rt-mom">MOM</em>':''}</h5></div></div>${parts.length ? `<button class="rb-rate" style="color:${rcol(r)}" onclick="event.stopPropagation();rbPop(this,${s.player_id})" aria-label="평점 상세 보기">${r}</button>` : `<b style="color:${rcol(r)}">${r||'-'}</b>`}<b class="ap-n">${powerMap[s.player_id]!=null?Math.round(powerMap[s.player_id]):'-'}</b><span class="ap-dc">${powerDelta[s.player_id]!=null && !powerNew[s.player_id] ? `<span class="ap-d ${powerDelta[s.player_id]>0?'p':powerDelta[s.player_id]<0?'m':''}">${powerDelta[s.player_id]>0?'+':''}${powerDelta[s.player_id]}</span>` : (powerNew[s.player_id] ? '<span class="ap-d n">NEW</span>' : '')}</span></div>`;
   }).join('') + guestRows : '<div class="ovc-empty">참석 정보 없음</div>';
 
   // 상대 전적
@@ -6457,7 +6456,7 @@ function luBubble(o){
       ${o.sub?'<i class="lu-bsub">↻</i>':''}${a?`<span class="lu-bgrp a">${'<i>👟</i>'.repeat(Math.min(a,5))}</span>`:''}${(g||og)?`<span class="lu-bgrp g">${'<i>⚽</i>'.repeat(Math.min(g,5))}${'<i class="og">⚽</i>'.repeat(Math.min(og,5))}</span>`:''}</div>
     <div class="lu-nm"${o.empty?' style="background:none;opacity:.8"':''}>${(o.empty||!o.photo)?'':`<span class="no">${luEsc(o.number??'')}</span>`}<span class="tx">${luEsc(o.name)}</span></div>
     ${o.sub?`<div class="lu-nsub">↻ ${luEsc(o.sub.name)}${o.sub.tag?`<span class="lu-nsub-t">${o.sub.tag.trim()}</span>`:''}</div>`:''}
-    <div class="lu-ps">${luEsc(o.slot||'')}</div></div>`;
+    <div class="lu-ps">${luEsc(posTxt(o.slot||''))}</div></div>`;
 }
 function luBadge(rec,q,pid){ const s=luQStat(rec,q,pid); return (s.g?' '+'⚽'.repeat(s.g):'')+(s.og?' '+'🔴'.repeat(s.og):'')+(s.a?' '+'👟'.repeat(s.a):''); }
 async function luLoadRec(matchId, fallback){
@@ -7094,8 +7093,8 @@ function luWhere(plan, pid, q){
 }
 function luAppearText(plan,pid,q){
   const a = luAppear(plan,pid,q); if(!a.length) return '';
-  if(a.length===1){ const x=a[0]; return x.part==='full'?x.slot : x.part==='first'?`${x.slot}(전)`:`${x.slot}(후)`; }
-  return a.map(x=>x.slot).join('→');
+  if(a.length===1){ const x=a[0]; const sl = posTxt(x.slot); return x.part==='full'?sl : x.part==='first'?`${sl}(전)`:`${sl}(후)`; }
+  return a.map(x=>posTxt(x.slot)).join('→');
 }
 function luRenderPlan(){
   const plan = LU.plan, q = LU.q;
@@ -7143,7 +7142,7 @@ function luRenderPlan(){
     const seen1 = {}, seen2 = {}; luSlots(plan[i].formation).forEach(s=>{
       const e = plan[i].slots[s.id];
       const f = e&&e.p, b = e&&(e.s||e.p);
-      if(!f) warns.push(`${i+1}Q ${s.id} 비어있음${e&&e.s?' (전반)':''}`);
+      if(!f) warns.push(`${i+1}Q ${posTxt(s.id)} 비어있음${e&&e.s?' (전반)':''}`);
       else { if(seen1[f]) warns.push(`${i+1}Q ${luPlayer(f).name} 중복 배치`); seen1[f]=1; }
       if(b){ if(seen2[b]) warns.push(`${i+1}Q ${luPlayer(b).name} 후반 중복 배치`); seen2[b]=1; }
     });
@@ -7176,7 +7175,7 @@ function luEdit(slotId){
     const w = luWhere(plan,p.id,q); const ex = (LU.cfg.excl[p.id]||[]).includes(q);
     const pr = luPrefsOf(p); const idx = pr.indexOf(slot.pos);
     const tag = idx>=0?`${idx+1}순위`:'';
-    const state = cur.p===p.id ? '<b style="color:var(--skyblue)">현재</b>' : w ? `${w.slot}${w.role==='sub'?' 교체':''}` : ex ? '제외' : '휴식';
+    const state = cur.p===p.id ? '<b style="color:var(--skyblue)">현재</b>' : w ? `${posTxt(w.slot)}${w.role==='sub'?' 교체':''}` : ex ? '제외' : '휴식';
     return `<div class="lu-row" onclick="luAssign(${p.id})"><span style="min-width:24px;color:var(--muted);font-size:11px">#${p.number??''}</span><b style="flex:1">${luEsc(p.name)}</b><span style="font-size:11px;color:#1f9d55;margin-right:8px">${tag}</span><span style="font-size:11px;color:var(--muted)">${state}</span></div>`;
   }).join('');
   const subOpts = LU.att.filter(p=>!luWhere(plan,p.id,q) || p.id===cur.s).map(p=>`<option value="${p.id}" ${cur.s===p.id?'selected':''}>${luEsc(p.name)}</option>`).join('');
