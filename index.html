@@ -495,6 +495,8 @@
   .mdx-p div{min-width:0}
   .mdx-p h5{margin:0;font-size:16px;font-weight:800;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mdx-p h5 small{font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;font-weight:600;color:var(--muted);margin-right:5px}
+  /* 등번호 칸 고정폭: 자릿수와 상관없이 이름 시작 위치 맞춤 */
+  .mdx-p h5 small.no,.vs-row p small.no{display:inline-block;width:22px;margin-right:6px;text-align:center;font-variant-numeric:tabular-nums}
   .mdx-p p{margin:1px 0 0;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mdx-row>b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:24px;font-weight:600;line-height:1;padding-top:3px;text-align:center;color:var(--team-navy)}
   .mdx-row>b.z{color:#cfd6e0}
@@ -2770,7 +2772,7 @@ function statCard(p, i, key) {
 const FM_CATS = [
   { tab:'goals',   key:'총골',     label:'득점' },
   { tab:'assists', key:'총어시스트', label:'도움' },
-  { tab:'points',  key:'공격포인트', label:'득점 + 도움' },
+  { tab:'points',  key:'공격포인트', label:'공격 포인트' },
   { tab:'mom',     key:'mom횟수',   label:'MOM' }
 ];
 function fmAvatar(p){
@@ -2786,12 +2788,15 @@ function svRow(p, rank, val){
 function fmCard(tab, label, list, valOf){
   const head = `<h3 class="ovc-h"><span>${label}</span></h3>`;
   if(!list || !list.length) return `<section class="ovc">${head}<div class="ovc-empty">기록 없음</div></section>`;
+  return `<section class="ovc">${head}${fmBody(list, valOf)}</section>`;
+}
+// 1위 크게 + 2~5위 + 더보기 (unit: 더보기 단위)
+function fmBody(list, valOf, unit){
   const p = list[0];
   let rk = 1; const ranks = list.map((q,i)=>{ if(i>0 && valOf(q)!==valOf(list[i-1])) rk = i+1; return rk; });
-  return `<section class="ovc">${head}
-    <div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b></div><div class="sv-big">${valOf(p)}</div></div>
+  return `<div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b></div><div class="sv-big">${valOf(p)}</div></div>
     ${list.slice(1).map((q,i)=>svRow(q,ranks[i+1],valOf(q)).replace('<div class="sv-r"', `<div class="sv-r${i>=4?' ts-more':''}"`)).join('')}
-    ${list.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${list.length-5}명)</button>`:''}</section>`;
+    ${list.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${list.length-5}${unit||'명'})</button>`:''}`;
 }
 async function getPower(sid){
   sid = sid || currentSeasonId;
@@ -2809,7 +2814,7 @@ async function defCardHtml(sid){
     api(`matches?select=id&status=eq.finished&season_id=eq.${sid}`).catch(()=>[]),
     api('players?select=id,name,number,photo_url').catch(()=>[]),
     ratingCtxLoad().catch(()=>null)]);
-  const head = `<h3 class="ovc-h"><span>수비</span><span class="ovc-tg"><button class="on" onclick="tsBack('clean',this)">무실점</button><button onclick="tsBack('low',this)">최소 실점</button><button onclick="tsBack('combo',this)">조합</button></span></h3>`;
+  const head = `<h3 class="ovc-h"><span>수비 지표</span><span class="ovc-tg"><button class="on" onclick="tsBack('clean',this)">무실점</button><button onclick="tsBack('low',this)">최소 실점</button><button onclick="tsBack('combo',this)">조합</button></span></h3>`;
   if (!RX) return `<section class="ovc">${head}<div class="ovc-empty">기록을 불러오지 못했어요</div></section>`;
   const pOf = id => (players||[]).find(p=>p.id===id);
   const pOfG = id => pOf(id) || (RX.guests && RX.guests[id]!=null ? { id, name: RX.guests[id]+'(용병)', guest:true } : null);   // 조합에는 용병도 표시
@@ -2838,7 +2843,11 @@ async function defCardHtml(sid){
   const rowB = (o,i,mode) => { const one = mode!=='combo';
     return `<div class="ts-kr${i>=5?' ts-more':''}"${one&&o.ps[0]?` onclick="showPlayer(${o.ps[0].id})"`:''}><span class="ts-kp${one?'':' ts-kp2'}">${stack(o.ps)}<b>${o.ps.map(p=>luEsc(p.name)).join(' · ')}</b></span><span class="ts-cl">${mode==='low' ? `<b>${(o.ga/o.n).toFixed(1)}<small> 실점/쿼터</small></b><small>${qfmt(o.n)}쿼터 · 총 ${qfmt(o.ga)}실점</small>` : `<b>${qfmt(o.clean)}<small>/${qfmt(o.n)}쿼터</small></b><small>쿼터당 실점 ${(o.ga/o.n).toFixed(1)}</small>`}</span></div>`; };
   const moreB = (L, u) => L.length>5 ? `<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${L.length-5}${u})</button>` : '';
-  const pane = (k, L, empty) => `<div class="ts-bp" data-k="${k}"${k==='clean'?'':' hidden'}>${L.length ? L.map((o,i)=>rowB(o,i,k)).join('') + moreB(L, k==='combo'?'조합':'명') : `<div class="ovc-empty">${empty}</div>`}</div>`;
+  // 무실점·최소 실점: 다른 지표 카드와 같은 형식 (1위 크게 + 순위 목록)
+  const valOfK = { clean: o => `${qfmt(o.clean)}<small>쿼터</small>`, low: o => `${(o.ga/o.n).toFixed(2)}` };
+  const pane = (k, L, empty) => `<div class="ts-bp" data-k="${k}"${k==='clean'?'':' hidden'}>${!L.length ? `<div class="ovc-empty">${empty}</div>`
+    : k==='combo' ? L.map((o,i)=>rowB(o,i,k)).join('') + moreB(L,'조합')
+    : fmBody(L.map(o=>({ ...o.ps[0], _o:o })), q=>valOfK[k](q._o))}${k==='low'?'<p class="ts-flnote">수비 자리로 뛴 쿼터당 평균 실점 · 2쿼터 이상</p>':''}${k==='clean'?'<p class="ts-flnote">GK·수비 자리로 뛴 무실점 쿼터 수 · 교체 쿼터는 0.5</p>':''}</div>`;
   return `<section class="ovc">${head}${pane('clean', cleanL, 'GK·수비 자리 무실점 쿼터 기록이 아직 없어요')}${pane('low', lowL, '수비 자리로 2쿼터 이상 뛴 선수가 아직 없어요')}${pane('combo', comboL, '무실점 쿼터를 만든 수비 조합이 아직 없어요')}</section>`;
 }
 function renderStatOverview() {
@@ -2846,7 +2855,7 @@ function renderStatOverview() {
   const body = document.getElementById('scorers-body');
   const cards = FM_CATS.map((cat,i) => {
     const top = [...statStats].filter(p=>p[cat.key]>0).sort((a,b)=>b[cat.key]-a[cat.key]);
-    return fmCard(cat.tab, cat.label, top, p=>p[cat.key]) + (i===0 ? '<div id="fm-def"><section class="ovc"><h3 class="ovc-h"><span>수비</span></h3><div class="ovc-empty">계산 중...</div></section></div>' : '');   // 득점 아래에 수비
+    return fmCard(cat.tab, cat.label, top, p=>p[cat.key]) + (i===0 ? '<div id="fm-def"><section class="ovc"><h3 class="ovc-h"><span>수비 지표</span></h3><div class="ovc-empty">계산 중...</div></section></div>' : '');   // 득점 아래에 수비
   }).join('');
   const sid = window._statSeason || currentSeasonId;
   body.innerHTML = `<div class="sv-ttl">${seasonSelect(sid,'statSeason')}</div>` + cards + `<div id="fm-power">${fmCard('power','어택 포인트',null)}</div>`;
@@ -2866,12 +2875,12 @@ function statBackBar(title){
 function renderStatList(tab) {
   window._currentStatTab = tab; window.scrollTo(0,0);
   const key = tab==='goals'?'총골':tab==='assists'?'총어시스트':tab==='points'?'공격포인트':'mom횟수';
-  const lbl = tab==='goals'?'득점':tab==='assists'?'도움':tab==='points'?'득점+도움':'MOM';
+  const lbl = tab==='goals'?'득점':tab==='assists'?'도움':tab==='points'?'공격 포인트':'MOM';
   const sorted = [...statStats].filter(p=>p[key]>0).sort((a,b)=>b[key]-a[key]);
   // 동점은 같은 순위
   let rk = 0;
   const rows = sorted.map((p,i) => { if(i===0 || p[key]!==sorted[i-1][key]) rk = i+1; return svRow(p, rk, p[key]); }).join('');
-  const ttl = {goals:'득점',assists:'도움',points:'득점 + 도움',mom:'MOM'}[tab];
+  const ttl = {goals:'득점',assists:'도움',points:'공격 포인트',mom:'MOM'}[tab];
   document.getElementById('scorers-body').innerHTML = statBackBar(ttl) + `<section class="ovc sv-list">
     <div class="sv-hd"><span class="sv-rk">순위</span><span style="flex:1;padding-left:44px">선수</span><span>${lbl}</span></div>
     ${rows || '<div class="ovc-empty">기록 없음</div>'}</section>`;
@@ -4174,7 +4183,7 @@ async function mdVoteOpen(matchId){
   box.innerHTML = `<div class="lu-shade" onclick="document.getElementById('vote-sheet').remove()"></div>
     <div class="lu-sheetbox vs-sheet"><h3>MOM 득표 입력</h3>
       <div class="vs-total"><span>투표 참여 인원</span><div class="vs-step"><button onclick="vsStep('vs-total',-1)" aria-label="빼기">−</button><input id="vs-total" type="number" min="0" inputmode="numeric" value="${total}"><button onclick="vsStep('vs-total',1)" aria-label="더하기">＋</button></div></div>
-      <div class="vs-list">${list.map(a=>{ const p=a.players; return `<div class="vs-row"><span class="sv-av">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}</span><p>${p.number!=null?`<small>${p.number}</small>`:''}${luEsc(p.name)}</p><div class="vs-step"><button onclick="vsStep('vs-${p.id}',-1)" aria-label="빼기">−</button><input id="vs-${p.id}" data-pid="${p.id}" type="number" min="0" inputmode="numeric" value="${vm[p.id]?.vote_count||0}"><button onclick="vsStep('vs-${p.id}',1)" aria-label="더하기">＋</button></div></div>`; }).join('')}</div>
+      <div class="vs-list">${list.map(a=>{ const p=a.players; return `<div class="vs-row"><span class="sv-av">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}</span><p><small class="no">${p.number??''}</small>${luEsc(p.name)}</p><div class="vs-step"><button onclick="vsStep('vs-${p.id}',-1)" aria-label="빼기">−</button><input id="vs-${p.id}" data-pid="${p.id}" type="number" min="0" inputmode="numeric" value="${vm[p.id]?.vote_count||0}"><button onclick="vsStep('vs-${p.id}',1)" aria-label="더하기">＋</button></div></div>`; }).join('')}</div>
       <p class="vs-hint">최다 득표자가 MOM으로 자동 지정돼요. 동률이면 공동 MOM이에요.</p>
       <button class="ss-add" onclick="mdVoteSave(${matchId})">저장</button>
     </div>`;
@@ -5333,21 +5342,21 @@ async function showMatch(matchId, skipPushState) {
   const contrib = stats.filter(s=>(s.goals||0)+(s.assists||0)>0).sort((a,b)=>(b.goals-a.goals)||(b.assists-a.assists));
   const contribHtml = contrib.length ? `<div class="mdx-hd"><span>선수</span><span>득점</span><span>도움</span></div>` + contrib.map(s=>{
     const p = pOf(s);
-    return `<div class="mdx-row" onclick="showPlayer(${p.id})"><div class="mdx-p">${av(p,34)}<div><h5>${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}</h5></div></div>${n(s.goals)}${n(s.assists)}</div>`;
+    return `<div class="mdx-row" onclick="showPlayer(${p.id})"><div class="mdx-p">${av(p,34)}<div><h5><small class="no">${p.number??''}</small>${luEsc(p.name||'-')}</h5></div></div>${n(s.goals)}${n(s.assists)}</div>`;
   }).join('') : '<div class="ovc-empty">기록 없음</div>';
 
   // 선수 평점
   const att = stats.filter(s=>s.attended).map(s=>({s, r: ratingOfS(s)})).sort((a,b)=>(b.r||0)-(a.r||0) || String(a.s.players?.name).localeCompare(String(b.s.players?.name)));
   // 용병 (라인업 설정에 등록된 게스트)
   const guests = ((lineupData && lineupData.cfg && lineupData.cfg.guests) || []);
-  const guestRows = guests.map(g=>`<div class="mdx-row" style="cursor:default"><div class="mdx-p"><span class="mdx-av" style="width:34px;height:34px;font-size:12px;background:#fff6d8;color:#c98a00">용</span><div><h5>${luEsc(g.name||'용병')}<em class="rt-mom" style="background:#eef2f8;color:var(--team-navy)">용병</em></h5><p>${(g.pref&&g.pref.length)?luEsc(g.pref.map(posTxt).join(' · ')):'게스트'}</p></div></div><b class="z">-</b><b class="z ap-n">-</b><span></span></div>`).join('');
+  const guestRows = guests.map(g=>`<div class="mdx-row" style="cursor:default"><div class="mdx-p"><span class="mdx-av" style="width:34px;height:34px;font-size:12px;background:#fff6d8;color:#c98a00">용</span><div><h5><small class="no"></small>${luEsc(g.name||'용병')}<em class="rt-mom" style="background:#eef2f8;color:var(--team-navy)">용병</em></h5><p style="padding-left:28px">${(g.pref&&g.pref.length)?luEsc(g.pref.map(posTxt).join(' · ')):'게스트'}</p></div></div><b class="z">-</b><b class="z ap-n">-</b><span></span></div>`).join('');
   const rateHtml = (att.length || guests.length) ? `<div class="mdx-hd"><span>선수</span><span>평점</span><span>어택P</span><span>변동</span></div>` + att.map(({s,r})=>{
     const p = pOf(s);
     const parts = r ? (getMatchParts(s.player_id, voteMap[s.player_id]?.is_defender ?? ['GK','DF'].includes(s.players?.position), goalsConceded) || []) : [];
     (window._rbParts = window._rbParts || {})[s.player_id] = { parts, r, name: p.name };
     const net = Math.round(parts.reduce((a,x)=>a+x.v,0)*10)/10;
     const rbBtn = parts.length ? `<button class="rb-btn ${net>0?'p':net<0?'m':''}" onclick="event.stopPropagation();rbPop(this,${s.player_id})" aria-label="평점 상세 보기">${net>0?'+':''}${net}</button>` : '<span class="rb-none">-</span>';
-    return `<div class="mdx-row mdx-nogo"><div class="mdx-p"><span class="mdx-go" onclick="showPlayer(${p.id})">${av(p,34)}</span><div><h5><span class="mdx-go" onclick="showPlayer(${p.id})">${p.number?`<small>${p.number}</small>`:''}${luEsc(p.name||'-')}</span>${s.is_mom?'<em class="rt-mom">MOM</em>':''}</h5></div></div>${parts.length ? `<button class="rb-rate" style="color:${rcol(r)}" onclick="event.stopPropagation();rbPop(this,${s.player_id})" aria-label="평점 상세 보기">${r}</button>` : `<b style="color:${rcol(r)}">${r||'-'}</b>`}<b class="ap-n">${powerMap[s.player_id]!=null?Math.round(powerMap[s.player_id]):'-'}</b><span class="ap-dc">${powerDelta[s.player_id]!=null && !powerNew[s.player_id] ? `<span class="ap-d ${powerDelta[s.player_id]>0?'p':powerDelta[s.player_id]<0?'m':''}">${powerDelta[s.player_id]>0?'+':''}${powerDelta[s.player_id]}</span>` : (powerNew[s.player_id] ? '<span class="ap-d n">NEW</span>' : '')}</span></div>`;
+    return `<div class="mdx-row mdx-nogo"><div class="mdx-p"><span class="mdx-go" onclick="showPlayer(${p.id})">${av(p,34)}</span><div><h5><span class="mdx-go" onclick="showPlayer(${p.id})"><small class="no">${p.number??''}</small>${luEsc(p.name||'-')}</span>${s.is_mom?'<em class="rt-mom">MOM</em>':''}</h5></div></div>${parts.length ? `<button class="rb-rate" style="color:${rcol(r)}" onclick="event.stopPropagation();rbPop(this,${s.player_id})" aria-label="평점 상세 보기">${r}</button>` : `<b style="color:${rcol(r)}">${r||'-'}</b>`}<b class="ap-n">${powerMap[s.player_id]!=null?Math.round(powerMap[s.player_id]):'-'}</b><span class="ap-dc">${powerDelta[s.player_id]!=null && !powerNew[s.player_id] ? `<span class="ap-d ${powerDelta[s.player_id]>0?'p':powerDelta[s.player_id]<0?'m':''}">${powerDelta[s.player_id]>0?'+':''}${powerDelta[s.player_id]}</span>` : (powerNew[s.player_id] ? '<span class="ap-d n">NEW</span>' : '')}</span></div>`;
   }).join('') + guestRows : '<div class="ovc-empty">참석 정보 없음</div>';
 
   // 상대 전적
