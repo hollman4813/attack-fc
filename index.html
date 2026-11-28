@@ -3485,7 +3485,7 @@ function ratingParts(v, st, pid, position){
   const m = (v && v.matches) || {}, c = RATING_CFG, out = [];
   const our = m.our_score, them = m.opponent_score ?? m.goals_conceded;
   const vote = (calcMatchAdjustedRate(v.vote_count, v.total_participants) * 100 - 66.5) / 22;
-  out.push({k:'득표', v:vote});
+  out.push({k:`득표 (${v.vote_count||0}/${v.total_participants||0}표)`, v:vote, keep:true});   // 득표는 0점이어도 항상 표시
   if (st.goals) out.push({k:`골${st.goals>1?'×'+st.goals:''}`, v:st.goals*0.2});
   if (st.assists) out.push({k:`도움${st.assists>1?'×'+st.assists:''}`, v:st.assists*0.2});
   if (st.is_mom) out.push({k:'MOM', v:0.5});
@@ -3502,7 +3502,7 @@ function ratingParts(v, st, pid, position){
     const g = them ?? 0, b = g===0 ? 1.0 : g===1 ? 0.5 : g===2 ? 0.2 : 0;
     if (b) out.push({k:g===0?'무실점':`수비 (실점 ${g})`, v:b});
   }
-  return out.filter(x=>Math.abs(x.v) >= 0.05).map(x=>({k:x.k, v:Math.round(x.v*10)/10}));
+  return out.filter(x=>x.keep || Math.abs(x.v) >= 0.05).map(x=>({k:x.k, v:Math.round(x.v*10)/10}));
 }
 // 보상 버튼 → 풍선 팝업
 function rbPop(btn, pid){
@@ -3511,7 +3511,7 @@ function rbPop(btn, pid){
   const d = (window._rbParts||{})[pid]; if (!d) return;
   const el = document.createElement('div'); el.id = 'rb-pop'; el.dataset.pid = pid;
   el.innerHTML = `<h6>${luEsc(d.name||'')} 평점 상세</h6><div class="rr"><span>기본</span><b>7.0</b></div>` +
-    d.parts.map(x=>`<div class="rr"><span>${luEsc(x.k)}</span><b class="${x.v>0?'p':'m'}">${x.v>0?'+':''}${x.v.toFixed(1)}</b></div>`).join('') +
+    d.parts.map(x=>`<div class="rr"><span>${luEsc(x.k)}</span><b class="${x.v>0?'p':x.v<0?'m':''}">${x.v>0?'+':''}${x.v.toFixed(1)}</b></div>`).join('') +
     `<div class="rt"><span>평점</span><b>${d.r}</b></div>`;
   document.body.appendChild(el);
   const r = btn.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
