@@ -532,6 +532,9 @@
   .sv-nm{flex:1;min-width:0}.sv-nm b{display:block;font-size:19px;font-weight:800;color:var(--team-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sv-nm span{font-size:12px;color:var(--muted)}
   .sv-big{font-family:'Teko','Noto Sans KR',sans-serif;font-size:46px;font-weight:600;line-height:1;color:var(--team-deep)}
   .f-teko .sv-big{line-height:.8;padding-top:8px}
+  .sv-sub{display:flex;align-items:center;gap:6px;font-style:normal;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px}
+  .sv-nm .sv-sub{font-size:12.5px;margin-top:4px}
+  .sv-big small.sv-of,.sv-v small.sv-of{font-family:'Teko','Noto Sans KR',sans-serif;font-size:.5em;font-weight:600;color:var(--muted);margin-left:2px}
   .sv-r{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid #eef1f5;cursor:pointer}
   .sv-rk{width:26px;flex:none;text-align:center;font-family:'Teko','Noto Sans KR',sans-serif;font-size:20px;font-weight:600;color:var(--muted);line-height:1}
   .f-teko .sv-r .sv-rk{padding-top:3px}
@@ -2796,12 +2799,12 @@ function fmCard(tab, label, list, valOf){
   return `<section class="ovc">${head}${fmBody(list, valOf)}</section>`;
 }
 // 1위 크게 + 2~5위 + 더보기 (unit: 더보기 단위)
-function fmBody(list, valOf, unit, rankOf){
+function fmBody(list, valOf, unit, rankOf, subOf){
   const p = list[0];
   rankOf = rankOf || valOf;
   let rk = 1; const ranks = list.map((q,i)=>{ if(i>0 && rankOf(q)!==rankOf(list[i-1])) rk = i+1; return rk; });
-  return `<div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b></div><div class="sv-big">${valOf(p)}</div></div>
-    ${list.slice(1).map((q,i)=>svRow(q,ranks[i+1],valOf(q)).replace('<div class="sv-r"', `<div class="sv-r${i>=4?' ts-more':''}"`)).join('')}
+  return `<div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b>${subOf?`<i class="sv-sub">${subOf(p)}</i>`:''}</div><div class="sv-big">${valOf(p)}</div></div>
+    ${list.slice(1).map((q,i)=>svRow(q,ranks[i+1],valOf(q)).replace(/<\/p>/, subOf?`<i class="sv-sub">${subOf(q)}</i></p>`:'</p>').replace('<div class="sv-r"', `<div class="sv-r${i>=4?' ts-more':''}"`)).join('')}
     ${list.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${list.length-5}${unit||'명'})</button>`:''}`;
 }
 async function getPower(sid){
@@ -2869,10 +2872,12 @@ async function defCardHtml(sid){
     return `<div class="ts-kr${i>=5?' ts-more':''}"${one&&o.ps[0]?` onclick="showPlayer(${o.ps[0].id})"`:''}><span class="ts-kp${one?'':' ts-kp2'}">${stack(o.ps)}<b>${o.ps.map(p=>luEsc(p.name)).join(' · ')}</b></span><span class="ts-cl">${mode==='low' ? `<b>${(o.ga/o.n).toFixed(1)}<small> 실점/쿼터</small></b><small>${qfmt(o.n)}쿼터 · 총 ${qfmt(o.ga)}실점</small>` : `<b>${qfmt(o.clean)}<small>/${qfmt(o.n)}쿼터</small></b><small>쿼터당 실점 ${(o.ga/o.n).toFixed(1)}</small>`}</span></div>`; };
   const moreB = (L, u) => L.length>5 ? `<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${L.length-5}${u})</button>` : '';
   // 무실점·최소 실점: 다른 지표 카드와 같은 형식 (1위 크게 + 순위 목록)
-  const valOfK = { clean: o => `${qfmt(o.clean)}<small>쿼터</small>`, low: o => `${(o.ga/o.n).toFixed(2)}` };
+  // 무실점: 무실점 쿼터 / 수비 자리로 뛴 전체 쿼터
+  const valOfK = { clean: o => `${qfmt(o.clean)}<small class="sv-of">/${qfmt(o.n)}</small>`, low: o => `${(o.ga/o.n).toFixed(2)}` };
+  const subOfK = {};
   const pane = (k, L, empty) => `<div class="ts-bp" data-k="${k}"${k==='clean'?'':' hidden'}>${!L.length ? `<div class="ovc-empty">${empty}</div>`
     : k==='combo' ? L.map((o,i)=>rowB(o,i,k)).join('') + moreB(L,'조합')
-    : fmBody(L.map(o=>({ ...o.ps[0], _o:o })), q=>valOfK[k](q._o), '명', k==='low' ? q=>q._o.adj : null)}${k==='low'?'<p class="ts-flnote">쿼터당 실점 · 6쿼터 이상 · 출전량 반영 순위</p>':''}${k==='clean'?'<p class="ts-flnote">GK·수비 자리로 뛴 무실점 쿼터 수 · 교체 쿼터는 0.5</p>':''}</div>`;
+    : fmBody(L.map(o=>({ ...o.ps[0], _o:o })), q=>valOfK[k](q._o), '명', k==='low' ? q=>q._o.adj : q=>q._o.clean, subOfK[k] ? q=>subOfK[k](q._o) : null)}${k==='low'?'<p class="ts-flnote">쿼터당 실점 · 6쿼터 이상 · 출전량 반영 순위</p>':''}${k==='clean'?'<p class="ts-flnote">무실점 쿼터 / 수비 자리 출전 쿼터 · 교체는 0.5</p>':''}</div>`;
   return `<section class="ovc">${head}${pane('clean', cleanL, 'GK·수비 자리 무실점 쿼터 기록이 아직 없어요')}${pane('low', lowL, '수비 자리로 6쿼터 이상 뛴 선수가 아직 없어요')}${pane('combo', comboL, '무실점 쿼터를 만든 수비 조합이 아직 없어요')}</section>`;
 }
 function renderStatOverview() {
