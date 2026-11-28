@@ -2568,7 +2568,7 @@ function ovLeaders(stats){
   const top = k => (stats||[]).filter(x=>(x[k]||0)>0).sort((a,b)=>(b[k]||0)-(a[k]||0))[0];
   const items = [['최다 득점','총골',top('총골')],['최다 도움','총어시스트',top('총어시스트')],['최다 MOM','mom횟수',top('mom횟수')]].filter(x=>x[2]);
   if(!items.length){ box.innerHTML=''; return; }
-  const pos = p => [p.sub_position1].filter(Boolean)[0] || p.position || '';
+  const pos = p => p.position || '';   // 세부 포지션은 스쿼드에서만
   box.innerHTML = `<div class="ovs-h"><span>시즌 리더</span><a class="ovc-pill" onclick="switchTab('scorers',document.querySelectorAll('.team-tab')[3])">전체 ›</a></div>
     <div class="ovs">${items.map(([t,k,p])=>`<div class="ovs-c" onclick="showPlayer(${p.id})"><div class="ovs-t">${t} ›</div><div class="ovs-b"><div class="ovs-im">${p.photo_url?`<img src="${p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((p.name||'?').charAt(0))}</b>`}</div><div style="min-width:0"><div class="ovs-pos">${luEsc([pos(p), p.number!=null?p.number:''].filter(x=>x!=='').join(' · '))}</div><div class="ovs-nm">${luEsc(p.name)}</div><div class="ovs-v">${p[k]}</div></div></div></div>`).join('')}</div>`;
 }
@@ -3004,7 +3004,10 @@ function posOf(p){
   const reg = [p.sub_position1, p.sub_position2].filter(x => x && x !== a.main);
   return { cat: a.cat, list: [a.main, a.sub || reg[0]].filter(Boolean) };
 }
-function posShort(p){ const o = posOf(p); return o.list.join(' · ') || o.cat || '-'; }
+// 세부 포지션 한 줄 (스쿼드 목록 전용)
+function posDetail(p){ const o = posOf(p); return o.list.join(' · ') || o.cat || '-'; }
+// 다른 화면은 GK·DF·MF·FW까지만
+function posShort(p){ return (p && p.position) || '-'; }
 
 function squadRender(){
   const players = window._sqPlayers || [];
@@ -3025,7 +3028,7 @@ function squadRender(){
     const inj = st==='injured' ? injInfo(p.id) : null;
     const stTag = inj ? `<span class="sq-tag hurt">${inj.tag}</span>` : st==='resting' ? '<span class="sq-tag rest">휴식</span>' : '';
     const role = p.nickname ? `<span class="sq-tag role">${luEsc(p.nickname)}</span>` : '';
-    const sub = posShort(p);
+    const sub = posDetail(p);
     const photo = p.photo_url ? `<img src="${p.photo_url}" referrerpolicy="no-referrer" alt="">` : `<b>${luEsc(p.name.slice(0,1))}</b>`;
     return `<div class="sq-row" onclick="showPlayer(${p.id})">
       <span class="sq-no">${p.number ?? '-'}</span>
