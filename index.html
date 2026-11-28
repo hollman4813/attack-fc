@@ -5063,7 +5063,7 @@ function plyProfile(p){
   const nick = p.nickname ? ` <span class="sq-tag role">${luEsc(p.nickname)}</span>` : '';
   return {
     pos: `<div class="pd-pos">${luEsc(posLine)}${nick}${stTag}</div>`,
-    tags: (nick||stTag) ? `<div class="pd-pos">${nick.trim()}${stTag}</div>` : '',
+    tags: `<div class="pd-pos">${luEsc(POS_NAME[pof.cat]||pof.cat||'')}${nick}${stTag}</div>`,   // 개인기록: 포지션 분류(Midfielder 등)까지만
     info: `<div class="pd-info">${[['나이',age],['주발',footMap[p.dominant_foot]||'-'],['입단',jd?`${jd.getFullYear()}.${String(jd.getMonth()+1).padStart(2,'0')}`:'-'],['국가',p.nationality||'-']].map(([l,v])=>`<div><span>${l}</span><b>${l==='나이'?v:luEsc(String(v))}</b></div>`).join('')}</div>`
   };
 }
