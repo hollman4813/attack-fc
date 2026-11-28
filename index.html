@@ -2886,15 +2886,10 @@ function renderStatOverview() {
   const momCat = FM_CATS.find(c=>c.tab==='mom');
   const cards = atk + '<div id="fm-def"><section class="ovc"><h3 class="ovc-h"><span>수비 지표</span></h3><div class="ovc-empty">계산 중...</div></section></div>' + fmCard(momCat.tab, momCat.label, topOf(momCat), p=>p[momCat.key]);
   const sid = window._statSeason || currentSeasonId;
-  body.innerHTML = `<div class="sv-ttl">${seasonSelect(sid,'statSeason')}</div>` + cards + `<div id="fm-duo"><section class="ovc"><h3 class="ovc-h"><span>골 · 어시 듀오</span></h3><div class="ovc-empty">계산 중...</div></section></div><div id="fm-power">${fmCard('power','어택 포인트',null)}</div>`;
-  const pb = document.querySelector('#fm-power .ovc-empty'); if(pb) pb.textContent = '계산 중...';
+  body.innerHTML = `<div class="sv-ttl">${seasonSelect(sid,'statSeason')}</div>` + cards + `<div id="fm-duo"><section class="ovc"><h3 class="ovc-h"><span>골 · 어시 듀오</span></h3><div class="ovc-empty">계산 중...</div></section></div>`;
   window.scrollTo(0,0);
   duoCardHtml(sid).then(h=>{ const box = document.getElementById('fm-duo'); if(box && window._currentStatTab==='overview' && (window._statSeason||currentSeasonId)===sid) box.innerHTML = h; }).catch(()=>{});
   defCardHtml(sid).then(h=>{ const box = document.getElementById('fm-def'); if(box && window._currentStatTab==='overview' && (window._statSeason||currentSeasonId)===sid) box.innerHTML = h; }).catch(()=>{});
-  getPower(sid).then(list=>{
-    const box = document.getElementById('fm-power'); if(!box || window._currentStatTab!=='overview' || (window._statSeason||currentSeasonId)!==sid) return;
-    box.innerHTML = fmCard('power','어택 포인트', list, p=>Math.round(p.power));
-  }).catch(e=>{ console.error('어택포인트 계산 실패:', e); const box=document.getElementById('fm-power'); if(box) box.innerHTML = fmCard('power','어택 포인트',null); });
 }
 function statBackBar(title){
   const sid = window._statSeason || currentSeasonId;
@@ -3388,6 +3383,7 @@ async function loadTeamStats() {
 
   html += tsLeader('참석률 TOP 5', attendanceRank, p=>`${p.rate}<small>%</small>`, p=>`${p.attended}/${p.totalEligible}경기 출석`, '데이터 없음 (입단 3개월 이상자 없음)');
   html += tsLeader('승리요정 TOP 5', luckyRank, p=>`${p.winRate}<small>%</small>`, p=>`출전 ${p.attended}경기 ${p.winsWhenPlayed}승`, '데이터 없음 (3경기 이상 참석자 없음)');
+  html += `<div id="ts-power"><section class="ovc"><h3 class="ovc-h"><span>어택 포인트</span></h3><div class="ovc-empty">계산 중...</div></section></div>`;   // 승리요정 아래
   const oppM = name => matches.find(x=>x.opponent===name || x.opponents?.name===name);
   html += `<section class="ovc"><h3 class="ovc-h"><span>상대팀 킬러</span><span class="ovc-pill">많이 붙은 팀 순</span></h3>${killerRows.length ? killerRows.map((r,i)=>{ const m = oppM(r.opp);
       return `<div class="ts-kr${i>=5?' ts-more':''}"${r.who.length===1?` onclick="showPlayer(${r.who[0].id})"`:''}><span class="ts-ko">${m?`<span class="mx-e" style="width:26px;height:26px">${oppLogo(m,24)}</span>`:''}<span><b>${luEsc(r.opp)}</b><small>${r.games}경기</small></span></span><span class="ts-kp"><span class="ts-stack">${r.who.slice(0,3).map(p=>svAv(p)).join('')}</span><b>${r.who.map(p=>luEsc(p.name)).join(', ')}</b></span><span class="sv-v">${r.goals}<small>골</small></span></div>`; }).join('') + (killerRows.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${killerRows.length-5}팀)</button>`:'') : '<div class="ovc-empty">데이터 없음</div>'}</section>`;
@@ -3442,6 +3438,9 @@ async function loadTeamStats() {
   document.getElementById('teamstats-content').innerHTML = html;
   document.getElementById('teamstats-loading').style.display = 'none';
   document.getElementById('teamstats-content').style.display = 'block';
+  // 어택 포인트 (계산이 오래 걸려 나중에 채움)
+  getPower(sid).then(list=>{ const box = document.getElementById('ts-power'); if (box) box.innerHTML = fmCard('power','어택 포인트', list, p=>Math.round(p.power)); })
+    .catch(e=>{ console.error('어택포인트 계산 실패:', e); const box = document.getElementById('ts-power'); if (box) box.innerHTML = fmCard('power','어택 포인트',null); });
 }
 
 async function tsSeason(sid){
