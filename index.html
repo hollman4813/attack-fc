@@ -1340,6 +1340,11 @@
   }
   .nw-share{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:32px;padding:0 12px;border:0;border-radius:16px;background:#eef2f8;color:var(--team-navy);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
   .nw-share:active{background:#dfe6f1}
+  /* 위로 가기 버튼 (스크롤이 길어지면 오른쪽 아래에 표시) */
+  #to-top{position:fixed;right:16px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:9700;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.96);color:var(--team-deep);box-shadow:0 4px 14px rgba(15,40,80,.18),0 0 0 1px rgba(15,40,80,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transform:translateY(12px) scale(.9);pointer-events:none;transition:opacity .2s,transform .2s}
+  #to-top.on{opacity:1;transform:none;pointer-events:auto}
+  #to-top:active{transform:scale(.92)}
+  #to-top svg{width:20px;height:20px}
   #nw-toast{position:fixed;left:50%;bottom:calc(32px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);z-index:9800;background:rgba(15,40,80,.94);color:#fff;font-size:13px;font-weight:600;padding:10px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
   #nw-toast.on{opacity:1;transform:translate(-50%,0)}
   .ts-kp.ts-kp2{flex-direction:column;align-items:flex-start;gap:5px}
@@ -7369,6 +7374,21 @@ if ('serviceWorker' in navigator) {
   </div>
   <div class="lu-body"></div>
 </div>
+<button id="to-top" aria-label="맨 위로" onclick="toTopGo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+<script>
+// 위로 가기: 마지막으로 스크롤한 영역(페이지 또는 열린 팝업)을 기준으로 표시
+(function(){
+  let tgt = null;
+  const btn = () => document.getElementById('to-top');
+  const yOf = el => el ? el.scrollTop : (window.scrollY || document.documentElement.scrollTop || 0);
+  const upd = () => { const b = btn(); if (!b) return; const vis = !tgt || tgt.offsetParent !== null || getComputedStyle(tgt).position==='fixed';
+    b.classList.toggle('on', vis && yOf(tgt) > 400); };
+  document.addEventListener('scroll', e => { const t = e.target; tgt = (t === document || t === document.documentElement || t === document.body) ? null : t; upd(); }, { capture:true, passive:true });
+  window.toTopGo = () => { (tgt || window).scrollTo({ top:0, behavior:'smooth' }); };
+  // 화면 전환으로 스크롤 영역이 사라지면 숨김
+  setInterval(() => { if (tgt && !document.contains(tgt)) tgt = null; upd(); }, 700);
+})();
+</script>
 </body>
 </html>    <!-- 운동장 정보 -->
     <div class="tab-section" id="tab-grounds">
