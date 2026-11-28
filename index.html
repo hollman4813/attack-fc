@@ -5239,7 +5239,7 @@ async function showMatch(matchId, skipPushState) {
   const moms = stats.filter(s=>s.is_mom);
 
   const subLine = p => {
-    const posTxt = posShort(p);
+    const posTxt = p.position || '-';   // 경기 화면은 GK·DF·MF·FW까지만 (세부 포지션은 스쿼드·선수 카드에서)
     return posTxt + (p.region ? ` · ${p.region}` : '');
   };
   const av = (p, z) => p.photo_url
