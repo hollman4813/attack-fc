@@ -1364,6 +1364,15 @@
   .ts-qlg{display:flex;gap:14px;justify-content:flex-end;margin:10px 0 0;font-size:11px;color:var(--muted)}
   .ts-qlg u{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
   .ts-bp[hidden]{display:none}
+  .ts-flg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .ts-fl{background:#f4f7fb;border-radius:12px;padding:12px 12px 10px;display:flex;flex-direction:column;gap:6px}
+  .ts-fl.p{background:#eaf5ec}.ts-fl.m{background:#fdecec}
+  .ts-fl span{font-size:11.5px;font-weight:700;color:var(--muted)}
+  .ts-fl b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:32px;font-weight:600;line-height:.8;padding-top:6px;color:var(--team-deep)}
+  .ts-fl.p b{color:#2e7d32}.ts-fl.m b{color:#c62828}
+  .ts-fl b small{font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;margin-left:2px}
+  .ts-fl>small{font-size:11px;color:var(--muted)}
+  .ts-flnote{margin:10px 0 0;font-size:10.5px;color:var(--muted)}
   .ts-more{display:none!important}
   section.ts-open .ts-more{display:flex!important}
   .ts-morebtn{display:block;width:100%;margin-top:8px;height:38px;border:0;border-radius:10px;background:#f4f7fb;color:var(--team-navy);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
@@ -3361,6 +3370,25 @@ async function loadTeamStats() {
     // 골·어시 듀오
     const duoL = Object.entries(duo).map(([k,n])=>{ const [a,b] = k.split('>').map(Number); return { a:pOf(a), s:pOf(b), n }; }).filter(x=>x.a&&x.s).sort((x,y)=>y.n-x.n);
     html += `<section class="ovc"><h3 class="ovc-h"><span>골 · 어시 듀오</span><span class="ovc-pill">도움 → 골</span></h3>${duoL.length ? duoL.map((x,i)=>`<div class="ts-kr${i>=5?' ts-more':''}"><span class="ts-kp">${stack([x.a,x.s])}<b>${luEsc(x.a.name)} <i class="ts-ar">→</i> ${luEsc(x.s.name)}</b></span><span class="sv-v">${x.n}<small>골</small></span></div>`).join('') + (duoL.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${duoL.length-5}쌍)</button>`:'') : '<div class="ovc-empty">쿼터 기록이 있는 경기가 아직 없어요</div>'}</section>`;
+    // 승부의 흐름: 쿼터가 끝날 때 스코어 기준 (쿼터 기록이 있는 경기)
+    const fl = { n:0, cw:0, cl:0, w:0, l:0, hl:0, hlw:0, hb:0, hbw:0, hd:0, hdw:0 };
+    matches.forEach(m => { const rec = RX.recs[m.id]; if (!rec) return;
+      let us = 0, th = 0, trailed = false, led = false, h = null;
+      for (let q=0;q<4;q++){ const sc = luQScore(rec[q]); us += sc.us; th += sc.them; if (us<th) trailed = true; if (us>th) led = true; if (q===1) h = us-th; }
+      fl.n++; const win = us>th, lose = us<th;
+      if (win) { fl.w++; if (trailed) fl.cw++; } if (lose) { fl.l++; if (led) fl.cl++; }
+      if (h>0) { fl.hl++; if (win) fl.hlw++; } else if (h<0) { fl.hb++; if (win) fl.hbw++; } else { fl.hd++; if (win) fl.hdw++; }
+    });
+    if (fl.n) {
+      const pc = (a,b) => b ? Math.round(a/b*100)+'%' : '-';
+      const tile = (lbl, big, sub, cls) => `<div class="ts-fl ${cls||''}"><span>${lbl}</span><b>${big}</b><small>${sub}</small></div>`;
+      html += `<section class="ovc"><h3 class="ovc-h"><span>승부의 흐름</span><span class="ovc-pill">${fl.n}경기 기준</span></h3><div class="ts-flg">
+        ${tile('역전승', fl.cw+'<small>경기</small>', `승리 ${fl.w}경기 중 ${pc(fl.cw,fl.w)}`, 'p')}
+        ${tile('역전패', fl.cl+'<small>경기</small>', `패배 ${fl.l}경기 중 ${pc(fl.cl,fl.l)}`, 'm')}
+        ${tile('전반 앞설 때 승률', pc(fl.hlw,fl.hl), `${fl.hl}경기 중 ${fl.hlw}승`)}
+        ${tile('전반 뒤질 때 승률', pc(fl.hbw,fl.hb), `${fl.hb}경기 중 ${fl.hbw}승`)}
+      </div><p class="ts-flnote">쿼터가 끝날 때 스코어로 판단해요. 한 번이라도 뒤졌다가 이기면 역전승이에요.</p></section>`;
+    }
     // 쿼터별 득실
     if (recN) { const mx = Math.max(1, ...qF, ...qA);
       html += `<section class="ovc"><h3 class="ovc-h"><span>쿼터별 득실</span><span class="ovc-pill">${recN}경기 기준</span></h3><div class="ts-q"><div class="h"><b class="f">득점</b><i></i><span></span><i></i><b class="a">실점</b></div>${[0,1,2,3].map(q=>`<div><b class="f">${qF[q]}</b><i class="l"><u class="f" style="width:${qF[q]/mx*100}%"></u></i><span>${q+1}Q</span><i><u class="a" style="width:${qA[q]/mx*100}%"></u></i><b class="a">${qA[q]}</b></div>`).join('')}</div></section>`; }
