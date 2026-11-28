@@ -1893,7 +1893,7 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:4px">포지션</div>
-            <select id="np-position" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
+            <select id="np-position" onchange="npSubPos()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff">
               <option value="">선택</option>
               <option value="GK">GK</option>
               <option value="DF">DF</option>
@@ -1925,9 +1925,15 @@
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">입단일</div>
           <input id="np-join" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px">
         </div>
-        <div id="np-subpos-wrap" style="margin-bottom:10px;display:none">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">세부 포지션</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap" id="np-subpos-btns"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">세부 포지션 1</div>
+            <select id="np-sub1" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff"><option value="">선택 안함</option></select>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">세부 포지션 2</div>
+            <select id="np-sub2" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff"><option value="">선택 안함</option></select>
+          </div>
         </div>
         <div style="margin-bottom:14px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">거주 지역</div>
@@ -2975,7 +2981,8 @@ function autoPosCalc(plans){
 }
 // 화면 표시용 포지션: 라인업 기록이 충분하면 그걸로, 아니면 등록된 포지션
 function posOf(p){
-  const a = p && window._autoPos && window._autoPos[p.id];
+  // 화면 표시는 선수 등록 때 입력한 포지션 (라인업 기반 _autoPos 는 개인기록 '많이 뛴 포지션'에서만 사용)
+  const a = null;
   if (!a) return { cat: p.position, list: [p.sub_position1, p.sub_position2].filter(Boolean) };
   const reg = [p.sub_position1, p.sub_position2].filter(x => x && x !== a.main);
   return { cat: a.cat, list: [a.main, a.sub || reg[0]].filter(Boolean) };
@@ -3755,6 +3762,7 @@ async function showAdminPage() {
 }
 
 async function loadAdminData() {
+  try { npSubPos(); } catch(e) {}
   const [matches, players] = await Promise.all([
     api('matches?select=*&order=match_date.desc'),
     api('players?select=*&order=number.asc')
@@ -4557,6 +4565,8 @@ const SUB_POS = {
   FW: ['CF','WF']
 };
 
+// 선수 등록: 포지션 고르면 세부 포지션 1 후보를 맞춰줌
+function npSubPos(){ const a = document.getElementById('np-sub1'), b = document.getElementById('np-sub2'); if (!a) return; a.innerHTML = getSubOptions(document.getElementById('np-position').value, ''); b.innerHTML = getAllSubOptions(''); }
 function updateSubPosOptions(position, sub1, sub2) {
   const sub1El = document.getElementById('ep-sub1');
   const sub2El = document.getElementById('ep-sub2');
@@ -4786,6 +4796,9 @@ async function addPlayer() {
     name,
     number,
     position: document.getElementById('np-position').value || null,
+    sub_position1: document.getElementById('np-sub1').value || null,
+    sub_position2: document.getElementById('np-sub2').value || null,
+    region: document.getElementById('np-region').value.trim() || null,
     dominant_foot: document.getElementById('np-foot').value || null,
     birth_date: document.getElementById('np-birth').value || null,
     nickname: document.getElementById('np-nickname').value.trim() || null,
@@ -4801,8 +4814,8 @@ async function addPlayer() {
 
   if (res.ok) {
     alert(`${name} 선수 등록 완료! ✅`);
-    ['np-name','np-number','np-birth','np-nickname','np-join'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('np-position').value = '';
+    ['np-name','np-number','np-birth','np-nickname','np-join','np-region'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('np-position').value = ''; npSubPos();
     document.getElementById('np-foot').value = '';
     await loadAdminData();
     loaded['squad'] = false;
