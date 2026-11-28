@@ -1116,6 +1116,19 @@
   .tc-stats div{background:#274f88;border-radius:10px;text-align:center;padding:8px 0 5px}
   .tc-stats span{display:block;font-size:11px;font-weight:700;color:var(--team-sky-soft);white-space:nowrap;line-height:14px}
   .tc-stats b{display:block;font-family:var(--font-display);font-size:34px;font-weight:600;line-height:1}
+  .tc-mp{display:inline-flex;align-items:center;gap:6px;margin-top:8px;height:26px;padding:0 10px;border-radius:13px;background:rgba(255,213,74,.16);border:1px solid rgba(255,213,74,.4)}
+  .tc-mp span{font-size:11px;font-weight:700;color:rgba(255,255,255,.75)}
+  .tc-mp b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:18px;font-weight:600;color:#ffd54a;line-height:1;padding-top:2px}
+  .tc-mp em{font-style:normal;font-size:11px;color:rgba(255,255,255,.6)}
+  .tc-ph{position:relative}
+  .tc-pb{position:absolute;right:-6px;bottom:-4px;min-width:34px;height:22px;padding:0 6px;border-radius:11px;background:#ffd54a;color:#0f2850;font-family:'Teko','Noto Sans KR',sans-serif;font-size:16px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #0f2850;padding-top:2px}
+  .tc-mpb{margin-top:6px;font-size:11px;color:rgba(255,255,255,.6)}
+  .tc-mpc{display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:8px;margin-top:10px;padding:9px 12px;border-radius:12px;background:rgba(255,255,255,.08)}
+  .tc-mpc .l{font-size:11px;font-weight:700;color:rgba(255,255,255,.7)}
+  .tc-mpc b{font-family:'Teko','Noto Sans KR',sans-serif;font-size:22px;font-weight:600;color:#ffd54a;line-height:1;padding-top:2px}
+  .tc-mpc i{height:6px;border-radius:3px;background:rgba(255,255,255,.15);overflow:hidden}
+  .tc-mpc u{display:block;height:100%;background:#ffd54a;border-radius:3px}
+  .tc-mpc em{font-style:normal;font-size:11px;color:rgba(255,255,255,.65);white-space:nowrap}
   .tc-stats.n4{grid-template-columns:repeat(4,1fr)}
   .tc-stats .tc-tot{background:var(--team-gold);color:var(--team-deep)}
   .tc-stats .tc-tot span{color:var(--team-deep);font-weight:800}
@@ -5050,6 +5063,7 @@ function plyProfile(p){
   const nick = p.nickname ? ` <span class="sq-tag role">${luEsc(p.nickname)}</span>` : '';
   return {
     pos: `<div class="pd-pos">${luEsc(posLine)}${nick}${stTag}</div>`,
+    tags: (nick||stTag) ? `<div class="pd-pos">${nick.trim()}${stTag}</div>` : '',
     info: `<div class="pd-info">${[['나이',age],['주발',footMap[p.dominant_foot]||'-'],['입단',jd?`${jd.getFullYear()}.${String(jd.getMonth()+1).padStart(2,'0')}`:'-'],['국가',p.nationality||'-']].map(([l,v])=>`<div><span>${l}</span><b>${l==='나이'?v:luEsc(String(v))}</b></div>`).join('')}</div>`
   };
 }
@@ -5788,17 +5802,21 @@ function mrRender(){
         <div class="tg-kpi"><div><span>함께 뛴 경기</span><b>${career}<small>경기</small></b></div><div><span>팀 내 고참 순위</span><b>${sen>=0?sen+1:'-'}<small>/ ${ros.length}명</small></b></div><div><span>${nextY}주년까지</span><b>D-${dd}</b></div></div></section>`;
     }
   }
+  // 시즌 최다 포지션 (라인업 기록 기준)
+  const mpv = window._mpv || 'C', mpLbl = D.scope==='all' ? '통산' : '시즌';
+  const mp = posList.length ? { code: LU_TO_SUB[posList[0][0]] || posList[0][0], q: posList[0][1], pct: Math.round(posList[0][1]/posTotal*100) } : null;
   ov.innerHTML = `<div style="max-width:440px;margin:0 auto;padding-bottom:40px">
     <button onclick="ovClose('my-record')" style="background:none;border:none;color:var(--skyblue);font:inherit;font-size:14px;padding:6px 0;cursor:pointer">← 닫기</button>
     <div class="tc">
       ${D.p.number!=null?`<div class="tc-wm" aria-hidden="true">${D.p.number}</div>`:''}
       <div class="tc-top"><span class="tc-tag"><img src="emblem_v4.png" alt=""><span>MY RECORD</span></span><span class="tc-scope">${D.scope==='all'?'통산':D.scope===currentSeasonId?luEsc(currentSeasonName):'시즌 '+D.scope}</span></div>
       <div class="tc-id">
-        <div class="tc-ph">${D.p.photo_url?`<img src="${D.p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((D.p.name||'?').charAt(0))}</b>`}</div>
+        <div class="tc-ph">${D.p.photo_url?`<img src="${D.p.photo_url}" referrerpolicy="no-referrer" alt="">`:`<b>${luEsc((D.p.name||'?').charAt(0))}</b>`}${mpv==='B'&&mp?`<span class="tc-pb">${mp.code}</span>`:''}</div>
         <div style="min-width:0"><div class="tc-a">${D.p.number!=null?`<span class="tc-ano">${D.p.number}</span>`:''}<div class="tc-name${(D.p.name||'').length>4?' long':''}">${luEsc(D.p.name)}</div></div>
-        ${prof.pos}</div>
+        ${prof.tags}${mpv==='A'&&mp?`<div class="tc-mp"><span>${mpLbl} 최다</span><b>${mp.code}</b><em>${fq(mp.q)}</em></div>`:''}${mpv==='B'&&mp?`<div class="tc-mpb">${mpLbl} 가장 많이 뛴 자리 · ${fq(mp.q)}</div>`:''}</div>
       </div>
       ${prof.info}
+      ${mpv==='C'&&mp?`<div class="tc-mpc"><span class="l">${mpLbl} 가장 많이 뛴 포지션</span><b>${mp.code}</b><i><u style="width:${mp.pct}%"></u></i><em>${fq(mp.q)} · ${mp.pct}%</em></div>`:''}
       <div class="tc-stats n4">${[[GP,'출전'],[G,'득점'],[A,'도움'],[MOM,'MOM']].map(([v,l])=>`<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>
     </div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px">${pill(currentSeasonId, currentSeasonName)}${seasons.filter(s=>s!==currentSeasonId).map(s=>pill(s,'시즌 '+s)).join('')}${pill('all','통산')}</div>
