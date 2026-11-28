@@ -2796,9 +2796,10 @@ function fmCard(tab, label, list, valOf){
   return `<section class="ovc">${head}${fmBody(list, valOf)}</section>`;
 }
 // 1위 크게 + 2~5위 + 더보기 (unit: 더보기 단위)
-function fmBody(list, valOf, unit){
+function fmBody(list, valOf, unit, rankOf){
   const p = list[0];
-  let rk = 1; const ranks = list.map((q,i)=>{ if(i>0 && valOf(q)!==valOf(list[i-1])) rk = i+1; return rk; });
+  rankOf = rankOf || valOf;
+  let rk = 1; const ranks = list.map((q,i)=>{ if(i>0 && rankOf(q)!==rankOf(list[i-1])) rk = i+1; return rk; });
   return `<div class="sv-ldr" onclick="showPlayer(${p.id})"><span class="sv-ph">${p.photo_url?`<img src="${p.photo_url}" alt="">`:luEsc((p.name||'?').slice(0,1))}<em>1</em></span><div class="sv-nm"><b>${luEsc(p.name)}</b></div><div class="sv-big">${valOf(p)}</div></div>
     ${list.slice(1).map((q,i)=>svRow(q,ranks[i+1],valOf(q)).replace('<div class="sv-r"', `<div class="sv-r${i>=4?' ts-more':''}"`)).join('')}
     ${list.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${list.length-5}${unit||'명'})</button>`:''}`;
@@ -2859,7 +2860,10 @@ async function defCardHtml(sid){
   const qfmt = v => Number.isInteger(v) ? v : v.toFixed(1);
   const indL = Object.entries(ind).map(([pid,o])=>({ ...o, ps:[pOf(+pid)].filter(Boolean) })).filter(o=>o.ps.length);
   const cleanL = indL.filter(o=>o.clean>0).sort((x,y)=>y.clean-x.clean || (y.clean/y.n)-(x.clean/x.n));
-  const lowL = indL.filter(o=>o.n>=2).sort((x,y)=>(x.ga/x.n)-(y.ga/y.n) || y.n-x.n);
+  // 최소 실점: 4쿼터 이상, 순위는 팀 평균 실점 5쿼터를 더한 보정값 (적게 뛴 선수가 유리하지 않도록)
+  const tN = Object.values(back).reduce((a,o)=>a+o.n,0), tGA = Object.values(back).reduce((a,o)=>a+o.ga,0), tAvg = tN ? tGA/tN : 0;
+  const LOW_K = 5; indL.forEach(o => o.adj = Math.round((o.ga + tAvg*LOW_K) / (o.n + LOW_K) * 1000) / 1000);
+  const lowL = indL.filter(o=>o.n>=4).sort((x,y)=>x.adj-y.adj || y.n-x.n);
   const comboL = Object.values(back).filter(o=>o.clean>0).map(o=>({ ...o, ps:o.ids.map(pOfG).filter(Boolean) })).sort((x,y)=>y.clean-x.clean || (y.clean/y.n)-(x.clean/x.n));
   const rowB = (o,i,mode) => { const one = mode!=='combo';
     return `<div class="ts-kr${i>=5?' ts-more':''}"${one&&o.ps[0]?` onclick="showPlayer(${o.ps[0].id})"`:''}><span class="ts-kp${one?'':' ts-kp2'}">${stack(o.ps)}<b>${o.ps.map(p=>luEsc(p.name)).join(' · ')}</b></span><span class="ts-cl">${mode==='low' ? `<b>${(o.ga/o.n).toFixed(1)}<small> 실점/쿼터</small></b><small>${qfmt(o.n)}쿼터 · 총 ${qfmt(o.ga)}실점</small>` : `<b>${qfmt(o.clean)}<small>/${qfmt(o.n)}쿼터</small></b><small>쿼터당 실점 ${(o.ga/o.n).toFixed(1)}</small>`}</span></div>`; };
@@ -2868,8 +2872,8 @@ async function defCardHtml(sid){
   const valOfK = { clean: o => `${qfmt(o.clean)}<small>쿼터</small>`, low: o => `${(o.ga/o.n).toFixed(2)}` };
   const pane = (k, L, empty) => `<div class="ts-bp" data-k="${k}"${k==='clean'?'':' hidden'}>${!L.length ? `<div class="ovc-empty">${empty}</div>`
     : k==='combo' ? L.map((o,i)=>rowB(o,i,k)).join('') + moreB(L,'조합')
-    : fmBody(L.map(o=>({ ...o.ps[0], _o:o })), q=>valOfK[k](q._o))}${k==='low'?'<p class="ts-flnote">수비 자리로 뛴 쿼터당 평균 실점 · 2쿼터 이상</p>':''}${k==='clean'?'<p class="ts-flnote">GK·수비 자리로 뛴 무실점 쿼터 수 · 교체 쿼터는 0.5</p>':''}</div>`;
-  return `<section class="ovc">${head}${pane('clean', cleanL, 'GK·수비 자리 무실점 쿼터 기록이 아직 없어요')}${pane('low', lowL, '수비 자리로 2쿼터 이상 뛴 선수가 아직 없어요')}${pane('combo', comboL, '무실점 쿼터를 만든 수비 조합이 아직 없어요')}</section>`;
+    : fmBody(L.map(o=>({ ...o.ps[0], _o:o })), q=>valOfK[k](q._o), '명', k==='low' ? q=>q._o.adj : null)}${k==='low'?'<p class="ts-flnote">쿼터당 평균 실점 · 4쿼터 이상 · 순위는 출전 쿼터 수도 반영</p>':''}${k==='clean'?'<p class="ts-flnote">GK·수비 자리로 뛴 무실점 쿼터 수 · 교체 쿼터는 0.5</p>':''}</div>`;
+  return `<section class="ovc">${head}${pane('clean', cleanL, 'GK·수비 자리 무실점 쿼터 기록이 아직 없어요')}${pane('low', lowL, '수비 자리로 4쿼터 이상 뛴 선수가 아직 없어요')}${pane('combo', comboL, '무실점 쿼터를 만든 수비 조합이 아직 없어요')}</section>`;
 }
 function renderStatOverview() {
   window._currentStatTab = 'overview';
