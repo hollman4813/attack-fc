@@ -4139,8 +4139,9 @@ function vsStep(id, d){ const i = document.getElementById(id); if(!i) return; i.
 async function mdVoteSave(matchId){
   const total = parseInt(document.getElementById('vs-total').value) || 0;
   const tally = [...document.querySelectorAll('#vote-sheet input[data-pid]')].map(i=>({ playerId: +i.dataset.pid, voteCount: parseInt(i.value)||0 }));
-  const sum = tally.reduce((a,t)=>a+t.voteCount,0);
-  if (sum > total && !confirm(`득표 합계(${sum}표)가 참여 인원(${total}명)보다 많아요. 그대로 저장할까요?`)) return;
+  // 한 사람이 여러 명(본인 포함)에게 투표할 수 있어서 합계는 인원보다 많을 수 있음 → 한 선수 득표가 인원을 넘을 때만 확인
+  const over = tally.filter(t=>t.voteCount > total);
+  if (over.length && !confirm(`투표 인원(${total}명)보다 표가 많은 선수가 있어요 (최대 ${Math.max(...over.map(t=>t.voteCount))}표). 그대로 저장할까요?`)) return;
   try {
     const { momTxt } = await saveVotesFor(matchId, total, tally);
     document.getElementById('vote-sheet')?.remove();
