@@ -2813,6 +2813,22 @@ async function getPower(sid){
   if (!window._powerCache[sid]) window._powerCache[sid] = await calcPowerRanking(sid);
   return window._powerCache[sid];
 }
+// 골·어시 듀오 카드 (플레이어 통계): 쿼터 기록의 도움 → 골
+async function duoCardHtml(sid){
+  const [matches, players, RX] = await Promise.all([
+    api(`matches?select=id&status=eq.finished&season_id=eq.${sid}`).catch(()=>[]),
+    api('players?select=id,name,number,photo_url').catch(()=>[]),
+    ratingCtxLoad().catch(()=>null)]);
+  const head = `<h3 class="ovc-h"><span>골 · 어시 듀오</span><span class="ovc-pill">도움 → 골</span></h3>`;
+  if (!RX) return `<section class="ovc">${head}<div class="ovc-empty">기록을 불러오지 못했어요</div></section>`;
+  const pOf = id => (players||[]).find(p=>p.id===id);
+  const duo = {};
+  (matches||[]).forEach(m => { const rec = RX.recs[m.id]; if (!rec) return;
+    for (let q=0;q<4;q++) luRecOf(rec,q).goals.forEach(g => { if (g.og || g.s==null || g.a==null || g.s===g.a) return; const k = g.a+'>'+g.s; duo[k] = (duo[k]||0) + 1; }); });
+  const stack = ps => `<span class="ts-stack">${ps.map(p=>svAv(p)).join('')}</span>`;
+  const duoL = Object.entries(duo).map(([k,n])=>{ const [a,b] = k.split('>').map(Number); return { a:pOf(a), s:pOf(b), n }; }).filter(x=>x.a&&x.s).sort((x,y)=>y.n-x.n);
+  return `<section class="ovc">${head}${duoL.length ? duoL.map((x,i)=>`<div class="ts-kr${i>=5?' ts-more':''}"><span class="ts-kp">${stack([x.a,x.s])}<b>${luEsc(x.a.name)} <i class="ts-ar">→</i> ${luEsc(x.s.name)}</b></span><span class="sv-v">${x.n}<small>골</small></span></div>`).join('') + (duoL.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${duoL.length-5}쌍)</button>`:'') : '<div class="ovc-empty">쿼터 기록이 있는 경기가 아직 없어요</div>'}</section>`;
+}
 // 수비 카드 (플레이어 통계): 쿼터 기록·라인업이 있는 경기의 GK·수비 자리 기준
 async function defCardHtml(sid){
   const [matches, players, RX] = await Promise.all([
@@ -2866,9 +2882,10 @@ function renderStatOverview() {
   const momCat = FM_CATS.find(c=>c.tab==='mom');
   const cards = atk + '<div id="fm-def"><section class="ovc"><h3 class="ovc-h"><span>수비 지표</span></h3><div class="ovc-empty">계산 중...</div></section></div>' + fmCard(momCat.tab, momCat.label, topOf(momCat), p=>p[momCat.key]);
   const sid = window._statSeason || currentSeasonId;
-  body.innerHTML = `<div class="sv-ttl">${seasonSelect(sid,'statSeason')}</div>` + cards + `<div id="fm-power">${fmCard('power','어택 포인트',null)}</div>`;
+  body.innerHTML = `<div class="sv-ttl">${seasonSelect(sid,'statSeason')}</div>` + cards + `<div id="fm-duo"><section class="ovc"><h3 class="ovc-h"><span>골 · 어시 듀오</span></h3><div class="ovc-empty">계산 중...</div></section></div><div id="fm-power">${fmCard('power','어택 포인트',null)}</div>`;
   const pb = document.querySelector('#fm-power .ovc-empty'); if(pb) pb.textContent = '계산 중...';
   window.scrollTo(0,0);
+  duoCardHtml(sid).then(h=>{ const box = document.getElementById('fm-duo'); if(box && window._currentStatTab==='overview' && (window._statSeason||currentSeasonId)===sid) box.innerHTML = h; }).catch(()=>{});
   defCardHtml(sid).then(h=>{ const box = document.getElementById('fm-def'); if(box && window._currentStatTab==='overview' && (window._statSeason||currentSeasonId)===sid) box.innerHTML = h; }).catch(()=>{});
   getPower(sid).then(list=>{
     const box = document.getElementById('fm-power'); if(!box || window._currentStatTab!=='overview' || (window._statSeason||currentSeasonId)!==sid) return;
@@ -3385,9 +3402,6 @@ async function loadTeamStats() {
       }
     });
     const stack = ps => `<span class="ts-stack">${ps.slice(0,4).map(p=>svAv(p)).join('')}</span>`;
-    // 골·어시 듀오
-    const duoL = Object.entries(duo).map(([k,n])=>{ const [a,b] = k.split('>').map(Number); return { a:pOf(a), s:pOf(b), n }; }).filter(x=>x.a&&x.s).sort((x,y)=>y.n-x.n);
-    html += `<section class="ovc"><h3 class="ovc-h"><span>골 · 어시 듀오</span><span class="ovc-pill">도움 → 골</span></h3>${duoL.length ? duoL.map((x,i)=>`<div class="ts-kr${i>=5?' ts-more':''}"><span class="ts-kp">${stack([x.a,x.s])}<b>${luEsc(x.a.name)} <i class="ts-ar">→</i> ${luEsc(x.s.name)}</b></span><span class="sv-v">${x.n}<small>골</small></span></div>`).join('') + (duoL.length>5?`<button class="ts-morebtn" onclick="tsMore(this)">더보기 (${duoL.length-5}쌍)</button>`:'') : '<div class="ovc-empty">쿼터 기록이 있는 경기가 아직 없어요</div>'}</section>`;
     // 승부의 흐름: 쿼터가 끝날 때 스코어 기준 (쿼터 기록이 있는 경기)
     const fl = { n:0, cw:0, cl:0, w:0, l:0, hl:0, hlw:0, hb:0, hbw:0, hd:0, hdw:0 };
     matches.forEach(m => { const rec = RX.recs[m.id]; if (!rec) return;
