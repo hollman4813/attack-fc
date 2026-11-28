@@ -3303,6 +3303,7 @@ async function loadTeamStats() {
     <div class="rs-rank ov-rs2"><div><span>경기당 득점</span><b>${(totalGoals/G).toFixed(1)}</b></div><div><span>경기당 실점</span><b>${(totalConcede/G).toFixed(1)}</b></div><div><span>득실차</span><b style="color:${gd>=0?'#2e7d32':'#d32f2f'}">${gd>0?'+':''}${gd}</b></div></div>
     <div class="ts-recs">${recRow('최다 득점 경기', topScoring[0])}${recRow('최다 실점 경기', topConcede[0])}${recRow('최대 점수차 승리', bigWins[0])}</div>
   </section>`;
+  const coreEnd = html.length; let flowSec = '';   // 핵심 기록 바로 뒤에 쿼터별 득실 → 승부의 흐름
 
   // 🏃 참석률 최다 (입단 3개월 이상자)
   const now = new Date();
@@ -3399,7 +3400,7 @@ async function loadTeamStats() {
     if (fl.n) {
       const pc = (a,b) => b ? Math.round(a/b*100)+'%' : '-';
       const tile = (lbl, big, sub, cls) => `<div class="ts-fl ${cls||''}"><span>${lbl}</span><b>${big}</b><small>${sub}</small></div>`;
-      html += `<section class="ovc"><h3 class="ovc-h"><span>승부의 흐름</span><span class="ovc-pill">${fl.n}경기 기준</span></h3><div class="ts-flg">
+      flowSec += `<section class="ovc"><h3 class="ovc-h"><span>승부의 흐름</span><span class="ovc-pill">${fl.n}경기 기준</span></h3><div class="ts-flg">
         ${tile('역전승', fl.cw+'<small>경기</small>', `승리 ${fl.w}경기 중 ${pc(fl.cw,fl.w)}`, 'p')}
         ${tile('역전패', fl.cl+'<small>경기</small>', `패배 ${fl.l}경기 중 ${pc(fl.cl,fl.l)}`, 'm')}
         ${tile('전반 앞설 때 승률', pc(fl.hlw,fl.hl), `${fl.hl}경기 중 ${fl.hlw}승`)}
@@ -3408,8 +3409,9 @@ async function loadTeamStats() {
     }
     // 쿼터별 득실
     if (recN) { const mx = Math.max(1, ...qF, ...qA);
-      html += `<section class="ovc"><h3 class="ovc-h"><span>쿼터별 득실</span><span class="ovc-pill">${recN}경기 기준</span></h3><div class="ts-q"><div class="h"><b class="f">득점</b><i></i><span></span><i></i><b class="a">실점</b></div>${[0,1,2,3].map(q=>`<div><b class="f">${qF[q]}</b><i class="l"><u class="f" style="width:${qF[q]/mx*100}%"></u></i><span>${q+1}Q</span><i><u class="a" style="width:${qA[q]/mx*100}%"></u></i><b class="a">${qA[q]}</b></div>`).join('')}</div></section>`; }
+      flowSec = `<section class="ovc"><h3 class="ovc-h"><span>쿼터별 득실</span><span class="ovc-pill">${recN}경기 기준</span></h3><div class="ts-q"><div class="h"><b class="f">득점</b><i></i><span></span><i></i><b class="a">실점</b></div>${[0,1,2,3].map(q=>`<div><b class="f">${qF[q]}</b><i class="l"><u class="f" style="width:${qF[q]/mx*100}%"></u></i><span>${q+1}Q</span><i><u class="a" style="width:${qA[q]/mx*100}%"></u></i><b class="a">${qA[q]}</b></div>`).join('')}</div></section>` + flowSec; }
   }
+  html = html.slice(0, coreEnd) + flowSec + html.slice(coreEnd);
 
   // 월별 / 경기장별 / 상대팀별 — 한 카드에서 전환
   const oppRow = name => { const m = matches.find(x=>(x.opponents?.name||x.opponent)===name); return m ? `<span class="mx-e" style="width:24px;height:24px">${oppLogo(m,22)}</span>` : ''; };
