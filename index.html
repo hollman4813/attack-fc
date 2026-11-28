@@ -2874,7 +2874,7 @@ async function defCardHtml(sid){
   // 무실점·최소 실점: 다른 지표 카드와 같은 형식 (1위 크게 + 순위 목록)
   // 무실점: 무실점 쿼터 수 + 이름 아래 무실점률
   const valOfK = { clean: o => `${qfmt(o.clean)}<small>쿼터</small>`, low: o => `${(o.ga/o.n).toFixed(2)}` };
-  const subOfK = { clean: o => `${qfmt(o.n)}쿼터 출전 · 무실점률 ${Math.round(o.clean/o.n*100)}%` };
+  const subOfK = { clean: o => `${qfmt(o.n)}쿼터 출전` };
   const pane = (k, L, empty) => `<div class="ts-bp" data-k="${k}"${k==='clean'?'':' hidden'}>${!L.length ? `<div class="ovc-empty">${empty}</div>`
     : k==='combo' ? L.map((o,i)=>rowB(o,i,k)).join('') + moreB(L,'조합')
     : fmBody(L.map(o=>({ ...o.ps[0], _o:o })), q=>valOfK[k](q._o), '명', k==='low' ? q=>q._o.adj : q=>q._o.clean, subOfK[k] ? q=>subOfK[k](q._o) : null)}${k==='low'?'<p class="ts-flnote">쿼터당 실점 · 6쿼터 이상 · 출전량 반영 순위</p>':''}${k==='clean'?'<p class="ts-flnote">GK·수비 자리 무실점 쿼터 · 교체는 0.5</p>':''}</div>`;
